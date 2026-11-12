@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("demo dashboard renders clear summaries and navigation", async ({ page }) => {
+test("demo dashboard renders clear summaries and navigation", async ({ page, isMobile }) => {
   await page.goto("/admin/demo");
   await expect(page.getByRole("heading", {name:"Welcome to your workspace"})).toBeVisible();
   await expect(page.getByText("interactive UI preview")).toBeVisible();
@@ -8,6 +8,7 @@ test("demo dashboard renders clear summaries and navigation", async ({ page }) =
   await expect(page.getByRole("link", {name:"Requirements"})).toBeVisible();
   await expect(page.getByRole("link", {name:"Knowledge sources"})).toBeVisible();
   await expect(page.getByRole("link", {name:"Preview & publish"})).toBeVisible();
+  await page.screenshot({path:test.info().outputPath(isMobile?"dashboard-mobile.png":"dashboard-desktop.png"),fullPage:true});
 });
 
 test("dropdown has keyboard-accessible options with no browser-native blue highlight", async ({page}) => {
@@ -42,6 +43,13 @@ test("mobile layouts avoid horizontal document scrolling and retain usable contr
       document: document.documentElement.scrollWidth,
       viewport: document.documentElement.clientWidth
     }));
+    if (dims.document > dims.viewport+1) {
+      const offenders = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>("body *")]
+        .map(el=>({tag:el.tagName,cls:String(el.className).slice(0,130),text:el.textContent?.trim().slice(0,60),right:Math.round(el.getBoundingClientRect().right),width:Math.round(el.getBoundingClientRect().width)}))
+        .filter(el=>el.right > document.documentElement.clientWidth+3)
+        .slice(0,20));
+      console.log("Overflow in",view,JSON.stringify(offenders));
+    }
     expect(dims.document, view+" has horizontal overflow").toBeLessThanOrEqual(dims.viewport+1);
   }
 });
