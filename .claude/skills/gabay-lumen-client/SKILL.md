@@ -40,7 +40,7 @@ Keep Lumen's PascalCase wire format inside this folder. The rest of the app uses
 - `config.ts`: reads env and throws when missing. Add `chatInstanceId` from `LUMEN_CHAT_INSTANCE_ID`.
 - `http.ts`: `lumenFetch(url, init & { timeoutMs })`. It adds headers and `AbortSignal.timeout`, parses `{ error: { code } }`, and throws `LumenError { kind, status, code? }`.
 - `chat.ts`: `openSession(title?)` returns **only** the session id. The raw session response contains our API key in `metadata.admin`, so it must never be logged or returned. `sendMessage(sessionId, message)` → `{ answer, outOfScope, citations, degradedSources }`, where `outOfScope` is true when the answer is the instance's fixed refusal ("That question is outside what this assistant covers."). Use a **28 s timeout** on `sendMessage` (just above Lumen's 25 s) and set `export const maxDuration = 35` (or more) on the route.
-- `ocr.ts`: `uploadDocument(bytes, mime)` → id; `waitForRead(id, { maxMs })`, which polls with back-off (~1.5 s, then 2.5 s, capped at about 8 polls, and remember every poll costs a credit); `getPages(id)`. Validate `data` with zod. The page schema isn't published, so parse it loosely and update the contract once observed.
+- `ocr.ts`: `uploadDocument(body: ArrayBuffer, mediaType, displayName)` → document record; `waitForRead(id, { delaysMs?, sleep?, maxElapsedMs?, now? })`, which polls with back-off (~1.5 s, then 2.5 s, capped at about 8 polls and 25 s elapsed, and remember every poll costs a credit); `getPages(id)`. Validate `data` with zod. The page schema isn't published, so parse it loosely and update the contract once observed.
 
 Map `error.code` to a `LumenError.kind`, then to our HTTP response:
 
@@ -48,7 +48,7 @@ Map `error.code` to a `LumenError.kind`, then to our HTTP response:
 |---|---|---|
 | 401 `*_NOT_FOUND`, `INVALID_API_CREDENTIALS`; 403 `ACCESS_DENIED`, `VIEW_ONLY_ACCESS`, `ORG_SUBSCRIPTION_INACTIVE`, `SESSION_NOT_OWNED` | `auth` | 502 "AI service unavailable" (our config problem; don't leak details) |
 | 403 `API_CREDITS_INSUFFICIENT`, `LC_INSUFFICIENT` | `credits` | 503 "AI service temporarily unavailable" (log loudly, since the team must top up) |
-| 429 any | `rate_limited` | 429 with `Retry-After` |
+| 429 any | `rate_limited` | 429 (the adapter maps it; the OCR route adds `Retry-After` only for its own limiter) |
 | 504 `AI_CHAT_REPLY_TIMEOUT`, our abort | `timeout` | 504 "Took too long, please try again" |
 | 503 any (`*_NOT_CONFIGURED`, `OCR_READ_QUEUE_FULL`, `PERMISSIONS_UPDATING`…) | `unavailable` | 503 |
 | 502, unexpected shape (zod fails) | `upstream` / `bad_response` | 502 |

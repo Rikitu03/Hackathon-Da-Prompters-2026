@@ -9,7 +9,7 @@ Goal: an applicant asks a question about one application cycle (optionally one r
 
 The failure that matters most here is a confident wrong answer about a scholarship requirement. A student acting on invented policy can miss a deadline. So the pipeline is designed to prefer refusing over guessing, and to make every citation traceable to a row in `knowledge_sources`.
 
-Read before starting: `src/lib/rag/README.md`, `docs/API_CONTRACTS.md`, `supabase/migrations/0001_initial.sql` (tables `knowledge_sources`, `knowledge_chunks`), and `docs/LUMEN_CONTRACT.md` if it exists. If it doesn't, use the `gabay-lumen-client` skill to verify Lumen first — you can build and test retrieval without it, but don't wire the generation step to a guessed API.
+Read before starting: `src/lib/rag/README.md`, `docs/API_CONTRACTS.md`, `supabase/migrations/20261112161002_initial.sql` (tables `knowledge_sources`, `knowledge_chunks`), and `docs/LUMEN_CONTRACT.md` if it exists. If it doesn't, use the `gabay-lumen-client` skill to verify Lumen first — you can build and test retrieval without it, but don't wire the generation step to a guessed API.
 
 ## Pipeline
 
@@ -54,6 +54,7 @@ plus the cycle's `official_url` if you have it. This is a fixed system message, 
 
 ### 4. Prompt (src/lib/rag/prompt.ts)
 Our Lumen instance (`PLP-Hackathon-Blank`) has **no system prompt and no context field**. The only input is `message`, and it's capped at **4000 characters**. So the instructions, the sources and the student's question all travel in one string. Build it to a fixed budget and assert the length before sending. Going over returns `400 AI_CHAT_QUERY_TOO_LONG`, which is our bug, not the user's.
+Budget the message in UTF-8 bytes (see `src/lib/rag/prompt.ts`), cap source titles (~120 chars) and skip (not stop at) a source that doesn't fit.
 
 Budget (characters): instructions ≈ 700 · sources ≤ 2700 · question ≤ 500 · delimiters/slack ≈ 100.
 - Lower the route's zod `message` max from 1500 to **500**, so the question can never squeeze out the sources.
@@ -93,7 +94,7 @@ Lumen's own `Answer.citations` relates to sources the *instance* consults, not t
 Lumen failures map per `gabay-lumen-client` (503/502/504/429). Set `export const maxDuration = 35` (or more) on the route, because a Lumen turn can take up to 25 s. Supabase errors → 500 `{ error: "Could not load guidance" }`; log the error code, not the user's message.
 
 ## Keep the parts testable
-Query building, prompt assembly and citation mapping are pure functions — keep them in separate files with no Supabase/Lumen imports so they can be unit-tested (the repo has no test runner yet; if the user wants tests, propose adding `vitest` as a dev dependency rather than adding it silently).
+Query building, prompt assembly and citation mapping are pure functions — keep them in separate files with no Supabase/Lumen imports so they can be unit-tested (Vitest is set up: `npm test`, tests in `src/**/*.test.ts`).
 
 ## Done means
 - `npm run typecheck && npm run lint` pass.
