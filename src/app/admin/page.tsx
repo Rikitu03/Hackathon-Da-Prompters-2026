@@ -1,2 +1,2 @@
-import Link from "next/link";
-export default function AdminPage(){return <main className="mx-auto max-w-3xl px-6 py-14"><Link href="/" className="text-sm text-emerald-800 underline">← Home</Link><h1 className="mt-8 text-4xl font-semibold">Scholarship content administration</h1><p className="mt-4 text-slate-600">Admin sign-in, content CRUD, and publish controls are assigned to Members 2 and 3. This informational page exposes no privileged data or write operations.</p><div className="mt-8 rounded-xl border bg-white p-6 text-sm text-slate-600">Do not publish scholarship requirements without source verification and server-side role enforcement.</div></main>}
+import { AdminConsole } from "@/components/admin/console";
+export default function AdminPage() { return <AdminConsole section="overview" />; }
