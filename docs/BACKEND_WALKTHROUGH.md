@@ -4,7 +4,9 @@ Open **http://localhost:3000/backend-lab** while `npm run dev` is running. This 
 a temporary integration workbench for the team. Its upper flow diagram is an
 interactive explanation; its sign-in, save, publish, unpublish, delete, and public
 result panels call the real backend and shared development database. `/admin`
-currently redirects here. The final admin frontend can use the same APIs.
+now renders the persistent admin frontend. Its source-text/publication bridge
+is still incomplete; this workbench exercises the existing complete API path.
+See [current integration status](STATUS.md) before following older sprint tasks.
 
 ## What the backend is for
 
@@ -48,11 +50,15 @@ flowchart LR
   descendants. Publisher permissions and RLS apply to every operation.
 - Real database readiness checks and useful validation/authorization errors.
 
-Lumen chat and OCR remain unimplemented. Their endpoints return 501/503 until
-Member 4 connects verified services and the grounded retrieval pipeline. The
-presence of knowledge chunks does not mean that the chatbot is connected.
+OCR is implemented, and local Member 4 work connects chat to cycle-scoped
+retrieval and Lumen. A cited answer through the merged applicant UI remains
+unverified. Stored source text must be relevant and reviewed; the current public
+synthetic disclaimer chunk is not a substitute for PSCS requirement guidance.
 
 ## Seeded development account and content
+
+This section records the original seed workflow. Shared records can change;
+the read-only public snapshot for this audit is recorded in [STATUS.md](STATUS.md).
 
 The requested development seed has been applied to the shared project:
 

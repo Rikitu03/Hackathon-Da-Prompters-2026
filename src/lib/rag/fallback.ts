@@ -1,13 +1,9 @@
 import type { ChatResponse } from "@/types/domain";
-
-/** Today's date in Manila as YYYY-MM-DD (the cycle's application_end is a Manila calendar date). */
-function manilaToday(now: Date): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
-}
+import { cycleWindow } from "@/lib/cycle-window";
 
 /** Closed once the Manila date is past application_end. No end date means open. */
 export function isCycleClosed(applicationEnd: string | null, now = new Date()): boolean {
-  return !!applicationEnd && manilaToday(now) > applicationEnd.slice(0, 10);
+  return cycleWindow(null, applicationEnd, now) === "closed";
 }
 
 function withUrl(res: ChatResponse, officialUrl: string | null | undefined): ChatResponse {

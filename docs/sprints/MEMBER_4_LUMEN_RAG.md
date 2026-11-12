@@ -5,6 +5,12 @@
 **Primary files:** `src/lib/lumen/`, `src/lib/rag/`, `src/app/api/ai/`, AI evaluation fixtures/tests  
 **Unblockers:** Lumen provider/docs (critical), M2 (verified sources), M3 (published KB access), M1 (chat/OCR UI contracts)
 
+## Current checkpoint — 13 November 2026
+
+Read [current status and next steps](../STATUS.md) first. OCR adapters/route, pure RAG helpers, and the local uncommitted retrieval/chat route are implemented. The original sprint checkboxes below remain planning history, not proof that this code is missing.
+
+Your immediate work is to align the merged applicant AI contract with M1 (4 MiB, 500 characters, timeouts, fallback/source links, OCR warnings and storage consent), then obtain one cited answer against suitable reviewed PSCS content supplied/published with M2/M3. The shared public DB currently has only a synthetic disclaimer source. Expanded OCR JSON profiles remain a later enhancement; do not restart the completed adapter tasks.
+
 ## Deliverable and acceptance
 
 At least one genuine Lumen tool must work in the submitted web app; demonstrate BOTH OCR and contextual Chat if possible. For RAG, Chat answers must rely on retrieved, approved scholarship information and cite matching source IDs. Applicants can correct OCR errors. Never claim a fake response is real provider output.

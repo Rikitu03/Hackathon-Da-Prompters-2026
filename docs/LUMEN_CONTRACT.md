@@ -60,6 +60,12 @@ Error codes: 400 `VALIDATION_ERROR`, `AI_CHAT_QUERY_TOO_LONG`, `AI_CHAT_QUERY_RE
 - Credits: 7 (new session 2 + message 5). Task 8 proceeds with layout A.
 - Reusing an existing session costs 5 credits instead of 7 (session + message).
 
+#### Route live check 2026-11-13 (`POST /api/ai/chat`, 21 credits)
+Ran against the shared Supabase demo cycle `1b379905-…` ("DEMO 2026–2027"). It has one approved source with one chunk, and that chunk states it is "SYNTHETIC DEVELOPMENT REFERENCE — NOT OFFICIAL GUIDANCE … No real eligibility rules, scholarship requirements, or dates are claimed."
+- Unknown/draft cycle → `404`, no Lumen call. Off-topic question ("Who won the NBA finals in 2025?") → no matching chunk, fixed refusal `grounded:false`, no Lumen call.
+- Three questions that retrieved and sent the chunk (`sent: 1`) all came back **scope-gated** (`outOfScope: true`, 3.9–6.2 s), including one explicitly framed as "For my scholarship application…". One of the three was a prompt-injection attempt. The route replaced each gated reply with the fixed refusal; no gated text reached the client.
+- Reading: the layout passed the gate with realistic scholarship sources (grounded probe above). The synthetic source says it isn't scholarship guidance, which is a likely trigger, not a proven classifier rule. **A grounded `[S#]` route answer still needs suitable reviewed scholarship content in the cycle.** Member 2/3 should use the official-source-backed [requirements reference](scholarships/pscs/requirements.md) for policy text; the [demo-data guide](scholarships/pscs/demo-data.md) supplies fictional OCR samples, not approved policy. See [current integration gaps](STATUS.md).
+
 ## OCR
 Asynchronous. Upload raw bytes, poll the record until it's done, then read the pages. JSON success bodies are wrapped as `{ "data": ..., "requestId": "..." }`, so always read from `data`.
 
@@ -112,12 +118,12 @@ Our upload: fictional "CERTIFICATE OF INDIGENCY" PNG (1200×800, 36 KB), uploade
 - Page-level keys are PascalCase; keys inside words and lines are lowercase (`text`, `box`, `confidence`, `words`).
 
 ## ⚠ Privacy constraints this creates
-- **OCR uploads are permanent and visible to the whole organization.** There is no DELETE on the developer surface, and `GET /documents` already lists a document our team didn't upload. That means the hackathon org is shared, so another key in it can list and download whatever we upload (`GET /documents/{id}/file`). This conflicts with "student uploads are transient" in ARCHITECTURE.md. **Only upload demo/sample documents.** Send a generic `X-Lumen-Document-Name` (e.g. `gabay-upload-<random>.jpg`), never the student's file name. The consent text must say the file is stored by the OCR provider.
+- **OCR uploads are retained and visible to the whole organization.** There is no DELETE on the developer surface, and `GET /documents` already lists a document our team didn't upload. Another key in the shared organization can list/download uploads (`GET /documents/{id}/file`); no provider retention duration has been established here. App-side transient handling does not remove that provider copy. **Only upload demo/sample documents.** Send a generic `X-Lumen-Document-Name` (e.g. `gabay-upload-<random>.jpg`), never the student's file name. The consent text must state provider storage and organization visibility; the merged applicant UI still needs this wording.
 - **Chat transcripts are stored on Lumen too.** Don't put personal data in chat messages, and tell users not to.
 - **Session responses contain our API key** (`Session.metadata.admin`). Keep them server-side and never log them.
 
 ## Credits spent so far (Member 4, 2026-11-13)
-3 read-only checks (3) + chat smoke (7) + OCR smoke (9) + grounded probe (7) + OCR route live check (~9) = **~35 credits**.
+3 read-only checks (3) + chat smoke (7) + OCR smoke (9) + grounded probe (7) + OCR route live check (~9) + chat route live check (21, assuming scope-gated replies are charged) = **~56 credits**.
 
 ## Limits / quota notes
 - Our credit balance hasn't been checked yet (not visible through these APIs).

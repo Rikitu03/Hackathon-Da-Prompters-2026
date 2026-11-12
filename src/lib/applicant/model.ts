@@ -1,3 +1,5 @@
+import { OCR_MAX_UPLOAD_BYTES } from "../ai-limits";
+
 export const OFFICIAL_PORTAL = "https://scholars.pasigcity.gov.ph/";
 export const STATUSES = [
   "not-started",
@@ -52,6 +54,51 @@ export type Preferences = {
 };
 export type Entry = { status: Status; signature: string };
 export type Progress = Record<string, Entry>;
+
+export type StageId = "guide" | "checklist" | "document" | "ask" | "official";
+export const JOURNEY_STAGES: readonly { id: StageId; label: string; href: string; description: string }[] = [
+  { id: "guide", label: "Choose a guide", href: "/onboarding", description: "Find the published scholarship and cycle you want to prepare for." },
+  { id: "checklist", label: "Prepare your checklist", href: "/my-checklist", description: "Read the steps and record your own preparation status." },
+  { id: "document", label: "Check a document", href: "/document-review", description: "Read a fictional document and correct the extracted details." },
+  { id: "ask", label: "Ask Gabay", href: "/assistant", description: "Ask a question and follow its published source references." },
+  { id: "official", label: "Take the official step", href: "/summary", description: "Review your preparation and continue to the official application page." },
+];
+export function stageForPath(path: string): StageId | null {
+  if (path === "/onboarding" || path === "/scholarships" || path.startsWith("/scholarships/")) return "guide";
+  if (path === "/my-checklist" || path.startsWith("/requirements/")) return "checklist";
+  return JOURNEY_STAGES.find((stage) => stage.href === path)?.id ?? null;
+}
+export function journeyProgress(input: { hasCycle: boolean; prepared: number; total: number; documentsChecked: number; asked: boolean }): Record<StageId, "done" | "todo"> {
+  return {
+    guide: input.hasCycle ? "done" : "todo",
+    checklist: input.total > 0 && input.prepared === input.total ? "done" : "todo",
+    document: input.documentsChecked > 0 ? "done" : "todo",
+    ask: input.asked ? "done" : "todo",
+    official: "todo",
+  };
+}
+export function nextStage(progress: Record<StageId, "done" | "todo">): StageId {
+  return JOURNEY_STAGES.find((stage) => progress[stage.id] === "todo")?.id ?? "official";
+}
+export function citedSegments(text: string, sourceCount: number): ({ text: string } | { cite: number })[] {
+  const result: ({ text: string } | { cite: number })[] = [];
+  const append = (value: string) => {
+    if (!value) return;
+    const last = result.at(-1);
+    if (last && "text" in last) last.text += value;
+    else result.push({ text: value });
+  };
+  let cursor = 0;
+  for (const match of text.matchAll(/\[(\d+(?:\s*,\s*\d+)*)\]/g)) {
+    append(text.slice(cursor, match.index));
+    const refs = match[1].split(",").map(Number);
+    if (refs.every((n) => n >= 1 && n <= sourceCount)) refs.forEach((cite) => result.push({ cite }));
+    else append(match[0]);
+    cursor = match.index! + match[0].length;
+  }
+  append(text.slice(cursor));
+  return result;
+}
 
 export function signature(
   requirement: Requirement,
@@ -111,8 +158,8 @@ export function validateFile(file: {
   name: string;
 }): string | null {
   if (!file.size) return "This file is empty. Choose a readable image or PDF.";
-  if (file.size > 10 * 1024 * 1024)
-    return "This file is over the 10 MB browser upload limit. Choose a smaller copy.";
+  if (file.size > OCR_MAX_UPLOAD_BYTES)
+    return "This file is larger than 4 MB. Choose a smaller copy.";
   if (!["image/jpeg", "image/png", "application/pdf"].includes(file.type))
     return "Choose a JPG, PNG, or PDF file.";
   const extension = file.name.split(".").pop()?.toLowerCase();
@@ -125,6 +172,14 @@ export function validateFile(file: {
   return null;
 }
 export function serviceMessage(status: number, service: string): string {
+  if (status === 403)
+    return `${service} blocked a request from another site. Reload GabayIskolar and try again.`;
+  if (status === 404)
+    return "This guide is no longer published. Choose a current guide to continue.";
+  if (status === 422)
+    return "The document couldn't be read. Try a clearer, well-lit photo, or continue with the written guide.";
+  if (status === 502 || status === 504)
+    return `${service} didn't respond in time. Try again in a moment.`;
   if (status === 400 || status === 415)
     return `The ${service} request could not be read. Check your input and try again.`;
   if (status === 413)

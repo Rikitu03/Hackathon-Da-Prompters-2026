@@ -136,7 +136,7 @@ describe("POST /api/ai/chat — grounded answer", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("cache-control")).toContain("no-store");
     expect(await res.json()).toEqual({
-      answer: "Kumuha ng Certificate of Indigency sa Barangay Hall [S1].",
+      answer: "Kumuha ng Certificate of Indigency sa Barangay Hall [1].",
       sources: [{ sourceId: "src-1", title: "Indigency guide", url: "https://example.com/s1" }],
       grounded: true,
     });

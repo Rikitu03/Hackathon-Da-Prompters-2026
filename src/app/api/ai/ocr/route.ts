@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { OCR_MAX_UPLOAD_BYTES as MAX_UPLOAD_BYTES } from "@/lib/ai-limits";
 import { json, sameOrigin } from "@/lib/api"; // team helper: NextResponse.json + "Cache-Control: private, no-store"
 import { LumenError, lumenErrorToHttp } from "@/lib/lumen/errors";
 import { getPages, uploadDocument, waitForRead } from "@/lib/lumen/ocr";
@@ -12,7 +13,6 @@ export const maxDuration = 60; // upload (≤15 s) + polling (≤25 s, see waitF
 // Best-effort, per server instance only (not shared across serverless instances).
 const ocrLimiter = createRateLimiter({ limit: 5, windowMs: 10 * 60_000 });
 
-const MAX_UPLOAD_BYTES = 4 * 1024 * 1024; // Vercel serverless body limit is ≈4.5 MB
 const EXTENSION: Record<SniffedMediaType, string> = {
   "application/pdf": "pdf", "image/png": "png", "image/jpeg": "jpg", "image/tiff": "tiff", "image/webp": "webp",
 };

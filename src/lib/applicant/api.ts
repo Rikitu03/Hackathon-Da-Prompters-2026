@@ -146,6 +146,7 @@ export async function fetchGuide(
 const chatSchema = z.object({
   answer: z.string().min(1),
   grounded: z.boolean(),
+  officialUrl: z.string().nullable().optional(),
   sources: z.array(
     z.object({
       sourceId: z.string(),
@@ -154,13 +155,16 @@ const chatSchema = z.object({
     }),
   ),
 });
-export type Answer = z.infer<typeof chatSchema>;
+export const NO_EVIDENCE_NOTICE = "I couldn't find this in the published guide for this cycle. Check the official page or contact the scholarship office.";
+export type ChatReply =
+  | { kind: "answer"; answer: string; sources: { sourceId: string; title: string; url?: string }[] }
+  | { kind: "notice"; answer: string; officialUrl: string | null };
 export async function askGabay(
   cycleId: string,
   message: string,
   requirementId?: string,
   signal?: AbortSignal,
-): Promise<Answer> {
+): Promise<ChatReply> {
   const data = await request<unknown>(
     "/api/ai/chat",
     {
@@ -180,14 +184,15 @@ export async function askGabay(
     throw new Error(
       "The assistant returned an unexpected response. Please retry.",
     );
-  if (!parsed.data.grounded || !parsed.data.sources.length)
+  if (!parsed.data.grounded)
     return {
-      answer:
-        "I cannot confirm that from the published guide. Please check the official portal or contact the scholarship office.",
-      grounded: false,
-      sources: [],
+      kind: "notice",
+      answer: parsed.data.answer,
+      officialUrl: safeHttps(parsed.data.officialUrl),
     };
-  return parsed.data;
+  if (!parsed.data.sources.length)
+    return { kind: "notice", answer: NO_EVIDENCE_NOTICE, officialUrl: null };
+  return { kind: "answer", answer: parsed.data.answer, sources: parsed.data.sources };
 }
 const ocrSchema = z.object({
   rawText: z.string(),
@@ -196,10 +201,13 @@ const ocrSchema = z.object({
       key: z.string(),
       label: z.string(),
       value: z.string(),
-      needsReview: z.boolean().optional(),
+      needsReview: z.boolean().default(false),
+      originalText: z.string().default(""),
+      warnings: z.array(z.string()).default([]),
     }),
   ),
   warnings: z.array(z.string()).default([]),
+  disclaimer: z.string().default(""),
 });
 export type OcrResult = z.infer<typeof ocrSchema>;
 export async function reviewDocument(

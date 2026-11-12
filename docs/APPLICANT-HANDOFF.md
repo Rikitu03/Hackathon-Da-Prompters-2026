@@ -2,6 +2,8 @@
 
 Member 1 owns the public homepage at `/` and the applicant workspace. This implementation replaces the emerald landing placeholder at `src/app/page.tsx`; preserve that route when integrating into staging. Admin and backend code remain owned by Members 2–4.
 
+**Merged-checkout update, 13 November 2026:** this frontend is now merged from staging into `feat/lumen-rag`. OCR and local chat/RAG routes are implemented. The backend contract in [API_CONTRACTS.md](API_CONTRACTS.md) and the gap list in [STATUS.md](STATUS.md) take precedence over the original integration assumptions below. This handoff describes frontend behavior, not proof that the combined live flow has passed.
+
 ## Routes and design
 
 `/` → `/onboarding` → `/dashboard` → `/my-checklist` → `/requirements/[id]` → `/summary`. Discovery uses `/scholarships` and `/scholarships/[id]`. Support tools are `/assistant` and `/document-review`.
@@ -18,17 +20,23 @@ No applicant authentication exists. Preferences use `gabayiskolar:preferences:v1
 
 ## Member 4 integration
 
-Chat posts `{cycleId, requirementId?, message}` to `/api/ai/chat`. Expected response: `{answer: string, grounded: boolean, sources: [{sourceId: string, title: string, url?: string}]}`. Ungrounded answers or empty citations get a conservative no-evidence fallback. Source links permit HTTPS only. Chat history is session-only. Live requests time out after 30 seconds.
+Chat posts `{cycleId, requirementId?, message}` to `/api/ai/chat`, with a shared 500-character limit and a 55-second client timeout. Grounded responses render inline numbered citations and matching source chips. Fixed server notices retain their text and safe HTTPS `officialUrl`, and appear as system notes with no Gabay attribution. A grounded response without sources becomes the fixed no-evidence notice. A stale requirement link falls back to the whole guide. Closed cycles disable the composer using Manila calendar dates. Chat privacy copy explains that Lumen stores messages; history remains in memory in this app.
 
-OCR posts multipart `file` and `consent=true` to `/api/ai/ocr`, only after explicit consent. Expected response: `{rawText: string, fields: [{key: string, label: string, value: string, needsReview?: boolean}], warnings: string[]}`. The proposed browser cap is 10 MB; Member 4 must confirm provider limits and validate bytes/types/server limits. Processing times out after 45 seconds. Client validation is usability guidance, not a security boundary.
+OCR posts multipart `file` and `consent=true` to `/api/ai/ocr`, only after explicit consent. The browser accepts JPG, PNG and PDF up to exactly 4 MiB; the server also supports WebP/TIFF and checks file bytes. The client timeout is 70 seconds. Review retains `rawText`, editable fields, `needsReview`, `originalText`, per-field and document warnings, and the response disclaimer. Consent explicitly states that Lumen keeps an organization-visible copy with no delete option, and permits sample or fictional documents only. Retrying extraction requires a user action and uploads again. Client validation is usability guidance, not a security boundary.
 
-The current endpoints return 503 without service configuration and 501 while pipelines are unimplemented. UI handles 400/415, 413, 429, 500, 501, 503, malformed responses, network failure, cancellation, and timeout. Simulated examples are clearly labeled and require explicit selection. They never appear as live provider results.
+The implemented endpoints return 503 when configuration or a kill switch prevents use; they are no longer 501 stubs. The frontend retains legacy 501 handling as well as HTTP/network/cancellation/timeout recovery. Simulated examples remain explicit user choices.
+
+### Connected preparation journey
+
+The five stages share their names across the landing page and workspace rail: Choose a guide → Prepare your checklist → Check a document → Ask Gabay → Take the official step. The rail shows checklist counts and memory-only document/question activity. Onboarding offers elementary Grades 4–6, junior high Grades 7–10, senior high Grades 11–12 and college/university, with new/renewing choices. These preferences do not establish eligibility or filter absent published metadata.
+
+A requirement launches document review and Ask Gabay with the same context. OCR confirmation counts a review for the visit without changing preparation status; students choose statuses themselves. Visit activity resets on cycle change or refresh. Unpublished saved guides explain how to select another guide. The summary uses the selected cycle's safe HTTPS destination, with the general Pasig portal as a secondary link when different.
 
 Uploaded files, object URLs, extracted fields, corrections, and conversation history are not persisted. Object URLs are revoked on replacement/unmount. OCR confirmation records only the student's review for the current visit; it never approves a document or automatically marks a checklist item prepared.
 
 ## Team boundaries
 
-No admin routes/components, Supabase migrations, API handlers, authentication, Lumen provider, or RAG logic are modified. The official handoff opens `https://scholars.pasigcity.gov.ph/` in a separate tab. GabayIskolar does not submit applications or decide eligibility.
+The alignment changes applicant screens, shared limits/calendar helpers, and AI citation normalization. No admin routes/components, Supabase migrations, authentication or Lumen wire-format adapters are changed. The official handoff opens the selected cycle's HTTPS `officialUrl` in a separate tab, falling back to `https://scholars.pasigcity.gov.ph/`. GabayIskolar does not submit applications or decide eligibility.
 
 ## Validation
 

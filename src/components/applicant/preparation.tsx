@@ -12,12 +12,15 @@ import {
   ScanText,
 } from "lucide-react";
 import {
+  OFFICIAL_PORTAL,
   progressOf,
   STATUSES,
   statusLabels,
   type Requirement,
   type Status,
 } from "@/lib/applicant/model";
+import { closedCycleNotice, cycleWindow } from "@/lib/cycle-window";
+import { JourneyRail } from "./journey";
 import { request, requirementFrom } from "@/lib/applicant/api";
 import type { RequirementRow } from "@/lib/guides/data";
 import {
@@ -130,6 +133,7 @@ export function Dashboard() {
   if (!guide || !cycle)
     return (
       <>
+        <JourneyRail current={null} />
         <div className="page-heading">
           <h1>Welcome to your preparation space.</h1>
           <p>A little guidance, whenever you need it.</p>
@@ -145,6 +149,7 @@ export function Dashboard() {
   );
   return (
     <>
+      <JourneyRail current={null} />
       {guide.demo && <DemoNotice />}
       <section className="dashboard-welcome">
         <div>
@@ -247,7 +252,7 @@ export function Dashboard() {
             {
               href: "/document-review",
               icon: ScanText,
-              title: "Review documents",
+              title: "Check a document",
               copy: "Check the details against your original.",
             },
           ].map(({ href, icon: Icon, title, copy }) => (
@@ -269,6 +274,7 @@ export function Checklist() {
   if (!guide || !cycle)
     return (
       <>
+        <JourneyRail current="checklist" />
         <div className="page-heading">
           <h1>My preparation checklist</h1>
           <p>Your next step, one document at a time.</p>
@@ -281,6 +287,7 @@ export function Checklist() {
   const progress = progressOf(cycle.requirements, prep.entries);
   return (
     <>
+      <JourneyRail current="checklist" />
       <div className="page-heading heading-actions">
         <div>
           <h1>My preparation checklist</h1>
@@ -406,6 +413,10 @@ export function RequirementDetail({
     cycle?.requirements.find((r) => r.id === id) ??
     (!selectedProgram ? direct : null);
   const prep = usePreparation(cycle);
+  function selectContext() {
+    if (data.guide && cycle)
+      w.select({ level: w.preferences?.level ?? data.guide.level ?? "Not specified", applicantType: w.preferences?.applicantType ?? "New applicant", programId: data.guide.id, cycleId: cycle.id });
+  }
   if (
     (selectedProgram && data.loading) ||
     (!selectedProgram && !direct && !directError)
@@ -433,6 +444,7 @@ export function RequirementDetail({
     );
   return (
     <>
+      <JourneyRail current="checklist" />
       <Link
         className="back-link"
         href={data.guide ? `/scholarships/${data.guide.id}` : "/scholarships"}
@@ -529,6 +541,14 @@ export function RequirementDetail({
               for this item.
             </p>
           )}
+          {cycle && data.guide && <Link
+            className="btn primary"
+            href={`/document-review?requirement=${encodeURIComponent(id)}`}
+            onClick={selectContext}
+          >
+            Check my document
+            <ScanText size={17} />
+          </Link>}
           <Link
             className="btn secondary"
             href={`/assistant?requirement=${encodeURIComponent(id)}`}
@@ -544,7 +564,7 @@ export function RequirementDetail({
                 });
             }}
           >
-            Ask Gabay
+            Ask Gabay about this item
             <MessageCircle size={17} />
           </Link>
         </aside>
@@ -553,11 +573,12 @@ export function RequirementDetail({
   );
 }
 export function Summary() {
-  const { guide, cycle } = useWorkspace();
+  const { guide, cycle, visit } = useWorkspace();
   const prep = usePreparation(cycle);
   if (!guide || !cycle)
     return (
       <>
+        <JourneyRail current="official" />
         <div className="page-heading">
           <h1>Your preparation summary</h1>
         </div>
@@ -574,6 +595,7 @@ export function Summary() {
   ];
   return (
     <>
+      <JourneyRail current="official" />
       <Link className="back-link" href="/my-checklist">
         <ArrowLeft size={16} />
         Back to checklist
@@ -621,6 +643,8 @@ export function Summary() {
           </section>
         );
       })}
+      <p>Documents you checked this visit: {visit.documentsChecked}</p>
+      {cycleWindow(cycle.start, cycle.end) === "closed" && <Notice>{closedCycleNotice(cycle.end!)}</Notice>}
       <section className="official-handoff">
         <div>
           <h2>Your official next step</h2>
@@ -630,9 +654,12 @@ export function Summary() {
             your application or determine eligibility.
           </p>
         </div>
-        <OfficialLink className="btn primary">
-          Continue to official portal
-        </OfficialLink>
+        <div className="handoff-actions">
+          <a className="btn primary" href={cycle.officialUrl} target="_blank" rel="noopener noreferrer">
+            Continue to the official application page
+          </a>
+          {cycle.officialUrl !== OFFICIAL_PORTAL && <OfficialLink className="text-link">Pasig City Scholarship Portal</OfficialLink>}
+        </div>
       </section>
     </>
   );

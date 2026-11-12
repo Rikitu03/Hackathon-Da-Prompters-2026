@@ -1,5 +1,7 @@
 # Member 4 – Lumen Adapter, Live OCR Endpoint and RAG Core (1-hour masterplan)
 
+> **Historical implementation plan.** Adapters, OCR and pure RAG helpers are implemented; local Member 4 work also implements retrieval/chat beyond this plan. Start with [current status and next steps](../../STATUS.md) before executing any unchecked steps. Provider limits, API behavior and acceptance evidence should be checked in the current contracts, not copied from these old code examples.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** In about one hour, ship a tested server-side Lumen adapter, a fully working `POST /api/ai/ocr` that has been verified against real Lumen with a demo document, and the pure building blocks of the grounded chat pipeline. That also includes proving whether a grounded message passes Lumen's scope gate.

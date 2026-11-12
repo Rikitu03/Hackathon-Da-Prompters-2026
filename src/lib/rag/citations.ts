@@ -2,17 +2,24 @@ import type { ChatSource } from "@/types/domain";
 
 export type PromptSource = { sourceId: string; title: string; url?: string | null; reviewedAt?: string | null; content: string };
 
-/** Map the model's [S#] markers back to the sources we actually sent. Unknown numbers are dropped. */
-export function mapCitations(answer: string, included: PromptSource[]): ChatSource[] {
-  const seen = new Set<string>();
-  const out: ChatSource[] = [];
-  for (const group of answer.matchAll(/\[([^\]]{1,40})\]/g)) {
-    for (const ref of group[1].matchAll(/S(\d{1,2})/g)) {
-      const src = included[Number(ref[1]) - 1];
-      if (!src || seen.has(src.sourceId)) continue;
-      seen.add(src.sourceId);
-      out.push(src.url ? { sourceId: src.sourceId, title: src.title, url: src.url } : { sourceId: src.sourceId, title: src.title });
+/** Translate prompt passage markers to the deduplicated, first-cited source list. */
+export function renumberCitations(answer: string, included: PromptSource[]): { answer: string; sources: ChatSource[] } {
+  const numbers = new Map<string, number>();
+  const sources: ChatSource[] = [];
+  const text = answer.replace(/[\t ]*\[(S\d+(?:\s*,\s*S\d+)*)\]/g, (marker: string, group: string) => {
+    const refs = new Set<number>();
+    for (const ref of group.matchAll(/S(\d+)/g)) {
+      const source = included[Number(ref[1]) - 1];
+      if (!source) continue;
+      let number = numbers.get(source.sourceId);
+      if (!number) {
+        number = sources.length + 1;
+        numbers.set(source.sourceId, number);
+        sources.push({ sourceId: source.sourceId, title: source.title, ...(source.url ? { url: source.url } : {}) });
+      }
+      refs.add(number);
     }
-  }
-  return out;
+    return refs.size ? `${marker.match(/^[\t ]*/)?.[0] ?? ""}[${[...refs].join(", ")}]` : "";
+  });
+  return { answer: text.trim(), sources };
 }

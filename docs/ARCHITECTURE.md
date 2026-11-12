@@ -2,17 +2,21 @@
 
 ## Architecture
 
-Next.js App Router (React, TypeScript) → Next.js Route Handlers → Supabase PostgreSQL/Auth + verified Lumen OCR/Chat API. Hosted on Vercel.
+Next.js App Router (React, TypeScript) → Next.js Route Handlers → Supabase PostgreSQL/Auth + Lumen OCR/Chat API. Vercel is the deployment target; verify the actual deployed commit and complete flow separately from the local build.
 
 **No Python FastAPI server.** AI processing is an outgoing server-side HTTP request. PostgreSQL FTS supports an initial RAG pipeline without embeddings.
 
-The first database-backed guide workflow is implemented. Use `/backend-lab` for
-a simple visual integration workbench and `/scholarships` for anonymous reads and
-the preparation checklist. `/admin` temporarily redirects to the workbench while
-the final admin interface is developed. [BACKEND_WALKTHROUGH.md](BACKEND_WALKTHROUGH.md)
-explains the process, account provisioning, tests, and the decision to defer
-applicant profiles until student accounts or syncing are required. Lumen OCR/chat
-remain a separate, unimplemented integration.
+The database-backed guide workflow and the applicant frontend are implemented.
+`/admin` renders the persistent admin workspace; `/backend-lab` remains the API
+integration workbench. The applicant flow includes `/onboarding`, `/dashboard`,
+`/my-checklist`, `/requirements/[id]`, `/summary`, `/assistant`, and
+`/document-review`, with discovery at `/scholarships`.
+
+Lumen OCR is implemented. The local Member 4 work also implements grounded chat
+and retrieval; it is not yet all committed or demonstrated through the merged UI.
+The final admin publication bridge and several applicant AI contract differences
+remain. [STATUS.md](STATUS.md) records verified gaps and the next integration steps;
+[BACKEND_WALKTHROUGH.md](BACKEND_WALKTHROUGH.md) explains the existing API workflow.
 
 ## Applicant journey
 

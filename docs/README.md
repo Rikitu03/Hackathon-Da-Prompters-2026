@@ -2,6 +2,8 @@
 
 Start with the reference that matches your task. The PSCS content and OCR references are grouped under `scholarships/pscs/`.
 
+**Start here after syncing staging:** [Current integration status and next steps](STATUS.md). It distinguishes merged frontend/backend features, local Member 4 work, verified gaps, and the order to finish the first complete demonstration.
+
 ## PSCS requirements and Member 4 demo work
 
 Read the [PSCS documentation index](scholarships/pscs/README.md) for the recommended order, source limitations, and team handoffs.
@@ -19,6 +21,7 @@ Read the [PSCS documentation index](scholarships/pscs/README.md) for the recomme
 |---|---|
 | [Architecture](ARCHITECTURE.md) | Product journeys, boundaries, and ownership |
 | [API contracts](API_CONTRACTS.md) | Shared backend/frontend interfaces |
+| [Applicant frontend handoff](APPLICANT-HANDOFF.md) | Applicant routes, persistence and AI integration differences |
 | [Backend handoff](BACKEND_HANDOFF.md) | Connect feature branches to the shared backend |
 | [Backend walkthrough](BACKEND_WALKTHROUGH.md) | Exercise draft, publish, and public-read workflows |
 | [Admin frontend UAT](ADMIN_FRONTEND_UAT.md) | Admin UI behavior and acceptance checks |

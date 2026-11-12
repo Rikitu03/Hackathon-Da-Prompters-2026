@@ -1,7 +1,8 @@
 import { LUMEN_MESSAGE_MAX } from "@/lib/lumen/limits";
+import { CHAT_MESSAGE_MAX_CHARS } from "@/lib/ai-limits";
 import type { PromptSource } from "./citations";
 
-export const MAX_QUESTION_CHARS = 500;
+export const MAX_QUESTION_CHARS = CHAT_MESSAGE_MAX_CHARS;
 const MAX_CHUNK_CHARS = 900;
 const MAX_TITLE_CHARS = 120;
 

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { json, sameOrigin } from "@/lib/api"; // NextResponse.json + "Cache-Control: private, no-store"
 import { openSession, sendMessage } from "@/lib/lumen/chat";
 import { LumenError, lumenErrorToHttp } from "@/lib/lumen/errors";
-import { mapCitations } from "@/lib/rag/citations";
+import { renumberCitations } from "@/lib/rag/citations";
 import { closedCycleAnswer, isCycleClosed, noEvidenceAnswer } from "@/lib/rag/fallback";
 import { MAX_QUESTION_CHARS, buildPrompt } from "@/lib/rag/prompt";
 import { buildTsQuery } from "@/lib/rag/query";
@@ -71,10 +71,10 @@ export async function POST(request: Request) {
     const reply = await sendMessage(sessionId, prompt);
 
     // 4. Cite only sources we sent. An uncited or scope-gated reply is replaced by the fixed refusal.
-    const cited = reply.outOfScope ? [] : mapCitations(reply.answer, included);
-    console.info("[chat] answered", { ...log, sent: included.length, cited: cited.length, outOfScope: reply.outOfScope, lumenCitations: reply.citations.length });
-    if (cited.length === 0) return json(noEvidenceAnswer(cycle.officialUrl));
-    const body: ChatResponse = { answer: reply.answer.trim(), sources: cited, grounded: true };
+    const cited = renumberCitations(reply.outOfScope ? "" : reply.answer, included);
+    console.info("[chat] answered", { ...log, sent: included.length, cited: cited.sources.length, outOfScope: reply.outOfScope, lumenCitations: reply.citations.length });
+    if (cited.sources.length === 0) return json(noEvidenceAnswer(cycle.officialUrl));
+    const body: ChatResponse = { answer: cited.answer, sources: cited.sources, grounded: true };
     return json(body);
   } catch (err) {
     if (err instanceof LumenError) {

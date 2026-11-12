@@ -2,6 +2,8 @@
 
 Research and implementation references for Pasig City scholarship preparation. Start here for Member 4 content work. Research baseline: **13 November 2026, Asia/Manila**.
 
+For the current merged build, remaining integration gaps and what to do next, read [Current status and next steps](../../STATUS.md) first. These references supply researched content and test designs; they do not automatically seed the shared database or enable extraction profiles.
+
 ## Reading order
 
 | Priority | File | Use it to |
