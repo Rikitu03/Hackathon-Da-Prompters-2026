@@ -6,9 +6,9 @@ export const metadata = { title: "Admin UI demo | GabayIskolar", description: "R
 export default async function AdminDemoPage({
   searchParams
 }: {
-  searchParams: Promise<{ view?: string }>
+  searchParams: Promise<{ view?: string; program?: string }>
 }) {
-  const { view } = await searchParams;
+  const { view, program } = await searchParams;
   const section: Section = allowed.includes(view as Section) ? view as Section : "overview";
-  return <AdminConsole section={section} demoMode />;
+  return <AdminConsole section={section} programId={program || ""} demoMode />;
 }
