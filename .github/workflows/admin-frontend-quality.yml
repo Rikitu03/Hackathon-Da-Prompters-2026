@@ -8,12 +8,16 @@ on:
       - "docs/ADMIN_FRONTEND_UAT.md"
       - ".github/workflows/admin-frontend-quality.yml"
       - "package.json"
+      - "playwright.config.ts"
+      - "tests/admin-ui.spec.ts"
   pull_request:
     branches: ["staging"]
     paths:
       - "src/app/admin/**"
       - "src/components/admin/**"
       - "package.json"
+      - "playwright.config.ts"
+      - "tests/admin-ui.spec.ts"
 jobs:
   admin-checks:
     runs-on: ubuntu-latest
@@ -33,3 +37,16 @@ jobs:
         run: npm run lint
       - name: Production build
         run: npm run build
+      - name: Install browser for UI tests
+        run: npx playwright install --with-deps chromium
+      - name: Admin desktop and mobile browser tests
+        run: npm run test:e2e
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-ui-playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
