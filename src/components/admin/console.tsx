@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import {
   ArrowRight, BookOpenCheck, Check, ChevronRight, ClipboardCheck, ExternalLink, FileCheck2, FileText, GraduationCap,
@@ -102,6 +102,47 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     } catch (err) { setError(errorText(err)); setGate("error"); }
   }, [client, reload]);
   useEffect(() => { if (!demoMode) void authenticate(); }, [authenticate, demoMode]);
+
+  // Keep one authenticated console mounted across /admin routes.
+  useEffect(() => {
+    if (initialProgramId) {
+      setProgramId(initialProgramId);
+      setCycleId("");
+      setCycleMode("none");
+      setRequirementId(null);
+      setProgramMode("none");
+    }
+  }, [initialProgramId]);
+  useEffect(() => {
+    if (startCreateProgram) {
+      setProgramForm(initProgram);
+      setProgramMode("new");
+      setCycleMode("none");
+    }
+  }, [startCreateProgram]);
+  const previousSection = useRef(section);
+  useEffect(() => {
+    if (previousSection.current !== section) {
+      setError("");
+      setMessage("");
+      previousSection.current = section;
+    }
+  }, [section]);
+
+  // Sign-out in another tab must immediately remove protected admin content.
+  useEffect(() => {
+    if (!client || demoMode) return;
+    const { data: { subscription } } = client.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        setData(emptyData);
+        setRole(null);
+        setGate("login");
+        setError("");
+        setMessage("");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [client, demoMode]);
   // Keep the existing content visible while fetching updates; never blank the dashboard.
   useEffect(() => {
     if (!client || demoMode || gate !== "ready") return;

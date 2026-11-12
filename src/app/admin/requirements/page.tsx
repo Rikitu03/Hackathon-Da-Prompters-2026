@@ -1,2 +1,2 @@
-import { AdminConsole } from "@/components/admin/console";
-export default function AdminRequirementsPage() { return <AdminConsole section="requirements" />; }
+/** The persistent /admin layout renders this route's workspace view. */
+export default function AdminRequirementsPage() { return null; }
