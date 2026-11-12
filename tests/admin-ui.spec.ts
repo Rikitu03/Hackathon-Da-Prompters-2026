@@ -62,3 +62,100 @@ test("demo controls never claim a database save", async ({page}) => {
   await page.getByRole("button",{name:"Create draft"}).click();
   await expect(page.getByText(/Preview mode: changes are not saved/)).toBeVisible();
 });
+
+
+test("overview program entries are fully clickable and Refresh is not required", async ({page}) => {
+  await page.goto("/admin/demo");
+  await expect(page.getByRole("button", {name:/^Refresh$/})).toHaveCount(0);
+  const program = page.getByRole("link", {name:"Open Sample Scholarship Preparation Guide program details"});
+  await expect(program).toBeVisible();
+  await program.click();
+  await expect(page).toHaveURL(/view=programs&program=demo-program-1/);
+  await expect(page.getByRole("heading", {name:"Scholarship programs"})).toBeVisible();
+});
+
+test("selected sage cards keep readable action hierarchy", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  const listRow = page.getByRole("listitem").filter({hasText:"Sample Scholarship Preparation Guide"});
+  await expect(listRow.getByRole("button",{name:"Edit"})).toHaveCSS("background-color","rgb(255, 255, 255)");
+  await expect(listRow.getByRole("button",{name:"View cycles"})).toHaveCSS("color","rgb(255, 255, 255)");
+  await expect(page.getByRole("button",{name:"Select"}).first()).toHaveCSS("color","rgb(255, 255, 255)");
+});
+
+test("step editor has a single label and constrains drag movement horizontally", async ({page}) => {
+  await page.goto("/admin/demo?view=requirements");
+  await page.getByRole("button", {name:/Example enrollment document/}).click();
+  const first = page.locator(".admin-step-card").first();
+  await expect(first.getByText("Step 1",{exact:true})).toBeVisible();
+  await expect(first.getByText("01",{exact:true})).toHaveCount(0);
+  const grip = page.getByRole("button",{name:/Drag to reorder step 1/});
+  const handleRect = await grip.boundingBox();
+  const before = await first.boundingBox();
+  expect(handleRect).not.toBeNull();
+  expect(before).not.toBeNull();
+  if (!handleRect || !before) return;
+  const centerX = handleRect.x + handleRect.width/2;
+  const centerY = handleRect.y + handleRect.height/2;
+  await page.mouse.move(centerX,centerY);
+  await page.mouse.down();
+  await page.mouse.move(centerX+240,centerY,{steps:12});
+  const during = await first.boundingBox();
+  expect(during).not.toBeNull();
+  expect(Math.abs((during?.x || 0)-before.x)).toBeLessThanOrEqual(3);
+  await page.mouse.up();
+  const overflow = await page.evaluate(()=>document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+});
+
+test("description editor grows with content and hides the native resize handle", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  await page.getByRole("listitem").filter({hasText:"Sample Scholarship Preparation Guide"}).getByRole("button",{name:"Edit"}).click();
+  const description = page.locator("#program-desc");
+  await expect(description).toBeVisible();
+  await expect(description).toHaveCSS("resize","none");
+  const initial = await description.evaluate(element=>({height:element.clientHeight,scrollHeight:element.scrollHeight}));
+  expect(initial.height).toBeGreaterThanOrEqual(initial.scrollHeight-2);
+  await description.fill("This sample contains a longer description. ".repeat(18));
+  const after = await description.evaluate(element=>({height:element.clientHeight,scrollHeight:element.scrollHeight}));
+  expect(after.height).toBeGreaterThan(initial.height);
+});
+
+test("FAQ preview uses accessible chevron accordion with answer", async ({page}) => {
+  await page.goto("/admin/demo?view=preview");
+  const question = page.getByRole("button",{name:"Is this an official requirement?"});
+  await expect(question).toHaveAttribute("aria-expanded","false");
+  await question.click();
+  await expect(question).toHaveAttribute("aria-expanded","true");
+  await expect(page.getByText("No. This entry is fictional UI-preview data, not scholarship policy.")).toBeVisible();
+  await question.click();
+  await expect(question).toHaveAttribute("aria-expanded","false");
+});
+
+test("search offers real matching programs and tab-scoped recent history", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  const search = page.getByRole("combobox",{name:"Search scholarship programs"});
+  await search.fill("Renewal");
+  const suggestion = page.getByRole("option",{name:/Example Renewal Guide/}).first();
+  await expect(suggestion).toBeVisible();
+  await suggestion.click();
+  await expect(search).toHaveValue("Example Renewal Guide");
+  await page.getByRole("button",{name:"Clear search"}).click();
+  await expect(page.getByRole("button",{name:"Clear history"})).toBeVisible();
+  await expect(page.getByRole("option",{name:/Example Renewal Guide/}).first()).toContainText("Recent");
+  await page.getByRole("button",{name:"Clear history"}).click();
+  await expect(page.getByRole("button",{name:"Clear history"})).toHaveCount(0);
+});
+
+test("active form field displays a single two-pixel focus indicator", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  await page.getByRole("button",{name:"New program"}).click();
+  const field = page.getByRole("textbox",{name:"Program name"});
+  await field.focus();
+  const css = await field.evaluate(el => {
+    const style = getComputedStyle(el);
+    return {width:style.outlineWidth,offset:style.outlineOffset,border:style.borderColor};
+  });
+  expect(css.width).toBe("2px");
+  expect(css.offset).toBe("2px");
+  expect(css.border).toBe("rgb(212, 224, 215)");
+});
