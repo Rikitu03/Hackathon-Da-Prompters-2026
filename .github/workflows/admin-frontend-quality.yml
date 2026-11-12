@@ -5,7 +5,11 @@ on:
     paths:
       - "src/app/admin/**"
       - "src/components/admin/**"
+      - "src/components/shared/**"
+      - "src/components/applicant/workspace.tsx"
       - "docs/ADMIN_FRONTEND_UAT.md"
+      - "docs/ADMIN_V2_QOL_HANDOFF.md"
+      - "tests/applicant-*.test.mjs"
       - ".github/workflows/admin-frontend-quality.yml"
       - "package.json"
       - "playwright.config.ts"
@@ -15,6 +19,8 @@ on:
     paths:
       - "src/app/admin/**"
       - "src/components/admin/**"
+      - "src/components/shared/**"
+      - "src/components/applicant/workspace.tsx"
       - "package.json"
       - "playwright.config.ts"
       - "tests/admin-ui.spec.ts"
@@ -40,6 +46,8 @@ jobs:
         run: npm run typecheck
       - name: ESLint
         run: npm run lint
+      - name: Applicant model and API regression tests
+        run: npm run test:applicant
       - name: Production build
         run: npm run build
       - name: Install browser for UI tests
