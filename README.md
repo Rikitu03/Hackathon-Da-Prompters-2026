@@ -17,14 +17,22 @@ A Pasig scholarship preparation assistant for **The Prompters — OVERCLOCK 2026
 
 ## Local setup
 
-1. Install Node.js 20.9+ and npm.
-2. Run `npm install`.
-3. Copy `.env.example` to `.env.local` and configure values privately.
+1. Install Node.js 22+ and npm (required by the locked Supabase SDK).
+2. Run `npm ci`.
+3. Run `npm run setup:env` to create `.env.local` without overwriting existing values. All four teammates use the same Supabase development project; follow [Shared team environment](docs/TEAM_ENVIRONMENT.md).
 4. Run `npm run dev`. Open http://localhost:3000.
-5. For database setup, create a Supabase project and apply `supabase/migrations/0001_initial.sql` in its SQL editor.
+5. Use the existing shared `gabayiskolar-dev` database and run `npm run check:db` to verify access. M3 has applied the migrations; teammates should not rerun them. See [Shared team environment](docs/TEAM_ENVIRONMENT.md) for project details and permission tests.
 6. Run `npm run typecheck`, `npm run lint`, and `npm run build` before opening a pull request.
 
-The landing, scholarship and admin informational pages work without credentials. Database-backed features and Lumen processing require configuration and implementation. The AI endpoints **explicitly fail when unconfigured** rather than inventing a response.
+Open `/backend-lab` for a simple visual backend walkthrough: administrator sign-in, atomic draft saving, source review, publishing, and anonymous public results. `/scholarships` reads real published guides and supports a browser-local preparation checklist. See [Backend walkthrough and testing](docs/BACKEND_WALKTHROUGH.md). Lumen chat and OCR still require implementation and intentionally return 501/503.
+
+Teammates integrating this backend should start with [Backend handoff](docs/BACKEND_HANDOFF.md).
+
+Development test data is seeded: sign in as `dev-admin@gabayiskolar.test` using
+the generated password in the ignored `.env.seed.local`. One published example
+and one private draft persist in the shared database. Run `npm run seed:dev`
+with the local backend running to create missing demo examples without overwriting
+existing ones. These are synthetic test records, not official scholarship guidance.
 
 ## Team ownership
 
@@ -39,7 +47,7 @@ Branches: `feat/applicant-ui`, `feat/admin-portal`, `feat/backend-db`, `feat/lum
 
 ## Security and ethics
 
-- Never commit API keys, database passwords, personal documents, or `.env.local`.
+- Never commit secret API keys, database passwords, personal documents, or `.env.local`. Only the Supabase public project URL and publishable/anon key may be shared in `.env.example`.
 - Public-facing content must be **published and source-backed**. Admin changes must be authorized on the server, not only in the UI.
 - Lumen credentials must only be read by server handlers.
 - Student uploads should be opt-in, used only for document review, and not persisted in the initial MVP.
