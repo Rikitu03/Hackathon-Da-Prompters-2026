@@ -54,4 +54,12 @@ describe("extractFields", () => {
   it("never claims verification or eligibility", () => {
     expect(JSON.stringify(extractFields(demoPages))).not.toMatch(/\b(verified|authentic|eligible|approved|valid)\b/i);
   });
+
+  it.each(["Name:   ", "Name: ____"])("flags a blank or placeholder label value (%j) as not found", (text) => {
+    const res = extractFields([{ pageNumber: 1, lines: [{ text, confidence: 0.99 }] }]);
+    const f = res.fields.find((x) => x.key === "full_name")!;
+    expect(f.value).toBe("");
+    expect(f.needsReview).toBe(true);
+    expect(f.warnings).toEqual(["Not found. Please fill this in if it applies."]);
+  });
 });

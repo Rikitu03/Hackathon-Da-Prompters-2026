@@ -21,10 +21,12 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 function findLabelled(lines: OcrInputLine[], aliases: string[]): Hit | undefined {
   const alt = [...aliases].sort((a, b) => b.length - a.length).map(escapeRe).join("|");
-  const re = new RegExp(`^\\s*(?:${alt})\\s*[:\\-–]\\s*(.+)$`, "i");
+  const re = new RegExp(`^\\s*(?:${alt})\\s*[:\\-–]\\s*(\\S.*)$`, "i");
   for (const line of lines) {
     const m = re.exec(line.text);
-    if (m) return { line, value: m[1].trim() };
+    if (!m) continue;
+    const value = m[1].trim();
+    if (/[\p{L}\p{N}]/u.test(value)) return { line, value }; // blanks/placeholders like "____" are "not found"
   }
   return undefined;
 }
