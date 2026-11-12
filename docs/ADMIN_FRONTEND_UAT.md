@@ -34,6 +34,22 @@ Owner: Member 2 (Admin UI/UX). Backend authorization, versioned publication and 
 - [ ] User-provided MP4 references: visual samples reviewed. Full spoken narration and exact curve/frame matching not yet verified.
 - [ ] Validate final form behavior and motion against actual devices and accessibility tools.
 
+## QA Round 2 — November 13, 2026
+The following feedback was incorporated in `feat/admin-portal`, without changing applicant-facing pages:
+
+- [x] Make **View cycles / Select** visually prominent with solid evergreen and **Edit** with a clear white outlined style, even on selected sage cards.
+- [x] Remove redundant `01` badges; show **Step N** only, auto-renumbered after drag or arrow reorder.
+- [x] Replace program, requirement, FAQ, and step textareas with auto-growing fields; hide native resize grips and short-content scrollbars (long input scrolls within a sensible max height).
+- [x] Restrict acquisition step drag movement to the vertical axis and list boundaries; keep touch/keyboard/arrow controls and prevent horizontal document scroll.
+- [x] Replace the browser-native FAQ triangle with a chevron accordion, accessible expanded state, and reduced-motion-aware transition.
+- [x] Use one accessible 2px focus outline with a neutral input border rather than stacked green rings.
+- [x] Remove the dashboard Refresh button; silently revalidate real Supabase data every 60s and on focus/visibility with stale content preserved. An error appears when background updates fail.
+- [x] Add local program-name suggestions and tab-scoped recent searches. Recent queries are stored only in `sessionStorage`, can be cleared, and are removed on admin sign-out.
+- [x] Make dashboard scholarship rows full keyboard-accessible links to program details, including demo routes.
+- [x] Extend Chromium desktop/mobile tests for buttons, focus, drag bounds, textareas, FAQ, search, and overview navigation.
+
+**Limits:** Search suggestions are generated from visible records, not AI. Background revalidation and admin roles rely on a functioning Supabase integration. Mobile Chromium tests are automated; manual iOS Safari, Android Chrome, Firefox, and screen-reader UAT remain necessary. MP4 references inform motion principles, but exact frame-timing reproduction is not claimed.
+
 ## Automated browser checks
 The workflow `.github/workflows/admin-frontend-quality.yml` runs:
 - `npm run typecheck`, `npm run lint`, `npm run build`.
