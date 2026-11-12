@@ -24,7 +24,7 @@ const PagesSchema = z.object({
     Items: z.array(
       z.object({
         PageNumber: z.number(),
-        Lines: z.array(z.object({ text: z.string(), confidence: ConfidenceSchema })).default([]),
+        Lines: z.array(z.object({ text: z.string(), confidence: ConfidenceSchema })).nullish(),
       }),
     ),
   }),
@@ -63,12 +63,16 @@ export async function getDocument(documentId: string): Promise<OcrDocument> {
 
 export async function waitForRead(
   documentId: string,
-  opts: { delaysMs?: number[]; sleep?: (ms: number) => Promise<void> } = {},
+  opts: { delaysMs?: number[]; sleep?: (ms: number) => Promise<void>; maxElapsedMs?: number; now?: () => number } = {},
 ): Promise<OcrDocument> {
   const delays = opts.delaysMs ?? DEFAULT_DELAYS_MS;
   const sleep = opts.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+  const now = opts.now ?? Date.now;
+  const maxElapsedMs = opts.maxElapsedMs ?? 25_000;
+  const start = now();
   let doc: OcrDocument | undefined;
   for (const delay of delays) {
+    if (now() - start + delay > maxElapsedMs) break;
     await sleep(delay);
     doc = await getDocument(documentId);
     if (DONE.has(doc.status)) return doc;
@@ -87,7 +91,7 @@ export async function getPages(documentId: string): Promise<OcrPage[]> {
   return parsed.data.data.Items
     .map((item) => ({
       pageNumber: item.PageNumber,
-      lines: item.Lines.map((l) => ({ text: l.text, confidence: l.confidence?.measured ? l.confidence.value : undefined })),
+      lines: (item.Lines ?? []).map((l) => ({ text: l.text, confidence: l.confidence?.measured ? l.confidence.value : undefined })),
     }))
     .sort((a, b) => a.pageNumber - b.pageNumber);
 }

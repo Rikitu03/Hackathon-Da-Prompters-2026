@@ -28,6 +28,12 @@ describe("buildPrompt", () => {
     expect(included.length).toBeLessThan(10);
   });
 
+  it("budgets in UTF-8 bytes, not characters", () => {
+    const sources = Array.from({ length: 10 }, (_, i) => src(i + 1, "Ñiño — “quoted” ".repeat(300)));
+    const { message } = buildPrompt("ñ".repeat(500), sources);
+    expect(new TextEncoder().encode(message).length).toBeLessThanOrEqual(LUMEN_MESSAGE_MAX);
+  });
+
   it("truncates the question", () => {
     const { message } = buildPrompt("x".repeat(MAX_QUESTION_CHARS + 50), [src(1, "a")]);
     expect(message).toContain("x".repeat(MAX_QUESTION_CHARS));

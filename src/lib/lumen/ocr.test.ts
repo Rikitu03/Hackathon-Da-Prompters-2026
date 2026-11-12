@@ -48,6 +48,17 @@ describe("waitForRead", () => {
     expect(doc.status).toBe("PROCESSING");
   });
 
+  it("stops polling once the elapsed deadline would be exceeded", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async () => json(200, record("PROCESSING")));
+    let t = 0;
+    const sleep = async (ms: number) => { t += ms; }; // fake clock: each sleep advances time by its delay
+    const doc = await waitForRead("doc-1", {
+      delaysMs: [10_000, 10_000, 10_000, 10_000], sleep, now: () => t, maxElapsedMs: 25_000,
+    });
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(doc.status).toBe("PROCESSING");
+  });
+
   it("surfaces FAILED with its reason", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, record("FAILED", { FailureReason: "corrupt_document" })));
     await expect(waitForRead("doc-1", { delaysMs: [0], sleep: async () => {} })).resolves.toMatchObject({
@@ -75,5 +86,10 @@ describe("getPages", () => {
       { pageNumber: 2, lines: [{ text: "Page two", confidence: undefined }] },
     ]);
     expect(fetchSpy.mock.calls[0][0]).toBe("https://lumen.test/ocr/documents/doc-1/pages?IncludeWords=true");
+  });
+
+  it("treats a null Lines array as no lines", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, { data: { Items: [{ PageNumber: 1, Lines: null }] }, requestId: "req" }));
+    await expect(getPages("doc-1")).resolves.toEqual([{ pageNumber: 1, lines: [] }]);
   });
 });

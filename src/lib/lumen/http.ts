@@ -12,6 +12,7 @@ export type LumenRequest = {
 export async function lumenFetch(url: string, init: LumenRequest): Promise<{ status: number; json: unknown }> {
   const { key, secret } = getLumenConfig();
   let res: Response;
+  let text: string;
   try {
     res = await fetch(url, {
       method: init.method,
@@ -20,11 +21,11 @@ export async function lumenFetch(url: string, init: LumenRequest): Promise<{ sta
       signal: AbortSignal.timeout(init.timeoutMs),
       cache: "no-store",
     });
+    text = await res.text(); // the body read is covered by the same timeout signal
   } catch (err) {
     if (err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError")) throw new LumenError("timeout");
     throw new LumenError("upstream");
   }
-  const text = await res.text();
   let json: unknown;
   if (text) {
     try { json = JSON.parse(text); } catch { json = undefined; }

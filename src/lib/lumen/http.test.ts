@@ -43,6 +43,13 @@ describe("lumenFetch", () => {
     await expect(lumenFetch("https://lumen.test/x", { method: "GET", timeoutMs: 1 })).rejects.toMatchObject({ kind: "timeout" });
   });
 
+  it("maps a body read that times out to a timeout", async () => {
+    const res = new Response("{}", { status: 200 });
+    vi.spyOn(res, "text").mockRejectedValue(Object.assign(new Error("body timed out"), { name: "TimeoutError" }));
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(res);
+    await expect(lumenFetch("https://lumen.test/x", { method: "GET", timeoutMs: 1000 })).rejects.toMatchObject({ kind: "timeout" });
+  });
+
   it("refuses to call Lumen without credentials", async () => {
     vi.stubEnv("LUMEN_API_KEY", "");
     const fetchSpy = vi.spyOn(globalThis, "fetch");
