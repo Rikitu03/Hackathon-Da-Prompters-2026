@@ -1,10 +1,10 @@
 /* Scoped premium, accessibility-first visual foundation for the admin console. */
 .admin-portal {
-  --admin-ink: #183f30;
-  --admin-muted: #5a7465;
-  --admin-accent: #1f694b;
-  --admin-surface: #fbfcf9;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --admin-ink: #102a51;
+  --admin-muted: #53657b;
+  --admin-accent: #155bb0;
+  --admin-surface: #f6faff;
+  font-family: "Gabay Sans", Arial, sans-serif;
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
 }
@@ -18,12 +18,12 @@
   resize: none;
 }
 .admin-portal :is(input, textarea, button, a, [role="combobox"]):focus-visible {
-  outline: 2px solid #236e4e !important;
+  outline: 2px solid #155bb0 !important;
   outline-offset: 2px !important;
   box-shadow: none !important;
 }
 .admin-portal :is(input, textarea, [role="combobox"]):focus-visible {
-  border-color: #d4e0d7 !important;
+  border-color: #d7e3ef !important;
 }
 .admin-portal input[type="search"]::-webkit-search-cancel-button {
   -webkit-appearance: none;
@@ -76,4 +76,112 @@
   .admin-portal .admin-step-card {
     padding: 12px;
   }
+}
+
+
+/* Admin V2: share the exact student typography, book-and-wave mark and blue language. */
+@font-face {
+  font-family: "Gabay Sans";
+  src: url("/fonts/InstrumentSans.ttf") format("truetype");
+  font-weight: 400 700;
+  font-display: swap;
+}
+.admin-portal {
+  color: var(--admin-ink);
+  background-color: #f5f9ff;
+  line-height: 1.55;
+}
+.admin-portal .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  line-height: 1.1;
+  text-decoration: none;
+}
+.admin-portal .brand-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 39px;
+  height: 40px;
+  background: #155bb0;
+  color: #fff;
+  border-radius: 10px 10px 13px 4px;
+}
+.admin-portal .brand-mark svg + svg { margin-top: -3px; }
+.admin-portal .brand-dot { color: #155bb0; }
+.admin-portal .admin-sidebar {
+  background: #102a51;
+  border-color: #29486f;
+}
+.admin-portal .admin-sidebar .brand { color: #fff; }
+.admin-portal .admin-sidebar .brand-dot { color: #9bcbff; }
+.admin-portal .admin-sidebar .admin-sidebar-label { color: #bed2ed; }
+.admin-portal .admin-sidebar .admin-sidebar-link {
+  color: #e1eaf7;
+  outline-color: #fff;
+}
+.admin-portal .admin-sidebar .admin-sidebar-link:hover:not([aria-current="page"]) {
+  background-color: #234574;
+  color: #fff;
+}
+.admin-portal .admin-sidebar .admin-sidebar-link[aria-current="page"] {
+  background-color: #fff;
+  color: #102a51;
+  font-weight: 700;
+}
+.admin-portal .admin-sidebar .admin-account {
+  color: #e1eaf7;
+  border-color: #29486f;
+}
+.admin-portal .admin-sidebar .admin-account:hover { background-color: #234574; color: #fff; }
+.admin-portal .admin-sidebar .admin-help {
+  background: #1d3b63;
+  border-color: #335478;
+  color: #e7f1ff;
+}
+.admin-portal .admin-sidebar .admin-help p,
+.admin-portal .admin-sidebar .admin-help span { color: #cedff4; }
+.admin-portal .admin-topbar { border-color: #d7e3ef; background: rgba(255,255,255,.97); }
+.admin-portal .admin-content { max-width: 1360px; }
+.admin-portal .admin-mobile-nav .admin-sidebar-link[aria-current="page"] {
+  background: #e8f2ff;
+  color: #102a51;
+}
+.admin-portal .admin-mobile-nav .admin-sidebar-link:not([aria-current="page"]) {
+  color: #53657b;
+}
+.admin-portal .admin-mobile-nav .admin-sidebar-link:hover { background: #eef6ff; }
+.admin-portal .admin-workflow-step[aria-current="step"] {
+  background: #eaf4ff;
+  border-color: #9abfe6;
+  color: #102a51;
+}
+.admin-portal .admin-workflow-step:not([aria-current="step"]):hover {
+  background: #f3f8ff;
+  border-color: #b5c9e0;
+}
+.admin-portal .admin-applicant-preview {
+  background: #f7fbff;
+  border: 1px solid #d7e3ef;
+  border-radius: 16px;
+  padding: clamp(16px, 2vw, 28px);
+}
+.admin-portal .admin-applicant-preview h3,
+.admin-portal .admin-applicant-preview h4 { color: #102a51; }
+.admin-portal .admin-applicant-preview details {
+  border: 1px solid #d7e3ef;
+  border-radius: 10px;
+  padding: 12px 16px;
+  background: #fff;
+}
+.admin-portal .admin-applicant-preview summary { cursor: pointer; font-weight: 600; }
+.admin-portal .admin-applicant-preview details p { padding-top: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  .admin-portal .admin-workflow-step { transition: none !important; }
 }

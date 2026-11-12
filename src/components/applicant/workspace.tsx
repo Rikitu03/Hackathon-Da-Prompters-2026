@@ -19,7 +19,6 @@ import {
   MessageCircle,
   ScanText,
   X,
-  Waves,
   ArrowRight,
   Info,
   AlertCircle,
@@ -202,23 +201,8 @@ export function usePreparation(cycle: Cycle | undefined) {
     changed,
   };
 }
-export function Brand({ inverse = false }: { inverse?: boolean }) {
-  return (
-    <Link
-      href="/"
-      className={`brand${inverse ? " inverse" : ""}`}
-      aria-label="GabayIskolar home"
-    >
-      <span className="brand-mark">
-        <BookOpen size={23} />
-        <Waves size={14} />
-      </span>
-      <span>
-        GabayIskolar<span className="brand-dot">.</span>
-      </span>
-    </Link>
-  );
-}
+export { GabayBrand as Brand } from "@/components/shared/gabay-brand";
+
 export function OfficialLink({
   children = "Official scholarship portal",
   className = "",
