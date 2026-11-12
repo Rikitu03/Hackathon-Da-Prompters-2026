@@ -51,7 +51,7 @@ function SortableStep({ step, index, count, disabled, onText, onMove, onRemove }
           disabled={disabled}
           title={"Drag to reorder step " + (index + 1)}
           aria-label={"Drag to reorder step " + (index + 1) + ". Use Space, arrows, then Space to drop."}
-          className="inline-flex h-11 w-11 shrink-0 touch-none items-center justify-center rounded-xl border border-[#e0eae2] bg-[#f5f8f4] text-[#678474] transition-colors hover:border-[#b5d1bb] hover:bg-[#e9f3eb] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#307751] disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex h-11 w-11 shrink-0 touch-none items-center justify-center rounded-xl border border-[#e0eae2] bg-[#f5f8f4] text-[#586f60] transition-colors hover:border-[#b5d1bb] hover:bg-[#e9f3eb] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#307751] disabled:cursor-not-allowed disabled:opacity-40"
         ><GripVertical size={19} aria-hidden="true"/></button>
         <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-[#eaf3eb] px-2 text-[13px] font-bold tabular-nums text-[#245e40]">{String(index + 1).padStart(2, "0")}</span>
         <span className="text-[15px] font-semibold text-[#234736]">Step {index + 1}</span>
@@ -71,7 +71,7 @@ function SortableStep({ step, index, count, disabled, onText, onMove, onRemove }
       rows={2}
       placeholder="Write one clear, verified instruction…"
       onChange={event => onText(step.id, event.target.value)}
-      className="admin-step-input mt-3 block min-h-20 w-full resize-y rounded-xl border border-[#dce6de] bg-[#fcfdfb] px-4 py-3 text-base leading-6 text-[#244735] placeholder:text-[#8a9b8e] transition-[border-color,background-color] duration-150 hover:border-[#bfd3c2] focus-visible:border-[#3b8a61] focus-visible:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3b8a61] disabled:cursor-not-allowed disabled:opacity-65"
+      className="admin-step-input mt-3 block min-h-20 w-full resize-y rounded-xl border border-[#dce6de] bg-[#fcfdfb] px-4 py-3 text-base leading-6 text-[#244735] placeholder:text-[#586f60] transition-[border-color,background-color] duration-150 hover:border-[#bfd3c2] focus-visible:border-[#3b8a61] focus-visible:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3b8a61] disabled:cursor-not-allowed disabled:opacity-65"
     />
   </div>;
 }
@@ -132,7 +132,7 @@ export function StepBuilder({ steps, onChange, disabled = false }: {
   }
   return <div className="space-y-3">
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <div><h3 className="text-lg font-semibold text-[#1b4331]">Acquisition steps</h3><p className="mt-1 text-sm leading-6 text-[#647d6a]">Drag using the grip handle, or use the arrows to reorder. One instruction per step.</p></div>
+      <div><h3 className="text-lg font-semibold text-[#1b4331]">Acquisition steps</h3><p className="mt-1 text-sm leading-6 text-[#586f60]">Drag using the grip handle, or use the arrows to reorder. One instruction per step.</p></div>
       <span className="rounded-full bg-[#edf3ec] px-3 py-1 text-sm font-semibold tabular-nums text-[#496c55]">{steps.length} {steps.length === 1 ? "step" : "steps"}</span>
     </div>
     <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
