@@ -6,3 +6,5 @@ export type JourneyStep={id:string;requirementId:string;position:number;instruct
 export type ChatRequest={cycleId:string;requirementId?:string;message:string};
 export type ChatSource={title:string;sourceId:string;url?:string};
 export type ChatResponse={answer:string;sources:ChatSource[];grounded:boolean};
+export type OCRReviewField={key:string;label:string;value:string;needsReview:boolean;originalText:string;warnings:string[]};
+export type OCRReviewResponse={rawText:string;fields:OCRReviewField[];warnings:string[];disclaimer:string};
