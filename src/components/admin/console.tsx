@@ -376,6 +376,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
            : message ? <motion.div key="admin-success" initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:0.16}} className="mb-5"><Notice tone="success">{message}</Notice></motion.div>
            : null}
         </AnimatePresence>
+        <AdminWorkflow section={section} demoMode={demoMode}/>
         <AnimatePresence mode="wait"><motion.div key={section} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-4}} transition={{duration:0.18,ease:"easeOut"}}>
           {section === "overview" ? <>
             <Heading eyebrow="Content management" title="Welcome to your workspace" description="A clear view of the scholarship guidance your team is preparing."/>
@@ -385,6 +386,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
               {stat(data.cycles.filter(c=>c.status==="published").length,"Published cycles",<Check size={19}/>, "Public guidance",0.11)}
               {stat(data.sources.filter(s=>!s.is_approved).length,"Sources to review",<LibraryBig size={19}/>, "Not approved for retrieval",0.165)}
             </div>
+            <OperationsPanel data={data} demoMode={demoMode}/>
             <div className="mt-6 grid items-start gap-5 xl:grid-cols-[1.6fr_1fr]">
               <Card><div className="mb-5 flex items-center justify-between"><h2 className="text-lg font-semibold">Scholarship programs</h2><Link href="/admin/programs"><StepLink>Manage all</StepLink></Link></div>
                 {data.programs.length ? <div className="divide-y divide-[#d7e3ef]">{data.programs.slice(0,5).map((p)=><Link key={p.id}
@@ -399,7 +401,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
           </> : null}
 
           {section === "programs" ? <>
-            <Heading eyebrow="Content library" title="Scholarship programs" description="Draft, review, and organize scholarship guides. Never invent application dates." action={<Button onClick={()=>{setProgramForm(initProgram);setProgramMode("new");setError("");}}><Plus size={17}/> New program</Button>}/>
+            <Heading eyebrow="Content library" title="Scholarship guides" description="Step 1: Enter verified scholarship details and academic year. Then prepare the student checklist." action={<Button onClick={()=>{setProgramForm(initProgram);setProgramMode("new");setError("");}}><Plus size={17}/> New program</Button>}/>
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,1fr)]">
               <div className="space-y-5">
                 <Card><div className="grid gap-3 sm:grid-cols-[1fr_160px]"><ProgramSearch value={search} onChange={setSearch} programNames={data.programs.map(p=>p.title)} scope={demoMode?"demo":"admin"}/><div><label htmlFor="program-filter" className="sr-only">Filter publication status</label><AdminSelect id="program-filter" value={filter} onChange={setFilter} placeholder="All statuses" options={[{value:"all",label:"All statuses"},{value:"draft",label:"Draft"},{value:"published",label:"Published"},{value:"archived",label:"Archived"}]}/></div></div></Card>
@@ -428,7 +430,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
           </> : null}
 
           {section === "requirements" ? <>
-            <Heading eyebrow="Preparation guidance" title="Requirement builder" description="Write clear acquisition steps and FAQs. Save only verified instructions to your draft."/>
+            <Heading eyebrow="Preparation guidance" title="Requirements & FAQs" description="Step 2: Select a guide and add documents students need, clear preparation steps, and common questions."/>
             <SelectScope data={data} programId={activeProgramId} cycleId={activeCycleId} onProgram={setProgramId} onCycle={setCycleId}/>
             {!activeCycle ? <Empty title="No application cycle selected" message="Create or choose an application cycle before adding requirements."><Link href="/admin/programs"><StepLink>Manage scholarship programs</StepLink></Link></Empty> : <div className="grid gap-5 xl:grid-cols-[minmax(260px,.8fr)_minmax(0,1.3fr)]">
               <Card className="self-start"><div className="mb-4 flex items-center justify-between gap-2"><h2 className="font-semibold">Checklist items</h2><Pill status={activeCycle.status}/></div><div className="space-y-2">{cycleRequirements.map((r,index)=><button key={r.id} className={"flex min-h-14 w-full items-center gap-3 rounded-xl border p-3 text-left text-sm transition-colors "+(requirementId===r.id?"border-[#98c7a6] bg-[#eff8f0]":"border-[#d7e3ef] hover:bg-[#eef6ff]")} onClick={()=>editRequirement(r)}><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#eef6ff] text-xs font-bold text-[#286047]">{index+1}</span><span className="flex-1 font-semibold">{r.title}</span><ChevronRight size={15} className="shrink-0"/></button>)}{!cycleRequirements.length ? <p className="py-4 text-sm leading-6 text-[#53657b]">No requirements yet. Add the first item for this cycle.</p> : null}</div>{isDraft ? <Button className="mt-5 w-full" variant="outline" onClick={()=>editRequirement()}><Plus size={16}/> Add requirement</Button> : <p className="mt-4 text-xs leading-5 text-[#7b6d4e]">Published cycles are read-only here. Use a versioned update workflow.</p>}</Card>
@@ -456,7 +458,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
           </> : null}
 
           {section === "knowledge" ? <>
-            <Heading eyebrow="Reference governance" title="Knowledge sources" description="Collect trusted official references. Unreviewed sources must remain unavailable to applicant AI."/>
+            <Heading eyebrow="Reference governance" title="Knowledge & sources" description="Step 3: Attach official references supporting the guide. New sources require review before use."/>
             <SelectScope data={data} programId={activeProgramId} cycleId={activeCycleId} onProgram={setProgramId} onCycle={setCycleId}/>
             {!activeCycle ? <Empty title="Choose an application cycle" message="Create a cycle before managing its reference sources."/> : <div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(280px,.8fr)]">
               <Card><h2 className="mb-4 text-lg font-semibold">Reference register</h2>
@@ -467,7 +469,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
           </> : null}
 
           {section === "preview" ? <>
-            <Heading eyebrow="Publication readiness" title="Preview & publish" description="Check evidence and content completeness before a publisher triggers the server-side publication workflow."/>
+            <Heading eyebrow="Publication readiness" title="Review & publish" description="Step 4: Review student-facing content and what still needs attention before publication."/>
             <SelectScope data={data} programId={activeProgramId} cycleId={activeCycleId} onProgram={setProgramId} onCycle={setCycleId}/>
             {!activeCycle ? <Empty title="No cycle to preview" message="Select or create a draft cycle, then return here for pre-publication checks."/> : <div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,.85fr)]">
               <Card><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-[#53657b]">Applicant guide preview</p><h2 className="mt-2 text-xl font-semibold">{activeProgram?.title}</h2><p className="mt-1 text-sm text-[#53657b]">{activeCycle.academic_year}</p></div><Pill status={activeCycle.status}/></div><p className="mb-5 text-sm leading-6 text-[#53657b]">This preview is for preparation only. It does not assess eligibility or submit an application.</p><h3 className="mb-3 text-sm font-semibold">Document checklist</h3>{!cycleRequirements.length ? <Empty title="No requirements yet" message="Add requirements and steps to preview the applicant guide."/> : <div className="space-y-3">{cycleRequirements.map(r=><div key={r.id} className="rounded-xl border border-[#d7e3ef] bg-[#fcfdfb] p-4"><div className="flex flex-wrap items-center gap-2"><h4 className="font-semibold">{r.title}</h4><span className="text-xs text-[#53657b]">{r.is_required?"Required":"Conditional"}</span></div><p className="mt-2 text-sm leading-6 text-[#53657b]">{r.description}</p><ol className="mt-3 list-inside list-decimal space-y-2 text-sm leading-6 text-[#294e70]">{data.steps.filter(s=>s.requirement_id===r.id).sort((a,b)=>a.position-b.position).map(s=><li key={s.id}>{s.instruction}</li>)}</ol>{data.faqs.filter(f=>f.requirement_id===r.id).map(f=><FaqAccordion key={f.id} question={f.question} answer={f.answer}/>)}</div>)}</div>}{activeCycle.official_url && isHttpsLink(activeCycle.official_url) ? <a href={activeCycle.official_url} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#155bb0] underline underline-offset-4">Official application portal <ExternalLink size={16}/></a> : <p className="mt-4 text-sm text-[#9c5845]">Official portal link not provided.</p>}</Card>
