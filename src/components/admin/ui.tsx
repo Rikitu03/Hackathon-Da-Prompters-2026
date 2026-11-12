@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { AlertCircle, ArrowRight, Inbox, LoaderCircle } from "lucide-react";
 
-export const inputClass = "mt-1.5 block min-h-12 w-full rounded-xl border border-[#d3dfd6] bg-white px-4 py-3 text-base leading-6 text-[#183d33] placeholder:text-[#758d7c] shadow-[0_1px_1px_rgba(20,55,30,.035)] transition-[border-color,background-color] duration-150 hover:border-[#bad1c1] focus-visible:border-[#357854] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#357854] disabled:cursor-not-allowed disabled:bg-[#f3f5f2]";
+export const inputClass = "mt-1.5 block min-h-12 w-full rounded-xl border border-[#d3dfd6] bg-white px-4 py-3 text-base leading-6 text-[#183d33] placeholder:text-[#586f60] shadow-[0_1px_1px_rgba(20,55,30,.035)] transition-[border-color,background-color] duration-150 hover:border-[#bad1c1] focus-visible:border-[#357854] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#357854] disabled:cursor-not-allowed disabled:bg-[#f3f5f2]";
 export const areaClass = inputClass + " min-h-[92px] resize-y";
 export const cardClass = "rounded-2xl border border-[#dce7df] bg-white p-5 shadow-[0_6px_30px_rgba(28,61,37,0.035)] sm:p-6";
 
@@ -32,7 +32,7 @@ export function Empty({ title, message, children }: { title: string; message: st
   return <div className="flex flex-col items-center rounded-2xl border border-dashed border-[#cdded2] bg-[#fbfdfb] px-5 py-12 text-center"><span className="mb-4 rounded-2xl bg-[#eaf3ed] p-3 text-[#397554]"><Inbox aria-hidden="true" className="h-6 w-6" /></span><h3 className="text-base font-semibold text-[#193b30]">{title}</h3><p className="mt-2 max-w-md text-sm leading-6 text-[#60786c]">{message}</p>{children ? <div className="mt-5">{children}</div> : null}</div>;
 }
 export function Heading({ eyebrow, title, description, action }: { eyebrow?: string; title: string; description?: string; action?: ReactNode }) {
-  return <div className="mb-6 flex flex-wrap items-start justify-between gap-4"><div className="max-w-2xl">{eyebrow ? <p className="mb-2 text-xs font-bold uppercase tracking-[.16em] text-[#28724d]">{eyebrow}</p> : null}<h1 className="text-2xl font-semibold tracking-tight text-[#123b2c] sm:text-3xl">{title}</h1>{description ? <p className="mt-2 text-sm leading-6 text-[#647e70]">{description}</p> : null}</div>{action}</div>;
+  return <div className="mb-6 flex flex-wrap items-start justify-between gap-4"><div className="max-w-2xl">{eyebrow ? <p className="mb-2 text-xs font-bold uppercase tracking-[.16em] text-[#28724d]">{eyebrow}</p> : null}<h1 className="text-2xl font-semibold tracking-tight text-[#123b2c] sm:text-3xl">{title}</h1>{description ? <p className="mt-2 text-sm leading-6 text-[#586f60]">{description}</p> : null}</div>{action}</div>;
 }
 export function StepLink({ children }: { children: ReactNode }) {
   return <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#176448]">{children}<ArrowRight aria-hidden="true" className="h-4 w-4" /></span>;
