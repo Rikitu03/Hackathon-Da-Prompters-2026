@@ -186,7 +186,7 @@ export function ApplicantContentPreview({ data, program, cycle }: { data: AdminD
           </li>)}
         </ul> : <p className="rounded-xl bg-white p-4 text-sm text-[#53657b]">No sources attached. Applicants must be directed to the official portal for confirmation.</p>}
       </section>
-      <p className="text-xs leading-5 text-[#53657b]"><CheckCircle2 size={14} className="mr-1 inline align-[-2px] text-[#155bb0]"/>This preview uses the real saved draft fields and applicant-facing terms. It does not bypass publication approval or expose the draft through the public API. Student progress remains private to the student's browser.</p>
+      <p className="text-xs leading-5 text-[#53657b]"><CheckCircle2 size={14} className="mr-1 inline align-[-2px] text-[#155bb0]"/>This preview uses the real saved draft fields and applicant-facing terms. It does not bypass publication approval or expose the draft through the public API. Student progress stays private in each browser.</p>
     </div>
   );
 }

@@ -16,7 +16,6 @@ import { demoData } from "./demo-data";
 import { AdminSelect } from "./select";
 import { StepBuilder } from "./step-builder";
 import { AutoTextarea } from "./auto-textarea";
-import { FaqAccordion } from "./faq-accordion";
 import { ProgramSearch } from "./program-search";
 import { GabayBrand } from "@/components/shared/gabay-brand";
 import { OperationsPanel, AdminWorkflow, ApplicantContentPreview } from "./operations";
