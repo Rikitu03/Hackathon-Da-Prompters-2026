@@ -1,9 +1,9 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { AlertCircle, ArrowRight, Inbox, LoaderCircle } from "lucide-react";
 
-export const inputClass = "mt-1.5 block min-h-12 w-full rounded-xl border border-[#d3dfd6] bg-white px-4 py-3 text-base leading-6 text-[#183d33] placeholder:text-[#586f60] shadow-[0_1px_1px_rgba(20,55,30,.035)] transition-[border-color,background-color] duration-150 hover:border-[#bad1c1] focus-visible:border-[#357854] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#357854] disabled:cursor-not-allowed disabled:bg-[#f3f5f2]";
+export const inputClass = "mt-1.5 block min-w-0 min-h-12 w-full rounded-xl border border-[#d3dfd6] bg-white px-4 py-3 text-base leading-6 text-[#183d33] placeholder:text-[#586f60] shadow-[0_1px_1px_rgba(20,55,30,.035)] transition-[border-color,background-color] duration-150 hover:border-[#bad1c1] focus-visible:border-[#357854] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#357854] disabled:cursor-not-allowed disabled:bg-[#f3f5f2]";
 export const areaClass = inputClass + " min-h-[92px] resize-y";
-export const cardClass = "rounded-2xl border border-[#dce7df] bg-white p-5 shadow-[0_6px_30px_rgba(28,61,37,0.035)] sm:p-6";
+export const cardClass = "min-w-0 rounded-2xl border border-[#dce7df] bg-white p-5 shadow-[0_6px_30px_rgba(28,61,37,0.035)] sm:p-6";
 
 export function Button({ children, variant = "primary", busy, className = "", disabled, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "outline" | "quiet" | "danger"; busy?: boolean }) {
   const variants = {
@@ -18,7 +18,7 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
   return <section className={cardClass + " " + className}>{children}</section>;
 }
 export function Field({ label, htmlFor, hint, required, children }: { label: string; htmlFor: string; hint?: string; required?: boolean; children: ReactNode }) {
-  return <div><label htmlFor={htmlFor} className="block text-sm font-semibold text-[#294c41]">{label}{required ? <span className="ml-1 text-[#aa3c31]" aria-label="required">*</span> : null}</label>{children}{hint ? <p className="mt-1.5 text-xs leading-5 text-[#58766a]">{hint}</p> : null}</div>;
+  return <div className="min-w-0"><label htmlFor={htmlFor} className="block text-sm font-semibold text-[#294c41]">{label}{required ? <span className="ml-1 text-[#aa3c31]" aria-label="required">*</span> : null}</label>{children}{hint ? <p className="mt-1.5 text-xs leading-5 text-[#58766a]">{hint}</p> : null}</div>;
 }
 export function Pill({ status }: { status: string }) {
   const colors = status === "published" || status === "approved" || status === "ready" ? "bg-[#e6f4e8] text-[#256044] border-[#c5e4cd]" : status === "archived" || status === "blocked" ? "bg-[#f4eded] text-[#81534e] border-[#ead9d7]" : "bg-[#fff5dd] text-[#77581d] border-[#f1dda6]";
