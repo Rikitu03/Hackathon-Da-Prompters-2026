@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import {
-  ArrowRight, ArrowUp, ArrowDown, BookOpenCheck, Check, ChevronRight, ClipboardCheck, ExternalLink, FileCheck2, FileText, GraduationCap,
+  ArrowRight, BookOpenCheck, Check, ChevronRight, ClipboardCheck, ExternalLink, FileCheck2, FileText, GraduationCap,
   LayoutDashboard, LibraryBig, LoaderCircle, LockKeyhole, LogOut, Plus, RefreshCw,
   Search, ShieldCheck, X
 } from "lucide-react";
@@ -13,6 +13,9 @@ import { createPublicSupabaseClient } from "@/lib/supabase/client";
 import { Button, Card, Empty, Field, Heading, Notice, Pill, StepLink, inputClass, areaClass } from "./ui";
 import { emptyData, formatDate, isHttpsLink, loadAdminData, type AdminData, type Cycle, type Program, type Requirement, type Role } from "./data";
 import { demoData } from "./demo-data";
+import { AdminSelect } from "./select";
+import { StepBuilder } from "./step-builder";
+import "./admin.css";
 
 export type Section = "overview" | "programs" | "requirements" | "knowledge" | "preview";
 const menu = [
@@ -41,15 +44,15 @@ function LinkNav({ section, mobile = false, demoMode = false }: { section: Secti
   return <nav aria-label="Admin sections" className={mobile ? "flex min-w-max gap-1 px-3 py-2" : "space-y-1"}>
     {menu.map((item) => {
       const Icon = item.icon;
-      return <Link key={item.id} href={demoMode ? "/admin/demo?view=" + item.id : item.href} aria-current={section === item.id ? "page" : undefined} className={(mobile ? "min-h-11 whitespace-nowrap px-3 " : "min-h-11 px-3 ") + "flex items-center gap-3 rounded-xl text-sm font-medium transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#176448] " + (section === item.id ? "bg-[#e5f1e8] text-[#155a3d]" : "text-[#5b7268] hover:bg-[#f0f5f1] hover:text-[#183e2f]")}><Icon size={18} aria-hidden="true"/>{item.label}</Link>;
+      return <Link key={item.id} href={demoMode ? "/admin/demo?view=" + item.id : item.href} aria-current={section === item.id ? "page" : undefined} className={(mobile ? "min-h-12 whitespace-nowrap px-3 " : "min-h-12 px-3 ") + "group flex items-center gap-3 rounded-xl text-sm font-medium transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#176448] " + (section === item.id ? "bg-[#e5f1e8] text-[#155a3d]" : "text-[#5b7268] hover:bg-[#f0f5f1] hover:text-[#183e2f]")}><Icon size={19} aria-hidden="true" className="shrink-0 transition-transform duration-150 group-hover:scale-105"/>{item.label}</Link>;
     })}
   </nav>;
 }
 function SelectScope({ data, programId, cycleId, onProgram, onCycle }: { data: AdminData; programId: string; cycleId: string; onProgram: (id: string) => void; onCycle: (id: string) => void }) {
   const cycles = data.cycles.filter((c) => c.program_id === programId);
   return <Card className="mb-5 !p-4"><div className="grid gap-4 sm:grid-cols-2">
-    <Field htmlFor="scope-program" label="Scholarship program"><select id="scope-program" value={programId} onChange={(e) => {onProgram(e.target.value); onCycle("");}} className={inputClass}><option value="">Choose a program</option>{data.programs.map((p) => <option value={p.id} key={p.id}>{p.title}</option>)}</select></Field>
-    <Field htmlFor="scope-cycle" label="Application cycle"><select id="scope-cycle" value={cycleId} onChange={(e) => onCycle(e.target.value)} className={inputClass}><option value="">Choose a cycle</option>{cycles.map((c) => <option value={c.id} key={c.id}>{c.academic_year} — {c.status}</option>)}</select></Field>
+    <Field htmlFor="scope-program" label="Scholarship program"><AdminSelect id="scope-program" value={programId} onChange={(id) => {onProgram(id); onCycle("");}} placeholder="Choose a program" options={data.programs.map(p=>({value:p.id,label:p.title}))}/></Field>
+    <Field htmlFor="scope-cycle" label="Application cycle"><AdminSelect id="scope-cycle" value={cycleId} onChange={onCycle} placeholder="Choose a cycle" options={cycles.map(c=>({value:c.id,label:c.academic_year+" — "+c.status}))} disabled={!programId}/></Field>
   </div></Card>;
 }
 
@@ -249,7 +252,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     } catch (err) {setError(errorText(err));} finally {setBusy(false);}
   }
 
-  if (gate !== "ready") return <MotionConfig reducedMotion="user"><div className="flex min-h-screen items-center justify-center bg-[#f5f8f4] px-4 py-10">
+  if (gate !== "ready") return <MotionConfig reducedMotion="user"><div className="admin-portal flex min-h-screen items-center justify-center bg-[#f5f8f4] px-4 py-10">
     <div className="w-full max-w-md">
       <Link href="/" className="mb-7 inline-flex items-center gap-2 text-xl font-bold text-[#174d36]"><BookOpenCheck size={25}/> gabayiskolar<span className="text-[#4b9569]">.</span></Link>
       <Card className="!p-7 sm:!p-9"><div className="mb-6 inline-flex rounded-2xl bg-[#e6f3eb] p-3 text-[#176448]"><LockKeyhole size={25} aria-hidden="true"/></div><h1 className="text-2xl font-semibold tracking-tight text-[#163e30]">Admin workspace</h1><p className="mt-2 text-sm leading-6 text-[#5c7568]">Sign in with your pre-provisioned administrator account. Applicant accounts cannot edit scholarship guidance.</p>
@@ -265,16 +268,29 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
       </form> : null}</Card><p className="mt-5 text-center text-xs leading-5 text-[#72877c]">Independent project. Not a government administration portal.</p>
     <div className="mt-5 border-t border-[#e3ece4] pt-5 text-center"><Link href="/admin/demo" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#176448] underline underline-offset-4">Explore read-only UI demo <ArrowRight size={16}/></Link></div></div></div></MotionConfig>;
 
-  return <MotionConfig reducedMotion="user"><div className="min-h-screen bg-[#f7f9f6] text-[#1d3e33] lg:grid lg:grid-cols-[252px_minmax(0,1fr)]">
-    <aside className="hidden min-h-screen border-r border-[#e3eae3] bg-white px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
+  return <MotionConfig reducedMotion="user"><div className="admin-portal min-h-screen bg-[#f7f9f6] text-[#1d3e33] lg:grid lg:grid-cols-[268px_minmax(0,1fr)]">
+    <aside className="hidden min-h-screen overflow-y-auto border-r border-[#e3eae3] bg-white px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
       <Link href="/" className="mb-10 flex items-center gap-2 px-3 text-xl font-bold tracking-tight text-[#164b35]"><BookOpenCheck className="h-7 w-7"/>gabay<span className="-ml-2 text-[#4b9469]">iskolar.</span></Link>
-      <p className="mb-3 px-3 text-[11px] font-bold uppercase tracking-[.15em] text-[#87998d]">Workspace</p><LinkNav section={section} demoMode={demoMode}/>
-      <div className="mt-auto space-y-4"><div className="rounded-xl border border-[#dfe9df] bg-[#f3f7f1] p-4"><ShieldCheck aria-hidden="true" className="mb-2 h-5 w-5 text-[#2d7855]"/><p className="text-sm font-semibold text-[#315541]">Source-first publishing</p><p className="mt-1 text-xs leading-5 text-[#648072]">Verify the source before applicants see guidance.</p></div>{demoMode ? <Link href="/admin" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-[#61796b] hover:bg-[#f1f6f2]"><LockKeyhole size={17} aria-hidden="true"/> Admin sign-in</Link> : <button onClick={() => void signOut()} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-[#61796b] hover:bg-[#f1f6f2]"><LogOut size={17} aria-hidden="true"/> Sign out</button>}</div>
+      <p className="mb-3 px-3 text-xs font-bold uppercase tracking-[.12em] text-[#718777]">Workspace</p><LinkNav section={section} demoMode={demoMode}/>
+
+      <div className="mt-6 border-t border-[#e6eee6] pt-4">
+        <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-[.08em] text-[#718777]">Account</p>
+        {demoMode
+          ? <Link href="/admin" className="group flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium text-[#486a57] transition-colors hover:bg-[#edf4ee]"><LockKeyhole size={18} aria-hidden="true"/> Admin sign-in</Link>
+          : <button onClick={() => void signOut()} className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-[#486a57] transition-colors hover:bg-[#edf4ee]"><LogOut size={18} aria-hidden="true"/> Sign out</button>}
+      </div>
+      <div className="mt-auto pt-6">
+        <div className="rounded-xl border border-[#dfe9df] bg-[#f3f7f1] p-4">
+          <div className="mb-2 flex items-center gap-2 text-[#2d7855]"><ShieldCheck aria-hidden="true" className="h-5 w-5"/><span className="text-sm font-semibold text-[#315541]">Source-first publishing</span></div>
+          <p className="text-sm leading-6 text-[#648072]">Verify the source before applicants see guidance.</p>
+        </div>
+        <div className="admin-bottom-clearance" aria-hidden="true"/>
+      </div>
     </aside>
     <div className="min-w-0">
       <div className="sticky top-0 z-20 border-b border-[#e1eae1] bg-white/95 backdrop-blur-xl">
         <div className="flex min-h-16 items-center justify-between gap-3 px-4 sm:px-7 lg:px-10">
-          <div className="flex min-w-0 items-center gap-2"><span className="font-bold text-[#194b37] lg:hidden">gabayiskolar.</span><span className="hidden text-xs font-medium text-[#7a9184] lg:inline">Admin workspace</span><ChevronRight size={14} aria-hidden="true" className="hidden text-[#a0b4a5] lg:inline"/><span className="hidden truncate text-sm font-semibold text-[#1a4334] lg:inline">{info[section].label}</span></div>
+          <div className="flex min-w-0 items-center gap-2"><span className="font-bold text-[#194b37] lg:hidden">gabayiskolar.</span><span className="hidden text-sm font-medium text-[#6e8677] lg:inline">Admin workspace</span><ChevronRight size={14} aria-hidden="true" className="hidden text-[#a0b4a5] lg:inline"/><span className="hidden truncate text-sm font-semibold text-[#1a4334] lg:inline">{info[section].label}</span></div>
           <div className="flex items-center gap-2"><span className="inline-flex rounded-full border border-[#d8e8db] bg-[#eff7f1] px-3 py-1.5 text-xs font-semibold capitalize text-[#2b674b]">{demoMode ? "Demo preview" : role + " access"}</span>{demoMode ? <Link href="/admin" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[#e1eae1] text-[#456553] lg:hidden" aria-label="Admin sign-in"><LockKeyhole size={18}/></Link> : <button className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[#e1eae1] text-[#456553] lg:hidden" onClick={() => void signOut()} aria-label="Sign out"><LogOut size={18}/></button>}</div>
         </div>
         <div className="overflow-x-auto border-t border-[#edf0ed] lg:hidden"><LinkNav section={section} mobile demoMode={demoMode}/></div>
@@ -305,7 +321,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
             <Heading eyebrow="Content library" title="Scholarship programs" description="Draft, review, and organize scholarship guides. Never invent application dates." action={<Button onClick={()=>{setProgramForm(initProgram);setProgramMode("new");setError("");}}><Plus size={17}/> New program</Button>}/>
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,1fr)]">
               <div className="space-y-5">
-                <Card><div className="grid gap-3 sm:grid-cols-[1fr_160px]"><div className="relative"><Search size={17} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-5 text-[#779084]"/><label htmlFor="program-search" className="sr-only">Search scholarship programs</label><input id="program-search" placeholder="Search programs…" className={inputClass+" pl-10"} value={search} onChange={e=>setSearch(e.target.value)}/></div><div><label htmlFor="program-filter" className="sr-only">Filter publication status</label><select id="program-filter" className={inputClass} value={filter} onChange={(e)=>setFilter(e.target.value)}><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></div></div></Card>
+                <Card><div className="grid gap-3 sm:grid-cols-[1fr_160px]"><div className="relative"><Search size={17} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-5 text-[#779084]"/><label htmlFor="program-search" className="sr-only">Search scholarship programs</label><input id="program-search" placeholder="Search programs…" className={inputClass+" pl-10"} value={search} onChange={e=>setSearch(e.target.value)}/></div><div><label htmlFor="program-filter" className="sr-only">Filter publication status</label><AdminSelect id="program-filter" value={filter} onChange={setFilter} placeholder="All statuses" options={[{value:"all",label:"All statuses"},{value:"draft",label:"Draft"},{value:"published",label:"Published"},{value:"archived",label:"Archived"}]}/></div></div></Card>
                 <Card className="!p-0"><div className="border-b border-[#e6eee6] px-5 py-4 text-sm font-semibold">{filteredPrograms.length} program(s)</div>{!filteredPrograms.length ? <div className="p-5"><Empty title="No matching programs" message="Try a different search or create a draft program."/></div> : <ul className="divide-y divide-[#e8eee7]">{filteredPrograms.map(p=><li key={p.id} className={"p-5 transition-colors hover:bg-[#f9fbf8] "+(activeProgramId===p.id?"bg-[#f3f9f3]":"")}><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><h2 className="font-semibold text-[#1f4938]">{p.title}</h2><p className="mt-2 line-clamp-2 text-sm leading-6 text-[#708477]">{p.description}</p><p className="mt-2 text-xs text-[#809186]">{data.cycles.filter(c=>c.program_id===p.id).length} cycle(s)</p></div><Pill status={p.status}/></div><div className="mt-4 flex flex-wrap gap-2"><Button variant="outline" onClick={()=>{setProgramId(p.id);setCycleId("");setCycleMode("none");setProgramMode("none");}}>View cycles</Button><Button variant="quiet" onClick={()=>editProgram(p)}>Edit <ChevronRight size={15}/></Button></div></li>)}</ul>}</Card>
               </div>
               <div className="space-y-5">
@@ -341,9 +357,14 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
                 <Field htmlFor="req-title" label="Requirement title" required><input id="req-title" className={inputClass} value={requirementForm.title} onChange={e=>setRequirementForm({...requirementForm,title:e.target.value})} required disabled={!isDraft}/></Field>
                 <Field htmlFor="req-desc" label="Why this document is needed" hint="Only include claims supported by an approved reference."><textarea id="req-desc" className={areaClass} value={requirementForm.description} onChange={e=>setRequirementForm({...requirementForm,description:e.target.value})} disabled={!isDraft}/></Field>
                 <label className="flex min-h-11 items-center gap-3 text-sm font-medium"><input type="checkbox" checked={requirementForm.is_required} onChange={e=>setRequirementForm({...requirementForm,is_required:e.target.checked})} className="h-5 w-5 accent-[#176448]" disabled={!isDraft}/> Required for this cycle (uncheck if conditional)</label>
-                <fieldset className="space-y-3 border-t border-[#e5ece5] pt-5"><legend className="text-base font-semibold">Acquisition steps</legend><p className="text-xs leading-5 text-[#668173]">Use short, numbered instructions; do not guess offices, fees, or dates.</p>
-                {requirementForm.steps.map((text,index)=><div key={index} className="flex items-start gap-2"><span className="mt-3 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#e8f2e9] text-xs font-semibold">{index+1}</span><label htmlFor={"step-"+index} className="sr-only">Acquisition step {index+1}</label><textarea id={"step-"+index} className={areaClass+" !mt-0 min-h-16 flex-1"} value={text} onChange={e=>setRequirementForm(prev=>({...prev,steps:prev.steps.map((s,i)=>i===index?e.target.value:s)}))} disabled={!isDraft}/><div className="flex flex-col gap-1"><button type="button" aria-label={"Move step "+(index+1)+" up"} disabled={!isDraft||index===0} className="flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-[#eef5ee] disabled:opacity-30" onClick={()=>setRequirementForm(prev=>{const arr=[...prev.steps];[arr[index-1],arr[index]]=[arr[index],arr[index-1]];return {...prev,steps:arr};})}><ArrowUp size={15}/></button><button type="button" aria-label={"Move step "+(index+1)+" down"} disabled={!isDraft||index===requirementForm.steps.length-1} className="rounded-lg p-2 hover:bg-[#eef5ee] disabled:opacity-30" onClick={()=>setRequirementForm(prev=>{const arr=[...prev.steps];[arr[index],arr[index+1]]=[arr[index+1],arr[index]];return {...prev,steps:arr};})}><ArrowDown size={15}/></button><button type="button" aria-label={"Remove step "+(index+1)} disabled={!isDraft||requirementForm.steps.length===1} className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-[#99534a] hover:bg-[#fdf1ef] disabled:opacity-30" onClick={()=>setRequirementForm(prev=>({...prev,steps:prev.steps.filter((_,i)=>i!==index)}))}><X size={15}/></button></div></div>)}
-                {isDraft ? <Button type="button" variant="outline" onClick={()=>setRequirementForm({...requirementForm,steps:[...requirementForm.steps,""]})}><Plus size={16}/> Add step</Button> : null}</fieldset>
+                <div className="border-t border-[#e5ece5] pt-6">
+                  <StepBuilder
+                    key={activeCycleId+":"+requirementId}
+                    steps={requirementForm.steps}
+                    disabled={!isDraft}
+                    onChange={steps=>setRequirementForm(prev=>({...prev,steps}))}
+                  />
+                </div>
                 <fieldset className="space-y-3 border-t border-[#e5ece5] pt-5"><legend className="text-base font-semibold">Frequently asked questions</legend>
                   {requirementForm.faqs.map((f,index)=><div className="rounded-xl border border-[#e2eae1] bg-[#fbfdfb] p-3" key={index}><div className="mb-2 flex items-center justify-between"><span className="text-sm font-semibold">FAQ {index+1}</span>{isDraft?<button type="button" aria-label={"Remove FAQ "+(index+1)} onClick={()=>setRequirementForm(prev=>({...prev,faqs:prev.faqs.filter((_,i)=>i!==index)}))} className="rounded-lg p-2 hover:bg-[#f4eae8]"><X size={16}/></button>:null}</div><label htmlFor={"faq-q-"+index} className="block text-xs font-medium">Question</label><input id={"faq-q-"+index} className={inputClass} value={f.question} disabled={!isDraft} onChange={e=>setRequirementForm(prev=>({...prev,faqs:prev.faqs.map((a,i)=>i===index?{...a,question:e.target.value}:a)}))}/><label htmlFor={"faq-a-"+index} className="mt-3 block text-xs font-medium">Answer</label><textarea id={"faq-a-"+index} className={areaClass} value={f.answer} disabled={!isDraft} onChange={e=>setRequirementForm(prev=>({...prev,faqs:prev.faqs.map((a,i)=>i===index?{...a,answer:e.target.value}:a)}))}/></div>)}
                   {isDraft ? <Button type="button" variant="outline" onClick={()=>setRequirementForm({...requirementForm,faqs:[...requirementForm.faqs,{question:"",answer:""}]})}><Plus size={16}/> Add FAQ</Button> : null}
