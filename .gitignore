@@ -1,0 +1,24 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+# build outputs
+/.next/
+/out/
+/build
+# platform
+.vercel
+# secrets
+.env
+.env.*
+!.env.example
+# editor / OS
+.DS_Store
+*.pem
+# TS
+*.tsbuildinfo
+next-env.d.ts
+# runtime logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
