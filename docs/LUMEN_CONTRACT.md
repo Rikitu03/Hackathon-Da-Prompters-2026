@@ -50,6 +50,14 @@ Error codes: 400 `VALIDATION_ERROR`, `AI_CHAT_QUERY_TOO_LONG`, `AI_CHAT_QUERY_RE
 ```
 - `citations` and `degradedSources` came back as empty arrays (present, not absent).
 - **The instance has a scope gate.** The spec mentions a classifier (`LUMEN_AI_CHAT_CLASSIFIER_TIMEOUT_MS`) and an instance-configured "out-of-scope reply". A bare "Reply with OK" was refused with a fixed sentence, still as a 200 and presumably still charged. The adapter must treat that exact sentence as a refusal, not an answer: map it to `grounded:false`.
+
+#### Grounded probe 2026-11-13
+- **Layout A** (instructions, then `=== SOURCES ===` with `[S1]`/`[S2]`, then `=== QUESTION ===`) **passed the scope gate**. Layout B was not needed or run.
+- Status: session create 201 in 1087ms (session `61aaae3d-…`), message 200 in 3910ms.
+- Answer (verbatim): "Maaari kang kumuha ng Certificate of Indigency sa Barangay Hall mula sa Office of the Punong Barangay. Kailangan mong magdala ng valid ID at sabihin na ang layunin ay para sa scholarship application. Karaniwang tumatagal ito ng isang araw ng trabaho para maproseso [S2]."
+- Inline `[S#]` markers appear in the answer text (`[S2]`). The structured `citations` array was still `[]` and `degradedSources` `[]`, so citations must be parsed from the answer text.
+- Replied in the student's language (Filipino), grounded in S2.
+- Credits: 7 (new session 2 + message 5). Task 8 proceeds with layout A.
 - **Not yet verified:** whether a full grounded message (instructions + `[S#]` sources + a scholarship question) passes the gate. Test this before building the RAG prompt. Reusing session `00b94164-…` costs 5 credits, not 7.
 
 ## OCR
@@ -108,7 +116,7 @@ Our upload: fictional "CERTIFICATE OF INDIGENCY" PNG (1200×800, 36 KB), uploade
 - **Session responses contain our API key** (`Session.metadata.admin`). Keep them server-side and never log them.
 
 ## Credits spent so far (Member 4, 2026-11-13)
-3 read-only checks (3) + chat smoke (7) + OCR smoke (9) = **19 credits**.
+3 read-only checks (3) + chat smoke (7) + OCR smoke (9) + grounded probe (7) = **26 credits**.
 
 ## Limits / quota notes
 - Our credit balance hasn't been checked yet (not visible through these APIs).
