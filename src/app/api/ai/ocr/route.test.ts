@@ -13,10 +13,10 @@ function pngFile(size = 64, name = "Juan-Dela-Cruz-indigency.png") {
   bytes.set(PNG_HEAD);
   return new File([bytes], name, { type: "image/png" });
 }
-function ocrRequest(fields: Record<string, string | File>) {
+function ocrRequest(fields: Record<string, string | File>, headers: Record<string, string> = {}) {
   const form = new FormData();
   for (const [k, v] of Object.entries(fields)) form.append(k, v);
-  return new Request("http://localhost/api/ai/ocr", { method: "POST", body: form });
+  return new Request("http://localhost/api/ai/ocr", { method: "POST", body: form, headers });
 }
 
 beforeEach(() => {
@@ -80,5 +80,33 @@ describe("POST /api/ai/ocr", () => {
     const res = await POST(ocrRequest({ consent: "true", file: pngFile() }));
     expect(res.status).toBe(502);
     expect(await res.json()).toEqual({ error: "AI service unavailable." });
+  });
+
+  it("returns 503 and does not upload when the kill switch is off", async () => {
+    vi.stubEnv("LUMEN_OCR_ENABLED", "false");
+    const res = await POST(ocrRequest({ consent: "true", file: pngFile() }));
+    expect(res.status).toBe(503);
+    expect(uploadDocument).not.toHaveBeenCalled();
+  });
+
+  it("rejects cross-site requests with 403", async () => {
+    const res = await POST(ocrRequest({ consent: "true", file: pngFile() }, { "sec-fetch-site": "cross-site" }));
+    expect(res.status).toBe(403);
+    expect(uploadDocument).not.toHaveBeenCalled();
+  });
+
+  it("rate limits valid uploads per IP (5 per window) with Retry-After", async () => {
+    vi.mocked(uploadDocument).mockResolvedValue({ documentId: "doc-1", status: "READY", failedPages: [] });
+    vi.mocked(getPages).mockResolvedValue(demoPages);
+    const ip = { "x-forwarded-for": "203.0.113.7" };
+    for (let i = 0; i < 5; i++) {
+      expect((await POST(ocrRequest({ consent: "true", file: pngFile() }, ip))).status).toBe(200);
+    }
+    const blocked = await POST(ocrRequest({ consent: "true", file: pngFile() }, ip));
+    expect(blocked.status).toBe(429);
+    expect(Number(blocked.headers.get("retry-after"))).toBeGreaterThan(0);
+    expect(uploadDocument).toHaveBeenCalledTimes(5);
+    const other = await POST(ocrRequest({ consent: "true", file: pngFile() }, { "x-forwarded-for": "198.51.100.2" }));
+    expect(other.status).toBe(200);
   });
 });

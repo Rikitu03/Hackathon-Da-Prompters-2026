@@ -1,12 +1,16 @@
 import { randomUUID } from "node:crypto";
-import { json } from "@/lib/api"; // team helper: NextResponse.json + "Cache-Control: private, no-store"
+import { json, sameOrigin } from "@/lib/api"; // team helper: NextResponse.json + "Cache-Control: private, no-store"
 import { LumenError, lumenErrorToHttp } from "@/lib/lumen/errors";
 import { getPages, uploadDocument, waitForRead } from "@/lib/lumen/ocr";
 import { detectMediaType, type SniffedMediaType } from "@/lib/ocr/file-type";
 import { extractFields } from "@/lib/ocr/extract-fields";
+import { clientKey, createRateLimiter } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
-export const maxDuration = 40; // upload + ≈19 s polling budget + pages
+export const maxDuration = 60; // upload (≤15 s) + polling (≤25 s, see waitForRead) + pages (≤15 s)
+
+// Best-effort, per server instance only (not shared across serverless instances).
+const ocrLimiter = createRateLimiter({ limit: 5, windowMs: 10 * 60_000 });
 
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024; // Vercel serverless body limit is ≈4.5 MB
 const EXTENSION: Record<SniffedMediaType, string> = {
@@ -19,10 +23,17 @@ function failureMessage(reason?: string): string {
 }
 
 export async function POST(request: Request) {
+  if (process.env.LUMEN_OCR_ENABLED === "false")
+    return json({ error: "Document reading is turned off right now." }, 503);
   if (!process.env.LUMEN_OCR_URL || !process.env.LUMEN_API_KEY || !process.env.LUMEN_API_SECRET)
     return json({ error: "Lumen OCR integration not configured" }, 503);
   if (!request.headers.get("content-type")?.startsWith("multipart/form-data"))
     return json({ error: "Expected multipart/form-data" }, 415);
+  try {
+    sameOrigin(request);
+  } catch {
+    return json({ error: "Cross-site requests are not allowed." }, 403);
+  }
   if (Number(request.headers.get("content-length") ?? 0) > MAX_UPLOAD_BYTES + 64 * 1024)
     return json({ error: "File is too large (max 4 MB)." }, 413);
 
@@ -40,6 +51,14 @@ export async function POST(request: Request) {
   const buffer = await file.arrayBuffer();
   const mediaType = detectMediaType(new Uint8Array(buffer, 0, Math.min(16, buffer.byteLength)));
   if (!mediaType) return json({ error: "Unsupported file type. Use a JPG, PNG, WebP, TIFF or PDF." }, 415);
+
+  // Only requests that passed all validation spend Lumen credits, so only they are counted.
+  const limit = ocrLimiter.take(clientKey(request));
+  if (!limit.ok) {
+    const res = json({ error: "Too many documents uploaded. Please wait a few minutes and try again." }, 429);
+    res.headers.set("Retry-After", String(limit.retryAfterSec));
+    return res;
+  }
 
   try {
     // Lumen keeps uploads org-wide and permanently: never send the student's own file name.
