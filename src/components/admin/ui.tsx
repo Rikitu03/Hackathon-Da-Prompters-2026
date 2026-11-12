@@ -1,9 +1,9 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { AlertCircle, ArrowRight, Inbox, LoaderCircle } from "lucide-react";
 
-export const inputClass = "mt-1.5 block min-h-11 w-full rounded-xl border border-[#cfded5] bg-white px-3.5 py-2.5 text-sm text-[#183d33] placeholder:text-[#768e84] shadow-sm outline-none transition-colors duration-150 focus:border-[#257756] focus:ring-4 focus:ring-[#d9eee2] disabled:cursor-not-allowed disabled:bg-[#f3f5f2]";
-export const areaClass = inputClass + " min-h-24 resize-y";
-export const cardClass = "rounded-2xl border border-[#dce7df] bg-white p-5 shadow-[0_7px_28px_rgba(24,64,46,0.035)] sm:p-6";
+export const inputClass = "mt-1.5 block min-h-12 w-full rounded-xl border border-[#d3dfd6] bg-white px-4 py-3 text-base leading-6 text-[#183d33] placeholder:text-[#758d7c] shadow-[0_1px_1px_rgba(20,55,30,.035)] transition-[border-color,background-color] duration-150 hover:border-[#bad1c1] focus-visible:border-[#357854] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#357854] disabled:cursor-not-allowed disabled:bg-[#f3f5f2]";
+export const areaClass = inputClass + " min-h-[92px] resize-y";
+export const cardClass = "rounded-2xl border border-[#dce7df] bg-white p-5 shadow-[0_6px_30px_rgba(28,61,37,0.035)] sm:p-6";
 
 export function Button({ children, variant = "primary", busy, className = "", disabled, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "outline" | "quiet" | "danger"; busy?: boolean }) {
   const variants = {
@@ -26,7 +26,7 @@ export function Pill({ status }: { status: string }) {
 }
 export function Notice({ children, tone = "info" }: { children: ReactNode; tone?: "info" | "error" | "success" }) {
   const styles = tone === "error" ? "border-[#edc6c2] bg-[#fff8f6] text-[#8f352e]" : tone === "success" ? "border-[#cce7d1] bg-[#f0f8f1] text-[#226743]" : "border-[#d6e4dc] bg-[#f2f7f2] text-[#365f4c]";
-  return <div role={tone === "error" ? "alert" : "status"} className={"flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm leading-6 " + styles}><AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" /><div>{children}</div></div>;
+  return <div role={tone === "error" ? "alert" : "status"} className={"flex items-start gap-3 rounded-xl border px-4 py-3.5 text-base leading-6 " + styles}><AlertCircle aria-hidden="true" size={19} strokeWidth={1.9} className="mt-[3px] shrink-0 self-start" /><div className="min-w-0 flex-1 leading-6">{children}</div></div>;
 }
 export function Empty({ title, message, children }: { title: string; message: string; children?: ReactNode }) {
   return <div className="flex flex-col items-center rounded-2xl border border-dashed border-[#cdded2] bg-[#fbfdfb] px-5 py-12 text-center"><span className="mb-4 rounded-2xl bg-[#eaf3ed] p-3 text-[#397554]"><Inbox aria-hidden="true" className="h-6 w-6" /></span><h3 className="text-base font-semibold text-[#193b30]">{title}</h3><p className="mt-2 max-w-md text-sm leading-6 text-[#60786c]">{message}</p>{children ? <div className="mt-5">{children}</div> : null}</div>;
