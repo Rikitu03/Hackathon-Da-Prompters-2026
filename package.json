@@ -2,7 +2,14 @@
   "name": "gabayiskolar",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
+    "setup:env": "node scripts/setup-env.mjs",
+    "check:db": "node --env-file=.env.local scripts/check-supabase.mjs",
+    "check:backend": "node scripts/check-backend.mjs",
+    "seed:dev": "node --env-file=.env.seed.local scripts/seed-dev.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -10,8 +17,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.57.0",
-    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "2.119.0",
+    "@supabase/ssr": "0.6.1",
     "lucide-react": "^0.468.0",
     "motion": "^12.0.0",
     "next": "^15.5.0",

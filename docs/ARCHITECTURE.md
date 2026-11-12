@@ -6,6 +6,14 @@ Next.js App Router (React, TypeScript) → Next.js Route Handlers → Supabase P
 
 **No Python FastAPI server.** AI processing is an outgoing server-side HTTP request. PostgreSQL FTS supports an initial RAG pipeline without embeddings.
 
+The first database-backed guide workflow is implemented. Use `/backend-lab` for
+a simple visual integration workbench and `/scholarships` for anonymous reads and
+the preparation checklist. `/admin` temporarily redirects to the workbench while
+the final admin interface is developed. [BACKEND_WALKTHROUGH.md](BACKEND_WALKTHROUGH.md)
+explains the process, account provisioning, tests, and the decision to defer
+applicant profiles until student accounts or syncing are required. Lumen OCR/chat
+remain a separate, unimplemented integration.
+
 ## Applicant journey
 
 Discover published cycle → read requirements → view acquisition steps and FAQs → save local preparation checklist → optionally upload a demonstration document → confirm OCR fields → ask source-grounded Lumen questions → follow official scholarship application link.
