@@ -5,6 +5,7 @@ import { AlertCircle, ArrowRight, BookOpen, CheckCircle2, ClipboardList, FilePen
 import type { AdminData, Cycle, Program } from "./data";
 import { formatDate, isHttpsLink } from "./data";
 import type { Section } from "./console";
+import { FaqAccordion } from "./faq-accordion";
 
 const route = (demoMode: boolean, section: Exclude<Section, "overview">, programId?: string) =>
   demoMode
@@ -169,7 +170,7 @@ export function ApplicantContentPreview({ data, program, cycle }: { data: AdminD
                     : <p className="mt-1 text-sm text-[#8c5f22]">Preparation steps are missing.</p>}
                   {faqs.length > 0 && <div className="mt-4 space-y-2">
                     <h6 className="text-sm font-semibold text-[#102a51]">Questions you might have</h6>
-                    {faqs.map(faq=><details key={faq.id}><summary>{faq.question}</summary><p className="text-sm text-[#53657b]">{faq.answer}</p></details>)}
+                    {faqs.map(faq=><FaqAccordion key={faq.id} question={faq.question} answer={faq.answer}/>)}
                   </div>}
                 </li>
               );

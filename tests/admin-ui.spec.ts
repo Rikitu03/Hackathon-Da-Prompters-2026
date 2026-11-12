@@ -243,6 +243,6 @@ test("guided authoring steps and applicant preview use the same saved guide fiel
   await expect(preview).toBeVisible();
   await expect(preview.getByText("Sample Scholarship Preparation Guide")).toBeVisible();
   await expect(preview.getByText("Example enrollment document")).toBeVisible();
-  await expect(preview.getByText("How to prepare")).toBeVisible();
+  await expect(preview.getByRole("heading",{name:"How to prepare"}).first()).toBeVisible();
   await expect(page.getByRole("link",{name:/Open editor to fix/}).first()).toBeVisible();
 });
