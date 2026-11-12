@@ -91,15 +91,17 @@ again; old published revisions are not kept live. Requirements retain supplied
 IDs so browser checklists can survive edits. Source content versions increment
 when a supplied source ID is reused; historical text revisions are not retained.
 
-## AI endpoints: not implemented
+## AI endpoints
 
 - `POST /api/ai/chat`: `{cycleId,requirementId?,message}`. Planned response:
   `{answer,sources:[{sourceId,title,url}],grounded:true}`.
-- `POST /api/ai/ocr`: multipart file. Planned response: editable extracted fields
-  with original text and review warnings.
+- `POST /api/ai/ocr` — `multipart/form-data` with `file` (JPG, PNG, WebP, TIFF or PDF; ≤ 4 MB; type checked by file contents) and `consent=true`.
+  - `200` → `OCRReviewResponse`: `{ "rawText": "...", "fields": [{ "key", "label", "value", "needsReview", "originalText", "warnings": [] }], "warnings": [], "disclaimer": "..." }`. The frozen keys (`rawText`, `fields[].key/label/value/needsReview`, `warnings`) are unchanged; `originalText`, per-field `warnings` and `disclaimer` are additions. Field keys: `document_type`, `full_name`, `barangay`, `date_issued`, `purpose`, `issuing_office`. Values are editable suggestions; an empty `value` comes with a "Not found" warning.
+  - Errors `{ "error": "..." }`: `400` missing consent/file, `413` too large, `415` unsupported type, `422` unreadable document, `429` rate limited, `502`/`503`/`504` OCR service problems.
+  - ⚠ The file is sent to Lumen OCR, which keeps a copy that's visible to the whole hackathon organization (no delete). UI consent text must say so; use demo documents only.
 
-Current AI routes return 503 when configuration is missing and 501 when the
-integration is not implemented. Member 4 must verify Lumen's actual contract,
+`/api/ai/chat` still returns 503 when configuration is missing and 501 until the
+grounded pipeline is wired. Member 4 must verify Lumen's actual contract,
 add rate limits and upload validation, and restrict retrieval to approved
 published cycle-scoped knowledge. No AI response is fabricated.
 
