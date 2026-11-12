@@ -55,7 +55,7 @@ Budget examples:
 - Prevent duplicate submissions. Avoid automatically replaying uploads or messages after a client timeout: the provider may already have accepted them.
 - Enforce server-side request limits and a shared spending budget before exposing public AI endpoints. An in-memory counter in one Vercel function cannot enforce a shared limit across instances or other teams' keys.
 
-The current `src/app/api/ai/chat/route.ts` and `src/app/api/ai/ocr/route.ts` return unimplemented/unconfigured errors and do not make Lumen requests. Other tools, keys, branches, or deployments may still spend credits.
+`/api/ai/chat` still returns 503/501 and makes no Lumen request. `/api/ai/ocr` is live: each successful upload costs about 7 + one credit per status poll (≈8–10), guarded by a per-instance rate limit (5 per 10 minutes per IP), a same-origin check and the `LUMEN_OCR_ENABLED=false` kill switch. Other tools, keys, branches, or deployments may still spend credits.
 
 Stop further AI work and investigate the relevant balance when Lumen returns `403 API_CREDITS_INSUFFICIENT` or `403 LC_INSUFFICIENT`. The published guides say failed calls are not charged; repeated failures still do not reveal the numeric balance.
 

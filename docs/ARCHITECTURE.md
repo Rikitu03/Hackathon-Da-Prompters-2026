@@ -27,7 +27,7 @@ Admin authentication → create program/cycle → add requirements/steps/FAQs �
 - Browser: public anon key only, never Lumen secrets or a Supabase service key.
 - Admin: only `admin_profiles` members. Server-side checks + RLS. Never self-signup into admin privileges.
 - Published-only knowledge retrieval; source approval does not depend on applicant text.
-- Student uploads are transient and consent-based. No automated authenticity or eligibility claims.
+- Student uploads are consent-based and never stored by this app, but the Lumen OCR provider keeps a copy (no delete API) visible to the organization — use demo documents only. No automated authenticity or eligibility claims.
 - Use demo data, and identify the product as an independent prototype.
 
 ## Ownership

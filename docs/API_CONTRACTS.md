@@ -97,8 +97,9 @@ when a supplied source ID is reused; historical text revisions are not retained.
   `{answer,sources:[{sourceId,title,url}],grounded:true}`.
 - `POST /api/ai/ocr` — `multipart/form-data` with `file` (JPG, PNG, WebP, TIFF or PDF; ≤ 4 MB; type checked by file contents) and `consent=true`.
   - `200` → `OCRReviewResponse`: `{ "rawText": "...", "fields": [{ "key", "label", "value", "needsReview", "originalText", "warnings": [] }], "warnings": [], "disclaimer": "..." }`. The frozen keys (`rawText`, `fields[].key/label/value/needsReview`, `warnings`) are unchanged; `originalText`, per-field `warnings` and `disclaimer` are additions. Field keys: `document_type`, `full_name`, `barangay`, `date_issued`, `purpose`, `issuing_office`. Values are editable suggestions; an empty `value` comes with a "Not found" warning.
-  - Errors `{ "error": "..." }`: `400` missing consent/file, `413` too large, `415` unsupported type, `422` unreadable document, `429` rate limited, `502`/`503`/`504` OCR service problems.
+  - Errors `{ "error": "..." }`: `400` missing consent/file, `403` cross-site request, `413` too large, `415` unsupported type, `422` unreadable document, `429` rate limited (5 uploads per 10 minutes, `Retry-After` header), `500` unexpected, `502`/`503`/`504` OCR service problems (`503` also when OCR is switched off).
   - ⚠ The file is sent to Lumen OCR, which keeps a copy that's visible to the whole hackathon organization (no delete). UI consent text must say so; use demo documents only.
+  - UI: disable submit while a request is in flight; a retry after `504` re-uploads and spends credits again; error bodies may be non-JSON when the platform times out.
 
 `/api/ai/chat` still returns 503 when configuration is missing and 501 until the
 grounded pipeline is wired. Member 4 must verify Lumen's actual contract,

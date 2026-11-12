@@ -58,7 +58,7 @@ Error codes: 400 `VALIDATION_ERROR`, `AI_CHAT_QUERY_TOO_LONG`, `AI_CHAT_QUERY_RE
 - Inline `[S#]` markers appear in the answer text (`[S2]`). The structured `citations` array was still `[]` and `degradedSources` `[]`, so citations must be parsed from the answer text.
 - Replied in the student's language (Filipino), grounded in S2.
 - Credits: 7 (new session 2 + message 5). Task 8 proceeds with layout A.
-- **Not yet verified:** whether a full grounded message (instructions + `[S#]` sources + a scholarship question) passes the gate. Test this before building the RAG prompt. Reusing session `00b94164-…` costs 5 credits, not 7.
+- Reusing an existing session costs 5 credits instead of 7 (session + message).
 
 ## OCR
 Asynchronous. Upload raw bytes, poll the record until it's done, then read the pages. JSON success bodies are wrapped as `{ "data": ..., "requestId": "..." }`, so always read from `data`.
@@ -86,6 +86,7 @@ Error codes: 400 `invalid_request_header` · 401 as for chat · 403 as for chat 
 
 ### Observed 2026-11-13 (our demo upload, 9 credits: upload 6 + 2 polls + pages 1)
 Our upload: fictional "CERTIFICATE OF INDIGENCY" PNG (1200×800, 36 KB), uploaded as `gabay-smoke-6e00b506.png` with **DocumentID `50a56ac6-8cec-4f06-a413-7ac9d409cc39`**. If you see that ID in the org list, it's ours (demo content only).
+- Live route check 2026-11-13 (`POST /api/ai/ocr`, Task 6): DocumentID `c73c9950-…`, READY, HTTP 200 — fictional demo certificate, ours.
 - Upload → 202 (1.2 s), Status `PROCESSING`. Poll 1 (at about 1.5 s) still `PROCESSING`; poll 2 (about 4 s) `READY`. Lumen's own read time was about 2 s (`ReadCompletedTS − CreatedTS`).
 - `GET …/pages?IncludeWords=true` → 200 (1.0 s):
 
@@ -116,7 +117,7 @@ Our upload: fictional "CERTIFICATE OF INDIGENCY" PNG (1200×800, 36 KB), uploade
 - **Session responses contain our API key** (`Session.metadata.admin`). Keep them server-side and never log them.
 
 ## Credits spent so far (Member 4, 2026-11-13)
-3 read-only checks (3) + chat smoke (7) + OCR smoke (9) + grounded probe (7) = **26 credits**.
+3 read-only checks (3) + chat smoke (7) + OCR smoke (9) + grounded probe (7) + OCR route live check (~9) = **~35 credits**.
 
 ## Limits / quota notes
 - Our credit balance hasn't been checked yet (not visible through these APIs).
