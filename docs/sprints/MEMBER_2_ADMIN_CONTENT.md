@@ -5,6 +5,8 @@
 **Primary files:** `src/app/admin/`, `src/components/admin/`, sample content package agreed with M3/M4  
 **Unblockers:** M3 (authenticated CRUD), M4 (knowledge intake), M1 (shared UI tokens)
 
+**Current checkpoint, 13 November 2026:** the persistent admin UI and backend guide/publication APIs exist. Follow [STATUS.md](../STATUS.md) to connect source text/review and cookie-authenticated publishing, and supply one reviewed PSCS content guide. `/backend-lab` already exposes the complete API workflow. The original sprint checklist below does not replace this current checkpoint.
+
 ## Deliverable and acceptance
 
 An authorized **prototype** content administrator creates a scholarship, configures an application cycle and documented requirements, saves a draft, previews the applicant journey, and publishes a verified guide. No implication of Pasig City endorsement.

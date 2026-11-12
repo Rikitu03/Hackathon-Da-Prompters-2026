@@ -3,6 +3,10 @@
 Branch: `feat/admin-portal`
 Owner: Member 2 (Admin UI/UX). Backend authorization, versioned publication and source indexing belong to Members 3 and 4.
 
+**Merged-checkout update, 13 November 2026:** the protected `POST /api/admin/publish`, atomic `save_guide` RPC and source chunk creation already exist. Remaining work is connecting these to the final admin UI, aligning browser/API authentication, and exposing real source-text review/readiness. See [STATUS.md](STATUS.md); `/backend-lab` exercises the API workflow today.
+
+The latest local mocked browser audit passed 23 cases, skipped one desktop-only-inapplicable case, and timed out on mobile multi-page layout navigation and desktop authenticated navigation. It used a development server; the production-server CI configuration still needs to verify those two cases. This does not establish a visual/layout failure, and the suite is not fully passing locally.
+
 ## Delivered frontend routes
 - `/admin` — protected-data-gated dashboard (roles checked with Supabase)
 - `/admin/login` — pre-provisioned account sign-in
@@ -19,7 +23,7 @@ Owner: Member 2 (Admin UI/UX). Backend authorization, versioned publication and 
 - Program and cycle editing, requirement steps/FAQs, and source registration use existing Supabase tables and RLS. Successful saves are acknowledged after a database response and a fresh read.
 - Source registration always inserts `is_approved: false`. The frontend does not pretend to verify or index an uploaded reference.
 - Editing a *published* cycle's requirements is intentionally disabled in this UI until a versioned update flow exists.
-- Publishing is blocked pending verifiable server checks, RAG indexing and role enforcement. The backend should implement `POST /api/admin/publish` and a readiness endpoint. Do not remove the safety gate merely for the demo.
+- Publishing remains blocked by the UI's hardcoded false readiness check. Connect the existing publication API and real server readiness results, retaining publisher enforcement. Do not simply remove the gate.
 - Steps/FAQ editing currently uses sequential delete+insert on a draft. Member 3 should replace this with an atomic RPC/transaction before production deployment.
 
 ## UI/UX refinement — Member 2 review items
@@ -103,8 +107,8 @@ From GabayIskolar UI/UX specification:
 
 ## Integration blockers before claiming production readiness
 1. Member 3: working Supabase configuration, seeded pre-provisioned admin role, RLS verification including negative tests.
-2. Member 3: transactional requirement/FAQ editor operation and protected draft/publish API with versioned approval and audit trail.
-3. Members 3/4: reviewer approval and RAG indexing state + server-side preflight check so publish gate can open.
+2. Members 2/3: connect final editors to the existing transactional guide save/publish APIs and cookie-authenticated session. Historical published revisions/audit history remain separate work.
+3. Members 2/3/4: source-text review, approved chunk presence and server readiness so the publish gate can reflect real results.
 4. Member 1: validate published content appears correctly in public scholarship guide.
 5. Whole team: run `npm run typecheck`, `npm run lint`, `npm run build` and full device/browser UAT in a runnable environment.
 

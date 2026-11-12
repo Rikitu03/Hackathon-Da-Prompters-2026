@@ -2,6 +2,8 @@
 
 Source of truth for the overall schedule: [Complete Sprint Execution Guide](../COMPLETE_SPRINT_GUIDE.md). The following are **task-oriented supplements** to the original Google Doc; they do not replace or amend official hackathon rules.
 
+For implemented features and remaining integration work after the staging sync, start with [Current status and next steps](../STATUS.md). The sprint windows and unchecked tasks below are planning history.
+
 | Member | Role | Branch | Detailed guide |
 |---|---|---|---|
 | M1 | Applicant Frontend / UI | `feat/applicant-ui` | [Member 1](./MEMBER_1_APPLICANT_UI.md) |

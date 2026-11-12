@@ -7,23 +7,27 @@ import {
   Send,
   Square,
 } from "lucide-react";
-import { askGabay, type Answer } from "@/lib/applicant/api";
-import { safeHttps } from "@/lib/applicant/model";
+import { askGabay, type ChatReply } from "@/lib/applicant/api";
+import { citedSegments, safeHttps } from "@/lib/applicant/model";
+import { CHAT_CLIENT_TIMEOUT_MS, CHAT_MESSAGE_MAX_CHARS } from "@/lib/ai-limits";
+import { closedCycleNotice, cycleWindow } from "@/lib/cycle-window";
+import { JourneyRail } from "./journey";
 import { Empty, Notice, OfficialLink, useWorkspace } from "./workspace";
 
 type Message = {
   id: number;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "notice";
   text: string;
-  sources?: Answer["sources"];
-  grounded?: boolean;
+  sources?: Extract<ChatReply, { kind: "answer" }>["sources"];
+  officialUrl?: string | null;
 };
 export function Assistant({
   initialRequirementId = "",
 }: {
   initialRequirementId?: string;
 }) {
-  const { guide, cycle, loading } = useWorkspace();
+  const { guide, cycle, loading, recordQuestion } = useWorkspace();
+  const closed = !!cycle && cycleWindow(cycle.start, cycle.end) === "closed";
   const [messages, setMessages] = useState<Message[]>([]),
     [input, setInput] = useState(""),
     [requirementId, setRequirementId] = useState(""),
@@ -42,6 +46,8 @@ export function Assistant({
     controller.current?.abort();
     setMessages([]);
     setError("");
+    setInput("");
+    setLast("");
     setRequirementId(
       cycle?.requirements.some((r) => r.id === initialRequirementId)
         ? initialRequirementId
@@ -51,8 +57,8 @@ export function Assistant({
     setPending(false);
   }, [cycle, initialRequirementId]);
   async function send(text: string, retry = false) {
-    if (!cycle || pending || !text.trim()) return;
-    const message = text.trim();
+    if (!cycle || closed || simulated || pending || !text.trim()) return;
+    const message = text.trim().slice(0, CHAT_MESSAGE_MAX_CHARS);
     setError("");
     setLast(message);
     setInput("");
@@ -68,7 +74,7 @@ export function Assistant({
     const timeout = setTimeout(() => {
       timedOut = true;
       c.abort();
-    }, 30000);
+    }, CHAT_CLIENT_TIMEOUT_MS);
     try {
       const answer = await askGabay(
         cycle.id,
@@ -76,17 +82,18 @@ export function Assistant({
         requirementId || undefined,
         c.signal,
       );
-      if (!c.signal.aborted)
+      if (!c.signal.aborted) {
         setMessages((m) => [
           ...m,
           {
             id: ++sequence.current,
-            role: "assistant",
+            role: answer.kind === "answer" ? "assistant" : "notice",
             text: answer.answer,
-            sources: answer.sources,
-            grounded: answer.grounded,
+            ...(answer.kind === "answer" ? { sources: answer.sources } : { officialUrl: answer.officialUrl }),
           },
         ]);
+        recordQuestion();
+      }
     } catch (e) {
       if (!c.signal.aborted || timedOut)
         setError(
@@ -117,15 +124,15 @@ export function Assistant({
       },
       {
         id: ++sequence.current,
-        role: "assistant",
+        role: "notice",
         text: "GabayIskolar helps you prepare. It cannot determine eligibility or approve an application. Confirm current rules and application instructions with the official scholarship office.",
-        sources: [],
-        grounded: false,
+        officialUrl: cycle?.officialUrl,
       },
     ]);
   }
   return (
     <>
+      <JourneyRail current="ask" />
       <div className="page-heading">
         <h1>Ask Gabay</h1>
         <p>A little guidance when you’re not sure of the next step.</p>
@@ -200,13 +207,23 @@ export function Assistant({
                   </div>
                 </div>
               )}
-              {messages.map((m) => (
+              {messages.map((m) => m.role === "notice" ? (
+                <aside key={m.id} role="note" className="chat-notice">
+                  <h3>Not in the published guide</h3>
+                  <p>{m.text}</p>
+                  {safeHttps(m.officialUrl ?? cycle?.officialUrl) && <a className="text-link" href={safeHttps(m.officialUrl ?? cycle?.officialUrl)!} target="_blank" rel="noopener noreferrer">Open the official page<ArrowUpRight size={16} /></a>}
+                </aside>
+              ) : (
                 <article key={m.id} className={`chat-message ${m.role}`}>
                   <strong>
                     {m.role === "user" ? "You" : "Gabay"}
                     {simulated ? " · simulated" : ""}
                   </strong>
-                  <p>{m.text}</p>
+                  <p>{citedSegments(m.text, m.sources?.length ?? 0).map((segment, i) => {
+                    if ("text" in segment) return segment.text;
+                    const url = safeHttps(m.sources?.[segment.cite - 1]?.url);
+                    return url ? <a key={i} className="inline-citation" href={url} target="_blank" rel="noopener noreferrer">[{segment.cite}]</a> : <span key={i}>[{segment.cite}]</span>;
+                  })}</p>
                   {m.sources?.length ? (
                     <div className="citation-chips">
                       {m.sources.map((s, i) => {
@@ -218,12 +235,12 @@ export function Assistant({
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            {s.title}
+                            {i + 1} {s.title}
                             <ArrowUpRight size={12} />
                           </a>
                         ) : (
                           <span key={`${s.sourceId}-${i}`}>
-                            {s.title} · No link provided
+                            {i + 1} {s.title} · No link provided
                           </span>
                         );
                       })}
@@ -258,6 +275,8 @@ export function Assistant({
                 </div>
               </Notice>
             )}
+            {closed && <Notice>{closedCycleNotice(cycle!.end!)}</Notice>}
+            <p className="helper chat-privacy" id="chat-privacy">Don&apos;t include names, addresses or ID numbers. Lumen, the AI service, stores chat messages.</p>
             <form
               className="chat-composer"
               onSubmit={(e) => {
@@ -271,15 +290,16 @@ export function Assistant({
               <textarea
                 id="gabay-message"
                 value={input}
-                maxLength={1500}
+                maxLength={CHAT_MESSAGE_MAX_CHARS}
+                aria-describedby="chat-privacy chat-composer-help"
                 rows={2}
                 placeholder={
                   simulated
                     ? "Return to live assistant to ask a question"
                     : "Ask about your selected guide…"
                 }
-                disabled={!cycle || simulated || pending}
-                onChange={(e) => setInput(e.target.value)}
+                disabled={!cycle || closed || simulated || pending}
+                onChange={(e) => setInput(e.target.value.slice(0, CHAT_MESSAGE_MAX_CHARS))}
                 onKeyDown={(e) => {
                   if (
                     e.key === "Enter" &&
@@ -309,15 +329,14 @@ export function Assistant({
               ) : (
                 <button
                   className="btn primary send-button"
-                  disabled={!input.trim() || !cycle || simulated}
+                  disabled={!input.trim() || !cycle || closed || simulated}
                   aria-label="Send question"
                 >
                   <Send size={18} />
                 </button>
               )}
-              <p className="helper">
-                Enter to send · Shift + Enter for a new line · {input.length}
-                /1500
+              <p className="helper" id="chat-composer-help">
+                Enter to send · Shift + Enter for a new line · {input.length}/{CHAT_MESSAGE_MAX_CHARS}
               </p>
             </form>
           </section>

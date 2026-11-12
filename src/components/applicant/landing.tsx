@@ -17,33 +17,9 @@ import {
   X,
 } from "lucide-react";
 import { Brand, OfficialLink } from "./workspace";
+import { JOURNEY_STAGES } from "@/lib/applicant/model";
 
-const journey = [
-  {
-    icon: Search,
-    title: "Find your guide",
-    description:
-      "Explore published scholarship information and choose where to begin.",
-  },
-  {
-    icon: ClipboardCheck,
-    title: "Prepare, step by step",
-    description:
-      "Understand each document and keep a checklist for your chosen cycle.",
-  },
-  {
-    icon: ScanText,
-    title: "Give it another look",
-    description:
-      "Review your documents and work through anything that needs attention.",
-  },
-  {
-    icon: ExternalLink,
-    title: "Take the official step",
-    description:
-      "Continue to the official scholarship portal when you’re ready.",
-  },
-];
+const journeyIcons = [Search, ClipboardCheck, ScanText, MessageCircle, ExternalLink];
 const tools = [
   {
     icon: BookOpen,
@@ -71,11 +47,11 @@ const tools = [
   },
   {
     icon: ScanText,
-    title: "Document review",
+    title: "Check a document",
     description:
       "Read extracted details, make corrections, and check against your original.",
     href: "/document-review",
-    action: "Review a document",
+    action: "Check a document",
   },
 ];
 function River() {
@@ -215,23 +191,24 @@ export function Landing() {
             <p>From “where do I start?” to knowing your next step.</p>
           </div>
           <ol className="journey-grid">
-            {journey.map(({ icon: Icon, title, description }, i) => (
-              <li key={title}>
+            {JOURNEY_STAGES.map(({ id, label, description }, i) => {
+              const Icon = journeyIcons[i];
+              return <li key={id}>
                 <div className="journey-icon">
                   <Icon size={29} />
                   <span>{i + 1}</span>
                 </div>
-                <h3>{title}</h3>
+                <h3>{label}</h3>
                 <p>{description}</p>
-                {i < 3 && (
+                {i < JOURNEY_STAGES.length - 1 && (
                   <ArrowRight
                     className="journey-connector"
                     size={22}
                     aria-hidden="true"
                   />
                 )}
-              </li>
-            ))}
+              </li>;
+            })}
           </ol>
         </section>
         <section id="preparation-tools" className="tools-section">
@@ -356,7 +333,7 @@ export function Landing() {
             <h2>Preparation tools</h2>
             <Link href="/my-checklist">My checklist</Link>
             <Link href="/assistant">Ask Gabay</Link>
-            <Link href="/document-review">Document review</Link>
+            <Link href="/document-review">Check a document</Link>
           </div>
           <div>
             <h2>The official next step</h2>

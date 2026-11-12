@@ -344,7 +344,7 @@
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 40px;
   text-align: center;
 }
@@ -2680,4 +2680,88 @@
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Five equal columns fill the canvas; the river joins their centred stops. */
+.applicant-ui .journey-rail {
+  position: relative;
+  margin-bottom: 32px;
+  padding: 12px 8px;
+  background: var(--river);
+  border-radius: var(--radius);
+}
+.applicant-ui .journey-rail ol {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.applicant-ui .journey-rail li { min-width: 0; }
+.applicant-ui .journey-rail a {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 104px;
+  padding: 0 8px 8px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 4px;
+}
+.applicant-ui .journey-stop {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: 0 0 4px;
+  border: 2px solid var(--muted);
+  border-radius: 50%;
+  background: white;
+  color: white;
+}
+.applicant-ui .journey-rail .is-done .journey-stop { background: var(--blue); border-color: var(--blue); }
+.applicant-ui .journey-rail [aria-current="step"] .journey-stop { background: var(--yellow); border-color: var(--navy); color: var(--navy); }
+.applicant-ui .journey-rail a:hover .journey-stage-label { text-decoration: underline; text-underline-offset: 4px; }
+.applicant-ui .journey-rail small { font-size: 13px; font-weight: 400; color: var(--muted); }
+.applicant-ui .journey-river { position: absolute; top: 14px; left: 10%; width: 80%; height: 24px; overflow: visible; }
+.applicant-ui .journey-river path { fill: none; stroke: var(--line); stroke-width: 4px; vector-effect: non-scaling-stroke; }
+.applicant-ui .journey-river .journey-river-progress { stroke: var(--blue); animation: journey-river-draw 600ms ease-out both; }
+@keyframes journey-river-draw { from { opacity: 0; transform: scaleX(0); } to { opacity: 1; transform: scaleX(1); } }
+.applicant-ui .journey-mobile-title { display: none; }
+.applicant-ui .cycle-window { display: inline-block; padding: 4px 10px; background: var(--river); border-radius: 4px; font-weight: 600; }
+.applicant-ui .chat-notice { padding: 20px; background: var(--river); border-left: 3px solid var(--navy); overflow-wrap: anywhere; }
+.applicant-ui .chat-notice h3 { margin-bottom: 10px; }
+.applicant-ui .chat-notice .text-link { margin-top: 12px; }
+.applicant-ui .chat-message.assistant { background: white; }
+.applicant-ui .chat-message .inline-citation { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; padding: 4px 2px; }
+.applicant-ui .chat-privacy { padding: 16px 20px 0; }
+.applicant-ui .chat-composer textarea { font-size: 16px; }
+.applicant-ui .chat-composer > .helper, .applicant-ui .chat-message strong, .applicant-ui .citation-chips > * { font-size: 13px; }
+.applicant-ui .citation-chips > a { min-height: 44px; }
+.applicant-ui .field-evidence { display: grid; gap: 4px; font-weight: 400; overflow-wrap: anywhere; }
+.applicant-ui .field-evidence small { font-size: 14px; }
+.applicant-ui .field-warning { font-size: 14px; color: var(--muted); }
+.applicant-ui .consent { font-size: 14px; }
+.applicant-ui .document-context { margin: 24px 0; max-width: 560px; }
+.applicant-ui .document-next { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; margin: 24px 0; padding: 20px; background: var(--river); }
+.applicant-ui .document-next h2 { font-size: 24px; }
+.applicant-ui input.sr-only { width: 1px; max-width: 1px; min-height: 0; height: 1px; padding: 0; border: 0; }
+.applicant-ui .handoff-actions { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+@media (max-width: 600px) {
+  .applicant-ui .journey-rail { padding: 16px; margin-bottom: 24px; }
+  .applicant-ui .journey-mobile-title { display: block; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .applicant-ui .journey-rail ol { gap: 8px; }
+  .applicant-ui .journey-rail a { min-height: 44px; padding: 18px 0; gap: 0; }
+  .applicant-ui .journey-rail a::after { content: ""; width: 100%; height: 8px; border-radius: 2px; background: var(--line); }
+  .applicant-ui .journey-rail .is-done a::after { background: var(--blue); }
+  .applicant-ui .journey-rail a[aria-current="step"]::after { background: var(--yellow); outline: 2px solid var(--navy); }
+  .applicant-ui .journey-rail .journey-stop, .applicant-ui .journey-stage-label, .applicant-ui .journey-rail small, .applicant-ui .journey-river { display: none; }
+  .applicant-ui .chat-notice { padding: 16px; }
+  .applicant-ui .document-next { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .applicant-ui .journey-river-progress { animation: none; }
 }
