@@ -1,2 +1,2 @@
-import { AdminConsole } from "@/components/admin/console";
-export default function AdminNewProgramPage() { return <AdminConsole section="programs" startCreateProgram />; }
+/** The persistent /admin layout renders this route's workspace view. */
+export default function AdminNewProgramPage() { return null; }

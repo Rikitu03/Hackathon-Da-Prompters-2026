@@ -16,7 +16,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:applicant": "node --experimental-strip-types --import ./tests/register-applicant-loader.mjs --test tests/applicant-*.test.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

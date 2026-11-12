@@ -1,2 +1,2 @@
-import { AdminConsole } from "@/components/admin/console";
-export default function AdminKnowledgePage() { return <AdminConsole section="knowledge" />; }
+/** The persistent /admin layout renders this route's workspace view. */
+export default function AdminKnowledgePage() { return null; }
