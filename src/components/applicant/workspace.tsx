@@ -201,7 +201,8 @@ export function usePreparation(cycle: Cycle | undefined) {
     changed,
   };
 }
-export { GabayBrand as Brand } from "@/components/shared/gabay-brand";
+import { GabayBrand as Brand } from "@/components/shared/gabay-brand";
+export { Brand };
 
 export function OfficialLink({
   children = "Official scholarship portal",
