@@ -93,3 +93,9 @@ At least one genuine Lumen tool must work in the submitted web app; demonstrate 
 
 **Escalate:** provider authentication failure immediately, with sanitized error text and no secrets.  
 **Out of scope:** external embedding API, semantic vector DB, broad legal/eligibility advice, document authenticity certification.
+
+## PSCS documentary research and demo data
+
+- [Requirements by grade level and applicant classification](../scholarships/pscs/requirements.md): official sources, historical new-applicant lists, 2026–2027 renewal lists, PAG-ASA distinctions, and evidence gaps. Researched 13 November 2026.
+- [Member 4 demo data guide](../scholarships/pscs/demo-data.md): six fictional document bundles, sample text, current OCR fields, negative variants, and source-scoped RAG questions. Source inspection does not replace Member 2's publication review.
+- [OCR field priorities and keywords](../scholarships/pscs/ocr-extraction.md), with [JSON profiles](../scholarships/pscs/ocr-profiles.json): document-specific P0/P1/P2 extraction targets and label hints, clearly separated from the current six-field parser.

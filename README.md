@@ -4,6 +4,8 @@ A Pasig scholarship preparation assistant for **The Prompters — OVERCLOCK 2026
 
 > **Independent prototype.** Not affiliated with or endorsed by Pasig City Government or the scholarship office. This project guides document preparation; it does not submit applications, verify eligibility, or approve scholarships.
 
+See the [documentation index](docs/README.md), including the [PSCS requirements, demo data, and OCR references](docs/scholarships/pscs/README.md).
+
 ## Stack
 
 - Next.js App Router, React, TypeScript

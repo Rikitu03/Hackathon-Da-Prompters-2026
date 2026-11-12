@@ -1,0 +1,411 @@
+{
+  "version": "1.0.0",
+  "reviewed_on": "2026-11-13",
+  "purpose": "Proposed field priorities and English/Filipino keyword hints for fictional PSCS OCR tests. This reference is not loaded by the current application.",
+  "requirements_reference": "requirements.md",
+  "common_first_review_fields": ["document_type"],
+  "priority_meaning": {
+    "P0": "Read and review first. Missing or ambiguous values need human attention; this is not an official required-field or rejection rule.",
+    "P1": "Useful context for document, issuer, period, or purpose comparisons when printed.",
+    "P2": "Optional supporting text. Extract only when needed for the selected review task."
+  },
+  "current_parser": {
+    "emitted_field_keys": ["document_type", "full_name", "barangay", "date_issued", "purpose", "issuing_office"],
+    "implemented_label_aliases": {
+      "full_name": ["name", "full name", "pangalan"],
+      "barangay": ["barangay", "brgy"],
+      "date_issued": ["date issued", "issued on", "petsa"],
+      "purpose": ["purpose", "layunin"],
+      "issuing_office": ["issuing office", "issued by"]
+    },
+    "limitations": [
+      "Document type currently uses a generic English title regex, not these profiles.",
+      "Label extraction expects a label followed by colon or dash and a value on the same line.",
+      "The additional aliases and fields below are proposed hints, not implemented parser behavior.",
+      "Table rows, narrative sentences, name roles, period comparisons, and visual document checks need separate implementation."
+    ]
+  },
+  "matching_rules": [
+    "Identify the document using its title and context before applying field hints. A keyword alone is not enough.",
+    "Treat title keywords as alternatives, not a requirement that every phrase be present.",
+    "Normalize case, whitespace, punctuation, and common abbreviations for matching; preserve original text and spelling for review.",
+    "Read the nearest labeled value or table cell. Narrative phrases require an explicit extraction rule and evidence span.",
+    "Separate applicant, parent, employee, taxpayer, sender, recipient, and signatory names. Never use the first name on the page by default.",
+    "For city and barangay, distinguish the subject's residence from the issuing office, employer, school, or birthplace.",
+    "Leave missing values empty in the current API, flag needsReview, and never complete a value using scholarship context.",
+    "Do not infer a city from a barangay name, a school year from an issue date, or monthly income from one remittance.",
+    "Preserve ambiguous numeric dates, currency, gross/net distinctions, grading scale, and income basis for manual review.",
+    "Do not derive authenticity, notarial validity, identity, eligibility, or official approval from OCR text."
+  ],
+  "field_catalogue": {
+    "document_type": {
+      "label": "Document type", "value_kind": "text",
+      "keywords": ["document title", "uri ng dokumento"],
+      "note": "Use each profile's title_keywords; these are matching concepts, not guaranteed printed labels."
+    },
+    "full_name": {
+      "label": "Applicant / named subject", "value_kind": "text",
+      "keywords": ["name", "full name", "name of applicant", "student name", "name of learner", "pangalan", "buong pangalan", "pangalan ng mag-aaral"],
+      "note": "The correct subject depends on the document. Exclude the official signing the certificate."
+    },
+    "barangay": {
+      "label": "Subject's barangay of residence", "value_kind": "text",
+      "keywords": ["barangay", "brgy", "brgy.", "resident of barangay", "residing at", "naninirahan sa", "taga-barangay"]
+    },
+    "city": {
+      "label": "Subject's city / municipality of residence", "value_kind": "text",
+      "keywords": ["city", "municipality", "city of", "lungsod", "bayan", "lungsod ng", "city / municipality"],
+      "note": "A city in the letterhead alone may describe only the issuer. Do not default to Pasig City."
+    },
+    "date_issued": {
+      "label": "Date issued", "value_kind": "date_text",
+      "keywords": ["date issued", "issued on", "date of issuance", "given this", "issued this", "petsa ng pag-isyu", "ipinagkaloob ngayong", "inilabas noong"],
+      "note": "A generic Date/Petsa label needs document context; it may instead mean birth, transaction, pay, or signing date."
+    },
+    "purpose": {
+      "label": "Stated purpose", "value_kind": "text",
+      "keywords": ["purpose", "issued for", "for the purpose of", "scholarship application", "educational assistance", "layunin", "para sa", "tulong pang-edukasyon"],
+      "note": "Do not insert scholarship as the purpose when the document does not state it."
+    },
+    "issuing_office": {
+      "label": "Issuing office", "value_kind": "text",
+      "keywords": ["issuing office", "issued by", "office of the punong barangay", "office of the barangay captain", "registrar", "tanggapan", "tanggapan ng punong barangay"]
+    },
+    "certificate_number": {
+      "label": "Certificate / reference number", "value_kind": "text",
+      "keywords": ["certificate no", "certification no", "reference no", "control no", "bilang ng sertipiko"],
+      "note": "Optional reference text, not proof that the certificate exists in an official register."
+    },
+    "address": {
+      "label": "Subject's residence address", "value_kind": "text",
+      "keywords": ["home address", "residential address", "residence", "residing at", "tirahan", "tahanan", "naninirahan sa"]
+    },
+    "years_of_residency": {
+      "label": "Explicit length of residence", "value_kind": "duration_text",
+      "keywords": ["years of residence", "years of residency", "length of residence", "years of stay", "resident since", "taon ng paninirahan", "tagal ng paninirahan", "naninirahan simula"],
+      "note": "Preserve a printed since-date as such; do not silently convert it to years or substitute the eligibility minimum."
+    },
+    "school_name": {
+      "label": "School / institution", "value_kind": "text",
+      "keywords": ["name of school", "school name", "institution", "university", "college", "paaralan", "pangalan ng paaralan"]
+    },
+    "academic_year": {
+      "label": "School / academic year", "value_kind": "academic_year_text",
+      "keywords": ["school year", "academic year", "s.y.", "sy", "a.y.", "ay", "taong panuruan"]
+    },
+    "semester": {
+      "label": "Semester / term", "value_kind": "text",
+      "keywords": ["semester", "sem", "term", "trimester", "first semester", "second semester", "unang semestre", "ikalawang semestre"],
+      "note": "Do not invent a semester for annual elementary or JHS records."
+    },
+    "grade_level": {
+      "label": "Grade / year level", "value_kind": "text",
+      "keywords": ["grade level", "year level", "academic level", "grade / year", "baitang", "antas", "taon sa kolehiyo"]
+    },
+    "course_program": {
+      "label": "Course / strand / program", "value_kind": "text",
+      "keywords": ["course", "degree program", "program", "strand", "kurso"]
+    },
+    "enrollment_status": {
+      "label": "Enrollment statement", "value_kind": "text",
+      "keywords": ["currently enrolled", "officially enrolled", "registered", "enrollment status", "kasalukuyang naka-enrol", "nakarehistro"],
+      "note": "An application, admission offer, assessment, or fee receipt alone is not an explicit enrollment statement."
+    },
+    "student_id": {
+      "label": "Student number", "value_kind": "text",
+      "keywords": ["student no", "student number", "student id", "learner reference number", "lrn", "bilang ng mag-aaral"],
+      "note": "Preserve as text, including leading zeroes. Use fictional identifiers in tests."
+    },
+    "grade_period": {
+      "label": "Period covered by grades", "value_kind": "text",
+      "keywords": ["grading period", "quarter", "semester", "final grades", "school year", "markahan", "huling marka"]
+    },
+    "subject_grades": {
+      "label": "Subjects and recorded grades", "value_kind": "table_text",
+      "keywords": ["subject", "course code", "final grade", "rating", "marka", "asignatura", "failed", "incomplete", "dropped", "in process"],
+      "note": "Keep subject, term, column header, and grade together. Current field values remain strings."
+    },
+    "general_average": {
+      "label": "Printed general / weighted average", "value_kind": "number_text",
+      "keywords": ["general average", "general weighted average", "gwa", "gpa", "weighted average", "pangkalahatang marka"],
+      "note": "Read a printed average; do not calculate it without a separately specified method."
+    },
+    "grading_scale": {
+      "label": "Printed grading scale / legend", "value_kind": "text",
+      "keywords": ["grading scale", "grading system", "grade equivalent", "legend", "passing grade", "katumbas na marka"],
+      "note": "Do not assume whether higher or lower numeric college grades are better."
+    },
+    "employee_name": {
+      "label": "Employee name", "value_kind": "text",
+      "keywords": ["employee name", "name of employee", "payee", "pangalan ng empleyado"]
+    },
+    "employer_name": {
+      "label": "Employer / company", "value_kind": "text",
+      "keywords": ["employer", "company name", "name of employer", "employer's name", "kompanya", "pinagtatrabahuhan"]
+    },
+    "pay_period": {
+      "label": "Payroll period", "value_kind": "date_range_text",
+      "keywords": ["pay period", "payroll period", "period covered", "for the period", "cut-off", "sakop na panahon"],
+      "note": "Distinguish a half-month payroll period from a full month and from the pay date."
+    },
+    "gross_income": {
+      "label": "Gross pay / earnings", "value_kind": "money_text",
+      "keywords": ["gross pay", "gross income", "total earnings", "gross earnings", "kabuuang kita bago kaltas"]
+    },
+    "net_income": {
+      "label": "Net / take-home pay", "value_kind": "money_text",
+      "keywords": ["net pay", "net income", "take-home pay", "net amount", "kita matapos ang kaltas"]
+    },
+    "currency": {
+      "label": "Explicit currency", "value_kind": "text",
+      "keywords": ["currency", "php", "peso", "pesos", "usd", "salapi"],
+      "note": "Preserve currency symbols in the evidence. Do not convert or assume a remittance currency."
+    },
+    "taxpayer_name": {
+      "label": "Taxpayer / income recipient", "value_kind": "text",
+      "keywords": ["taxpayer name", "name of taxpayer", "registered name", "employee name", "pangalan ng nagbabayad ng buwis"]
+    },
+    "tax_year": {
+      "label": "Tax year / taxable period", "value_kind": "text",
+      "keywords": ["taxable year", "tax year", "for the year", "calendar year", "fiscal year", "taxable period"]
+    },
+    "income_amount": {
+      "label": "Labeled income amount", "value_kind": "money_text",
+      "keywords": ["income", "monthly income", "annual income", "compensation income", "taxable income", "gross compensation", "kita", "buwanang kita", "taunang kita"],
+      "note": "Retain the exact printed label. Taxable income, compensation, revenue, and tax due are different values."
+    },
+    "income_basis": {
+      "label": "Income frequency / basis", "value_kind": "text",
+      "keywords": ["per month", "monthly", "annual", "annually", "per year", "daily", "buwanan", "taunan", "kada buwan", "arawan"]
+    },
+    "declarant_name": {
+      "label": "Affidavit declarant", "value_kind": "text",
+      "keywords": ["affiant", "declarant", "name of affiant", "ako si", "ako", "nagsasalaysay"],
+      "note": "First-person narrative requires a bounded sentence rule; do not treat any occurrence of I/Ako as a name label."
+    },
+    "employment_status": {
+      "label": "Stated employment / income source", "value_kind": "text",
+      "keywords": ["employment status", "occupation", "unemployed", "self-employed", "source of income", "trabaho", "hanapbuhay", "walang trabaho"]
+    },
+    "nonfiling_reason": {
+      "label": "Stated reason for non-filing", "value_kind": "text",
+      "keywords": ["reason for non-filing", "not required to file", "did not file", "non-filing of income tax return", "dahilan ng hindi paghahain", "hindi naghain ng itr"]
+    },
+    "declaration_date": {
+      "label": "Declaration / execution date", "value_kind": "date_text",
+      "keywords": ["executed on", "in witness whereof", "signed on", "date of execution", "nilagdaan noong", "ginawa ngayong"]
+    },
+    "notarial_text": {
+      "label": "Printed notarial block text", "value_kind": "text",
+      "keywords": ["subscribed and sworn", "notary public", "jurat", "doc. no.", "page no.", "book no."],
+      "note": "Text extraction only. Presence cannot verify notarization; absence from OCR cannot prove the original lacks it."
+    },
+    "sender_name": {
+      "label": "Remittance sender", "value_kind": "text",
+      "keywords": ["sender", "remitter", "sent by", "from", "nagpadala"]
+    },
+    "recipient_name": {
+      "label": "Remittance recipient", "value_kind": "text",
+      "keywords": ["recipient", "receiver", "beneficiary", "paid to", "to", "tatanggap"],
+      "note": "Short From/To labels require remittance context, not global text matching."
+    },
+    "transaction_date": {
+      "label": "Remittance transaction date", "value_kind": "date_text",
+      "keywords": ["transaction date", "date sent", "date received", "remittance date", "petsa ng padala"]
+    },
+    "remittance_amount": {
+      "label": "Labeled remittance amount", "value_kind": "money_text",
+      "keywords": ["amount sent", "amount received", "payout amount", "principal amount", "halagang ipinadala", "halagang natanggap"],
+      "note": "Retain sent versus received amounts and currencies separately; exclude transfer fees."
+    },
+    "application_type": {
+      "label": "Printed applicant classification", "value_kind": "text",
+      "keywords": ["new applicant", "renewal", "applicant type", "application type", "bagong aplikante", "pag-renew"],
+      "note": "A heading offering New/Renewal options does not identify the selected option; checkbox detection needs separate support."
+    },
+    "father_name": {
+      "label": "Father's name", "value_kind": "text",
+      "keywords": ["father's name", "name of father", "father", "ama", "pangalan ng ama"]
+    },
+    "mother_name": {
+      "label": "Mother's name", "value_kind": "text",
+      "keywords": ["mother's name", "name of mother", "mother", "ina", "pangalan ng ina"]
+    },
+    "guardian_name": {
+      "label": "Guardian's name", "value_kind": "text",
+      "keywords": ["guardian's name", "name of guardian", "guardian", "tagapag-alaga", "pangalan ng tagapag-alaga"]
+    },
+    "combined_monthly_income": {
+      "label": "Printed combined monthly income", "value_kind": "money_text",
+      "keywords": ["combined monthly income", "combined monthly earnings", "total monthly family income", "kabuuang buwanang kita"],
+      "note": "Do not sum conflicting or differently based amounts without a separate, reviewed calculation rule."
+    },
+    "date_of_birth": {
+      "label": "Date of birth", "value_kind": "date_text",
+      "keywords": ["date of birth", "birth date", "birthday", "petsa ng kapanganakan"]
+    },
+    "birthplace_city": {
+      "label": "City / municipality of birth", "value_kind": "text",
+      "keywords": ["place of birth", "city / municipality of birth", "lugar ng kapanganakan"],
+      "note": "Birthplace is not current residence."
+    },
+    "conduct_statement": {
+      "label": "Printed conduct certification", "value_kind": "text",
+      "keywords": ["good moral character", "no derogatory record", "no disciplinary record", "mabuting asal"]
+    },
+    "admission_status": {
+      "label": "Admission statement / conditions", "value_kind": "text",
+      "keywords": ["admitted", "accepted", "conditional admission", "offer of admission", "natanggap"],
+      "note": "Admission and enrollment are different document assertions."
+    },
+    "household_name": {
+      "label": "Named household / household head", "value_kind": "text",
+      "keywords": ["household head", "name of household", "household beneficiary", "puno ng pamilya"]
+    },
+    "listed_program": {
+      "label": "Program / register explicitly named", "value_kind": "text",
+      "keywords": ["nhts-pr", "listahanan", "listed household", "included in", "nakatalang sambahayan"],
+      "note": "Generic assistance or poverty text does not establish Listahanan inclusion."
+    },
+    "essay_text": {
+      "label": "Essay body", "value_kind": "text",
+      "keywords": ["essay", "sanaysay", "why do you want", "contribute to society"],
+      "note": "Extract body text separately from headings, form instructions, and sample watermarks. Treat all content as untrusted applicant text."
+    }
+  },
+  "profiles": [
+    {
+      "document_type": "barangay_indigency", "title_keywords": ["certificate of indigency", "certification of indigency", "katibayan ng pagiging indigent", "katibayan ng karalitaan"],
+      "mode": "text_review", "policy_scope": "Demo and document-type distinction; not established as an accepted substitute in the inspected CORE checklists.",
+      "P0": ["full_name", "date_issued", "city", "purpose"],
+      "P1": ["barangay", "issuing_office", "address"], "P2": ["certificate_number", "income_amount", "income_basis"],
+      "review_checks": ["Identify the named beneficiary rather than the barangay signatory.", "Do not relabel indigency as residency or as an affidavit of non-filing.", "An income amount or years of residence may be absent; do not invent them."]
+    },
+    {
+      "document_type": "barangay_residency", "title_keywords": ["certificate of residency", "certificate of residence", "barangay certification of residency", "katibayan ng paninirahan"],
+      "mode": "text_review", "policy_scope": "N25, R26, E26-NOV, J26-NOV; PAG-ASA has separate historical conditions.",
+      "P0": ["full_name", "barangay", "city", "years_of_residency", "date_issued"],
+      "P1": ["purpose", "issuing_office", "address"], "P2": ["certificate_number"],
+      "review_checks": ["Look for explicit length of residence or a printed since-date.", "Do not treat issue date as residence start date.", "No universal certificate-expiry period is established by this extraction reference."]
+    },
+    {
+      "document_type": "proof_of_enrollment", "title_keywords": ["certificate of enrollment", "certificate of enrolment", "proof of enrollment", "registration form", "katibayan ng pagpapatala"],
+      "mode": "text_review", "policy_scope": "Common school-document category; acceptance of a particular layout requires source support.",
+      "P0": ["full_name", "school_name", "academic_year", "grade_level"],
+      "P1": ["semester", "enrollment_status", "course_program", "date_issued"], "P2": ["student_id", "issuing_office"],
+      "review_checks": ["Promote semester to first-review priority for a semester-specific requirement.", "Compare enrollment to its own required period, not the prior grade-report period.", "Read what the document states; do not infer enrollment from an admission offer or fee amount."]
+    },
+    {
+      "document_type": "school_report_card", "title_keywords": ["report card", "form 138", "sf9", "school form 9", "learner progress report card", "kard ng marka"],
+      "mode": "text_review", "policy_scope": "Elementary, JHS, SHS records; historical PAG-ASA SHS records are separately scoped.",
+      "P0": ["full_name", "school_name", "academic_year", "grade_level", "grade_period", "subject_grades"],
+      "P1": ["general_average", "semester", "grading_scale"], "P2": ["date_issued", "student_id"],
+      "review_checks": ["Keep quarter, semester, and final-grade columns distinct.", "Do not interpret OCR text as an eligibility decision.", "A blank or unreadable grade remains unknown, not zero."]
+    },
+    {
+      "document_type": "college_grade_report", "title_keywords": ["transcript of records", "certification of grades", "certificate of grades", "report of grades", "grade report"],
+      "mode": "text_review", "policy_scope": "Candidate college grade-document layouts; official acceptance must be checked separately.",
+      "P0": ["full_name", "school_name", "academic_year", "semester", "subject_grades"],
+      "P1": ["general_average", "grading_scale", "course_program", "grade_level"], "P2": ["date_issued", "student_id"],
+      "review_checks": ["Preserve Failed, Incomplete, Dropped, and In process as printed.", "Do not compare a 1-to-5 scale with percentages without a verified mapping.", "R26 prior grades and current enrollment intentionally have different periods."]
+    },
+    {
+      "document_type": "payslip", "title_keywords": ["payslip", "pay slip", "payroll statement", "salary slip", "statement of earnings"],
+      "mode": "text_review", "policy_scope": "Employed household-member income evidence.",
+      "P0": ["employee_name", "employer_name", "pay_period", "gross_income", "currency"],
+      "P1": ["net_income", "income_basis"], "P2": [],
+      "review_checks": ["A parent's name is not an applicant-name mismatch.", "Distinguish gross pay, net pay, deductions, and year-to-date totals.", "Do not silently double half-month pay or assume which pay amount scholarship policy uses."]
+    },
+    {
+      "document_type": "income_tax_return", "title_keywords": ["income tax return", "annual income tax return", "itr"],
+      "mode": "text_review", "policy_scope": "Tax/income document extraction; a detected tax-document title does not establish it is an accepted ITR.",
+      "P0": ["taxpayer_name", "tax_year", "income_amount", "income_basis", "currency"],
+      "P1": ["employer_name"], "P2": [],
+      "review_checks": ["Preserve the actual tax form title; do not automatically classify a compensation/withholding certificate as an ITR.", "Separate annual compensation, taxable income, and tax due.", "Do not convert annual income to an eligibility amount without an approved calculation rule.", "National tax identifiers are not extraction targets for this demo."]
+    },
+    {
+      "document_type": "nonfiling_affidavit", "title_keywords": ["affidavit of non-filing", "affidavit of non filing", "non-filing of income tax return", "affidavit of no income"],
+      "mode": "text_review", "policy_scope": "Unemployed/self-employed income branch; preserve actual title and confirm accepted category.",
+      "P0": ["declarant_name", "nonfiling_reason", "declaration_date"],
+      "P1": ["employment_status", "income_amount", "income_basis", "address", "purpose"], "P2": ["notarial_text"],
+      "review_checks": ["Do not treat a no-income statement as an explicit non-filing statement unless present.", "OCR cannot determine whether a signature or notarization is valid.", "Do not read notary names as declarant names."]
+    },
+    {
+      "document_type": "ofw_remittance_slip", "title_keywords": ["remittance slip", "remittance receipt", "money transfer", "transfer receipt", "padala"],
+      "mode": "text_review", "policy_scope": "OFW income branch; OFW relationship itself is not proved by a remittance heading.",
+      "P0": ["sender_name", "recipient_name", "transaction_date", "remittance_amount", "currency"],
+      "P1": [], "P2": [],
+      "review_checks": ["Keep sender and recipient roles distinct.", "Do not treat transfer fees as the remitted amount.", "One transfer does not establish monthly income or transfer frequency.", "Transaction reference numbers and account details are not needed for this demo."]
+    },
+    {
+      "document_type": "scholarship_application_form", "title_keywords": ["scholarship application form", "academic scholars renewal form", "pcs application form", "application for scholarship"],
+      "mode": "text_review", "policy_scope": "Match the selected program, level, classification, and cycle to the actual form heading.",
+      "P0": ["full_name", "academic_year", "grade_level", "school_name", "application_type"],
+      "P1": ["course_program", "combined_monthly_income", "father_name", "mother_name", "guardian_name", "semester"], "P2": [],
+      "review_checks": ["Read classification from the selected option or form title, not unselected labels.", "Split first, middle, and last names only with an explicit layout rule; preserve the source cells.", "Do not extract bank, cash-card, or GCash numbers for this demo.", "Printed signature labels do not prove a form has been signed."]
+    },
+    {
+      "document_type": "school_or_valid_id", "title_keywords": ["school identification card", "student identification card", "student id", "identity card", "identification card"],
+      "mode": "text_review", "policy_scope": "Identity attachment review; document acceptance and both-side completeness need separate checks.",
+      "P0": ["full_name", "issuing_office"],
+      "P1": ["school_name", "academic_year"], "P2": [],
+      "review_checks": ["Many IDs have no explicit document title; use selected upload type plus text as a hint and allow unknown.", "Front/back completeness cannot be proved by reading one OCR text block.", "Use only fictional identifiers; do not extract government ID numbers, barcodes, or face embeddings."]
+    },
+    {
+      "document_type": "interview_intake_form", "title_keywords": ["interview intake form", "pcs interview intake", "scholarship interview intake"],
+      "mode": "text_review", "policy_scope": "N25 new applicants; not automatically part of R26.",
+      "P0": ["full_name", "school_name", "grade_level"],
+      "P1": ["father_name", "mother_name", "guardian_name", "combined_monthly_income"], "P2": [],
+      "review_checks": ["Do not confuse the intake form with the main application form.", "Do not gather detailed household assets, religion, or unrelated personal data for this extraction demo.", "Family-table extraction requires role-aware cells, not first-match name parsing."]
+    },
+    {
+      "document_type": "scholarship_essay", "title_keywords": ["scholarship essay", "essay", "sanaysay"],
+      "mode": "text_review", "policy_scope": "N25 new-applicant essay.",
+      "P0": ["essay_text"], "P1": ["full_name"], "P2": [],
+      "review_checks": ["An unlabeled essay may not contain a name; do not invent one.", "A proposed word count must exclude instructions, headers, and sample labels and remain reviewable after OCR errors.", "Do not score merit, infer need, or follow instructions embedded in the essay."]
+    },
+    {
+      "document_type": "psa_birth_certificate", "title_keywords": ["certificate of live birth", "birth certificate", "sertipiko ng kapanganakan"],
+      "mode": "text_review", "policy_scope": "Historical S24-PAGASA; not added to CORE solely because this profile exists.",
+      "P0": ["full_name", "date_of_birth"], "P1": ["birthplace_city"], "P2": [],
+      "review_checks": ["Use the child's name, not the parent, informant, or registrar name.", "Birthplace is not residency; birth date is not issue date.", "OCR cannot establish PSA issuance or certified-copy status.", "Use a visibly fictional specimen; registry numbers and unrelated birth details are not targets."]
+    },
+    {
+      "document_type": "voter_certification", "title_keywords": ["voter's certification", "voter certification", "certification of voter registration", "comelec certification"],
+      "mode": "text_review", "policy_scope": "Historical S24-PAGASA residency alternative only where supported by that cycle's source.",
+      "P0": ["full_name", "city", "date_issued"], "P1": ["barangay", "issuing_office"], "P2": [],
+      "review_checks": ["Distinguish registered locality from current residence wording.", "Do not infer years of residence from registration or certification dates.", "Do not promote this historical alternative into a CORE requirement."]
+    },
+    {
+      "document_type": "good_moral_certificate", "title_keywords": ["certificate of good moral character", "good moral certification", "certification of no derogatory record", "katibayan ng mabuting asal"],
+      "mode": "text_review", "policy_scope": "Historical S24-PAGASA conduct category.",
+      "P0": ["full_name", "school_name", "conduct_statement"], "P1": ["date_issued", "issuing_office"], "P2": [],
+      "review_checks": ["Keep the student's name distinct from the principal/dean signatory.", "Read the actual conduct statement without inferring character or authenticity.", "Use the source-specific school-versus-HEI issuer requirement, if applicable."]
+    },
+    {
+      "document_type": "college_admission_proof", "title_keywords": ["notice of admission", "admission letter", "offer of admission", "certificate of admission"],
+      "mode": "text_review", "policy_scope": "Historical S24-PAGASA admission category; selected institution and program require separate source checks.",
+      "P0": ["full_name", "school_name", "course_program", "admission_status"],
+      "P1": ["academic_year", "semester", "date_issued"], "P2": [],
+      "review_checks": ["Do not equate an admission offer with enrollment.", "Extract conditional wording rather than replacing it with accepted or enrolled.", "A school name alone does not establish a current scholarship partnership."]
+    },
+    {
+      "document_type": "listahanan_household_certification", "title_keywords": ["nhts-pr certification", "listahanan certification", "certification of household inclusion"],
+      "mode": "text_review", "policy_scope": "Historical S24-PAGASA income alternative, not a generic indigency certificate.",
+      "P0": ["household_name", "listed_program", "issuing_office"], "P1": ["date_issued", "city"], "P2": [],
+      "review_checks": ["Look for explicit household inclusion in the named register.", "Applicant-to-household relationship needs separate review; do not assume identical names.", "Do not expose household registry identifiers in this demo."]
+    },
+    {
+      "document_type": "one_by_one_photo", "title_keywords": [],
+      "mode": "visual_or_manual_only", "policy_scope": "Photo attachment category; source-specific dimensions/background are outside OCR text extraction.",
+      "P0": [], "P1": [], "P2": [],
+      "review_checks": ["Do not infer subject name, photo dimensions, facial identity, or background compliance from OCR.", "Use a separately implemented visual/manual attachment check if needed."]
+    },
+    {
+      "document_type": "gcash_form", "title_keywords": ["gcash form"],
+      "mode": "awaiting_official_layout", "policy_scope": "E26-NOV/J26-NOV list the form; the actual layout and fields were not inspected.",
+      "P0": [], "P1": [], "P2": [],
+      "review_checks": ["Record attachment category only; no extraction field list is asserted.", "Inspect the official form and obtain review before adding keywords or fields.", "Do not request or extract wallet numbers, account credentials, PINs, or OTPs for these tests."]
+    }
+  ]
+}
