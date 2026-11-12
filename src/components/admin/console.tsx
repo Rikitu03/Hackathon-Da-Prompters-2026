@@ -12,6 +12,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createPublicSupabaseClient } from "@/lib/supabase/client";
 import { Button, Card, Empty, Field, Heading, Notice, Pill, StepLink, inputClass, areaClass } from "./ui";
 import { emptyData, formatDate, isHttpsLink, loadAdminData, type AdminData, type Cycle, type Program, type Requirement, type Role } from "./data";
+import { demoData } from "./demo-data";
 
 export type Section = "overview" | "programs" | "requirements" | "knowledge" | "preview";
 const menu = [
@@ -36,11 +37,11 @@ const initRequirement = (): RequirementDraft => ({ title: "", description: "", i
 const errorText = (err: unknown) => err instanceof Error ? err.message : "Something went wrong. Please retry.";
 const stat = (value: number, title: string, icon: ReactNode, subtitle: string) => <Card><div className="flex items-center justify-between gap-3"><span className="text-sm font-medium text-[#597768]">{title}</span><span className="rounded-xl bg-[#ecf5ef] p-2 text-[#28684b]">{icon}</span></div><p className="mt-3 text-3xl font-semibold tracking-tight text-[#163d2f]" style={{ fontVariantNumeric: "tabular-nums" }}>{value}</p><p className="mt-1 text-xs leading-5 text-[#738b7e]">{subtitle}</p></Card>;
 
-function LinkNav({ section, mobile = false }: { section: Section; mobile?: boolean }) {
+function LinkNav({ section, mobile = false, demoMode = false }: { section: Section; mobile?: boolean; demoMode?: boolean }) {
   return <nav aria-label="Admin sections" className={mobile ? "flex min-w-max gap-1 px-3 py-2" : "space-y-1"}>
     {menu.map((item) => {
       const Icon = item.icon;
-      return <Link key={item.id} href={item.href} aria-current={section === item.id ? "page" : undefined} className={(mobile ? "min-h-11 whitespace-nowrap px-3 " : "min-h-11 px-3 ") + "flex items-center gap-3 rounded-xl text-sm font-medium transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#176448] " + (section === item.id ? "bg-[#e5f1e8] text-[#155a3d]" : "text-[#5b7268] hover:bg-[#f0f5f1] hover:text-[#183e2f]")}><Icon size={18} aria-hidden="true"/>{item.label}</Link>;
+      return <Link key={item.id} href={demoMode ? "/admin/demo?view=" + item.id : item.href} aria-current={section === item.id ? "page" : undefined} className={(mobile ? "min-h-11 whitespace-nowrap px-3 " : "min-h-11 px-3 ") + "flex items-center gap-3 rounded-xl text-sm font-medium transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#176448] " + (section === item.id ? "bg-[#e5f1e8] text-[#155a3d]" : "text-[#5b7268] hover:bg-[#f0f5f1] hover:text-[#183e2f]")}><Icon size={18} aria-hidden="true"/>{item.label}</Link>;
     })}
   </nav>;
 }
@@ -52,13 +53,13 @@ function SelectScope({ data, programId, cycleId, onProgram, onCycle }: { data: A
   </div></Card>;
 }
 
-export function AdminConsole({ section = "overview", programId: initialProgramId = "", startCreateProgram = false }: { section?: Section; programId?: string; startCreateProgram?: boolean }) {
-  const client = useMemo(() => { try {return createPublicSupabaseClient();} catch {return null;} }, []);
-  const [gate, setGate] = useState<"loading"|"setup"|"login"|"denied"|"ready"|"error">("loading");
-  const [role, setRole] = useState<Role | null>(null);
+export function AdminConsole({ section = "overview", programId: initialProgramId = "", startCreateProgram = false, demoMode = false }: { section?: Section; programId?: string; startCreateProgram?: boolean; demoMode?: boolean }) {
+  const client = useMemo(() => { if (demoMode) return null; try {return createPublicSupabaseClient();} catch {return null;} }, [demoMode]);
+  const [gate, setGate] = useState<"loading"|"setup"|"login"|"denied"|"ready"|"error">(demoMode ? "ready" : "loading");
+  const [role, setRole] = useState<Role | null>(demoMode ? "editor" : null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [data, setData] = useState<AdminData>(emptyData);
+  const [data, setData] = useState<AdminData>(demoMode ? demoData : emptyData);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -94,7 +95,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
       setError("");
     } catch (err) { setError(errorText(err)); setGate("error"); }
   }, [client, reload]);
-  useEffect(() => { void authenticate(); }, [authenticate]);
+  useEffect(() => { if (!demoMode) void authenticate(); }, [authenticate, demoMode]);
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -106,11 +107,12 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     await authenticate(); setBusy(false);
   }
   async function signOut() {
-    if (!client) return;
+    if (demoMode || !client) return;
     await client.auth.signOut();
     setData(emptyData); setRole(null); setGate("login"); setError(""); setMessage("");
   }
   async function act(action: (sb: SupabaseClient) => Promise<void>, success: string) {
+    if (demoMode) { setError("Preview mode: changes are not saved. Sign in to the real admin workspace to make edits."); return; }
     if (!client) return;
     setBusy(true); setError(""); setMessage("");
     try { await action(client); await reload(client); setMessage(success); }
@@ -266,18 +268,19 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
   return <MotionConfig reducedMotion="user"><div className="min-h-screen bg-[#f7f9f6] text-[#1d3e33] lg:grid lg:grid-cols-[252px_minmax(0,1fr)]">
     <aside className="hidden min-h-screen border-r border-[#e3eae3] bg-white px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
       <Link href="/" className="mb-10 flex items-center gap-2 px-3 text-xl font-bold tracking-tight text-[#164b35]"><BookOpenCheck className="h-7 w-7"/>gabay<span className="-ml-2 text-[#4b9469]">iskolar.</span></Link>
-      <p className="mb-3 px-3 text-[11px] font-bold uppercase tracking-[.15em] text-[#87998d]">Workspace</p><LinkNav section={section}/>
-      <div className="mt-auto space-y-4"><div className="rounded-xl border border-[#dfe9df] bg-[#f3f7f1] p-4"><ShieldCheck aria-hidden="true" className="mb-2 h-5 w-5 text-[#2d7855]"/><p className="text-sm font-semibold text-[#315541]">Source-first publishing</p><p className="mt-1 text-xs leading-5 text-[#648072]">Verify the source before applicants see guidance.</p></div><button onClick={() => void signOut()} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-[#61796b] hover:bg-[#f1f6f2]"><LogOut size={17} aria-hidden="true"/> Sign out</button></div>
+      <p className="mb-3 px-3 text-[11px] font-bold uppercase tracking-[.15em] text-[#87998d]">Workspace</p><LinkNav section={section} demoMode={demoMode}/>
+      <div className="mt-auto space-y-4"><div className="rounded-xl border border-[#dfe9df] bg-[#f3f7f1] p-4"><ShieldCheck aria-hidden="true" className="mb-2 h-5 w-5 text-[#2d7855]"/><p className="text-sm font-semibold text-[#315541]">Source-first publishing</p><p className="mt-1 text-xs leading-5 text-[#648072]">Verify the source before applicants see guidance.</p></div>{demoMode ? <Link href="/admin" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-[#61796b] hover:bg-[#f1f6f2]"><LockKeyhole size={17} aria-hidden="true"/> Admin sign-in</Link> : <button onClick={() => void signOut()} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-[#61796b] hover:bg-[#f1f6f2]"><LogOut size={17} aria-hidden="true"/> Sign out</button>}</div>
     </aside>
     <div className="min-w-0">
       <div className="sticky top-0 z-20 border-b border-[#e1eae1] bg-white/95 backdrop-blur-xl">
         <div className="flex min-h-16 items-center justify-between gap-3 px-4 sm:px-7 lg:px-10">
           <div className="flex min-w-0 items-center gap-2"><span className="font-bold text-[#194b37] lg:hidden">gabayiskolar.</span><span className="hidden text-xs font-medium text-[#7a9184] lg:inline">Admin workspace</span><ChevronRight size={14} aria-hidden="true" className="hidden text-[#a0b4a5] lg:inline"/><span className="hidden truncate text-sm font-semibold text-[#1a4334] lg:inline">{info[section].label}</span></div>
-          <div className="flex items-center gap-2"><span className="hidden rounded-full border border-[#d8e8db] bg-[#eff7f1] px-3 py-1.5 text-xs font-semibold capitalize text-[#2b674b] sm:inline-flex">{role} access</span><button className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[#e1eae1] text-[#456553] lg:hidden" onClick={() => void signOut()} aria-label="Sign out"><LogOut size={18}/></button></div>
+          <div className="flex items-center gap-2"><span className="inline-flex rounded-full border border-[#d8e8db] bg-[#eff7f1] px-3 py-1.5 text-xs font-semibold capitalize text-[#2b674b]">{demoMode ? "Demo preview" : role + " access"}</span>{demoMode ? <Link href="/admin" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[#e1eae1] text-[#456553] lg:hidden" aria-label="Admin sign-in"><LockKeyhole size={18}/></Link> : <button className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[#e1eae1] text-[#456553] lg:hidden" onClick={() => void signOut()} aria-label="Sign out"><LogOut size={18}/></button>}</div>
         </div>
-        <div className="overflow-x-auto border-t border-[#edf0ed] lg:hidden"><LinkNav section={section} mobile/></div>
+        <div className="overflow-x-auto border-t border-[#edf0ed] lg:hidden"><LinkNav section={section} mobile demoMode={demoMode}/></div>
       </div>
       <main className="mx-auto w-full max-w-[1340px] px-4 py-7 sm:px-7 sm:py-9 lg:px-10 lg:py-10">
+        {demoMode ? <div className="mb-5"><Notice>This is a <strong>read-only UI demo</strong> with fictional examples. No government information, user credentials or live records are loaded. Edit and publish actions do not write data.</Notice></div> : null}
         {error ? <div className="mb-5"><Notice tone="error">{error}</Notice></div> : null}
         {message ? <div className="mb-5"><Notice tone="success">{message}</Notice></div> : null}
         <AnimatePresence mode="wait"><motion.div key={section} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-4}} transition={{duration:0.18,ease:"easeOut"}}>
@@ -366,7 +369,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
             <SelectScope data={data} programId={activeProgramId} cycleId={activeCycleId} onProgram={setProgramId} onCycle={setCycleId}/>
             {!activeCycle ? <Empty title="No cycle to preview" message="Select or create a draft cycle, then return here for pre-publication checks."/> : <div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,.85fr)]">
               <Card><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-[#73917a]">Applicant guide preview</p><h2 className="mt-2 text-xl font-semibold">{activeProgram?.title}</h2><p className="mt-1 text-sm text-[#607969]">{activeCycle.academic_year}</p></div><Pill status={activeCycle.status}/></div><p className="mb-5 text-sm leading-6 text-[#637a6a]">This preview is for preparation only. It does not assess eligibility or submit an application.</p><h3 className="mb-3 text-sm font-semibold">Document checklist</h3>{!cycleRequirements.length ? <Empty title="No requirements yet" message="Add requirements and steps to preview the applicant guide."/> : <div className="space-y-3">{cycleRequirements.map(r=><div key={r.id} className="rounded-xl border border-[#dfe9e0] bg-[#fcfdfb] p-4"><div className="flex flex-wrap items-center gap-2"><h4 className="font-semibold">{r.title}</h4><span className="text-xs text-[#6c8776]">{r.is_required?"Required":"Conditional"}</span></div><p className="mt-2 text-sm leading-6 text-[#668172]">{r.description}</p><ol className="mt-3 list-inside list-decimal space-y-2 text-sm leading-6 text-[#405f4e]">{data.steps.filter(s=>s.requirement_id===r.id).sort((a,b)=>a.position-b.position).map(s=><li key={s.id}>{s.instruction}</li>)}</ol>{data.faqs.filter(f=>f.requirement_id===r.id).map(f=><details className="mt-3 rounded-lg border border-[#e4ece4] bg-white p-3 text-sm" key={f.id}><summary className="cursor-pointer font-semibold">{f.question}</summary><p className="mt-2 leading-6 text-[#5b7865]">{f.answer}</p></details>)}</div>)}</div>}{activeCycle.official_url && isHttpsLink(activeCycle.official_url) ? <a href={activeCycle.official_url} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#176448] underline underline-offset-4">Official application portal <ExternalLink size={16}/></a> : <p className="mt-4 text-sm text-[#9c5845]">Official portal link not provided.</p>}</Card>
-              <Card className="self-start"><h2 className="text-lg font-semibold">Publication checklist</h2><p className="mt-2 text-xs leading-5 text-[#6a8374]">Incomplete checks prevent the publish action.</p><ul className="mt-5 space-y-4">{checks.map(c=><li key={c.name} className="flex items-start gap-3 text-sm"><span className={"mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full "+(c.ok?"bg-[#e3f3e5] text-[#25734a]":"bg-[#fff0dd] text-[#8c5f22]")}>{c.ok?<Check size={13}/>:<X size={12}/>}</span><span className="leading-6">{c.name}</span></li>)}</ul><div className="mt-6 border-t border-[#e5ece4] pt-5"><Button className="w-full" disabled={!preflightReady || role!=="publisher" || busy} busy={busy} onClick={()=>void requestPublish()}><ShieldCheck size={17}/> Publish verified guide</Button><p className="mt-3 text-xs leading-5 text-[#6c8073]">{role!=="publisher" ? "A publisher role is required." : "Final approval requires server-side verification, including RAG source indexing and version checks."}</p></div><div className="mt-4"><Notice>RAG indexing and publisher authorization are not yet verifiable from this frontend. Publication is intentionally blocked until the backend implements and verifies them.</Notice></div></Card>
+              <Card className="self-start"><h2 className="text-lg font-semibold">Publication checklist</h2><p className="mt-2 text-xs leading-5 text-[#6a8374]">Incomplete checks prevent the publish action.</p><ul className="mt-5 space-y-4">{checks.map(c=><li key={c.name} className="flex items-start gap-3 text-sm"><span className={"mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full "+(c.ok?"bg-[#e3f3e5] text-[#25734a]":"bg-[#fff0dd] text-[#8c5f22]")}>{c.ok?<Check size={13}/>:<X size={12}/>}</span><span className="leading-6">{c.name}</span></li>)}</ul><div className="mt-6 border-t border-[#e5ece4] pt-5"><Button className="w-full" disabled={!preflightReady || role!=="publisher" || busy} busy={busy} onClick={()=>void requestPublish()}><ShieldCheck size={17}/> Publish verified guide</Button><p className="mt-3 text-xs leading-5 text-[#6c8073]">{demoMode ? "Demo preview cannot publish. The real workflow requires a verified publisher account." : role!=="publisher" ? "A publisher role is required." : "Final approval requires server-side verification, including RAG source indexing and version checks."}</p></div><div className="mt-4"><Notice>RAG indexing and publisher authorization are not yet verifiable from this frontend. Publication is intentionally blocked until the backend implements and verifies them.</Notice></div></Card>
             </div>}
           </> : null}
         </motion.div></AnimatePresence>
