@@ -30,12 +30,12 @@ export function ProgramSearch({ value, onChange, programNames, scope }: {
   }, [scope]);
 
   const trimmed = value.trim().toLocaleLowerCase();
-  const matchingPrograms = programNames
-    .filter(name => !trimmed || name.toLocaleLowerCase().includes(trimmed))
-    .slice(0, 6);
   const matchingHistory = history
     .filter(name => !trimmed || name.toLocaleLowerCase().includes(trimmed))
-    .filter(name => !matchingPrograms.some(program => program.toLocaleLowerCase() === name.toLocaleLowerCase()))
+    .slice(0, 6);
+  const matchingPrograms = programNames
+    .filter(name => !trimmed || name.toLocaleLowerCase().includes(trimmed))
+    .filter(name => !matchingHistory.some(recent => recent.toLocaleLowerCase() === name.toLocaleLowerCase()))
     .slice(0, 6);
   const options: SearchItem[] = [
     ...matchingHistory.map(text => ({ text, type: "recent" as const })),
