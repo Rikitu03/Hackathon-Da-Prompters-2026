@@ -1,0 +1,29 @@
+{
+  "asset": "students-pasig.png",
+  "generator": "Built-in image_gen.imagegen",
+  "mode": "original image generation with style/composition reference",
+  "created_local_date": "2026-11-13",
+  "reference_image": "User-supplied GabayIskolar visual reference",
+  "reference_role": "Style and composition inspiration only; no screenshot pixels were used as a UI asset.",
+  "generated_original": "Original image_gen generation; original asset preserved in students-pasig.png",
+  "destination": "public/illustrations/students-pasig.png",
+  "transparent_background_requested": true,
+  "dimensions": {
+    "width": 1448,
+    "height": 1086
+  },
+  "file_bytes": 1840891,
+  "alpha_verification": {
+    "method": "System.Drawing.Bitmap inspection",
+    "pixel_format": "Format32bppArgb",
+    "top_left": 0,
+    "top_right": 0,
+    "bottom_left": 0,
+    "bottom_right": 0,
+    "center": 253,
+    "alpha_channel_confirmed": true
+  },
+  "visual_verification": "Two adult Filipino students dominate the composition; blue arch bridge, skyline and river integrated at the base; original illustration with no text, logo, seal, watermark, border or UI.",
+  "use": "Illustrative landing hero artwork, not official imagery or a documentary depiction.",
+  "exact_prompt": "Use case: illustration-story.\nAsset type: one original transparent editorial illustration for the right half of a Filipino scholarship-preparation website landing hero, delivered as a high-resolution PNG, approximately 4:3 landscape.\nInput image 1 is STYLE AND COMPOSITION REFERENCE ONLY: use its polished, hopeful blue editorial illustration treatment as inspiration. It is a website/UI screenshot; do not reproduce, edit, crop, trace, or include any part of the screenshot itself. Create a completely new standalone illustration with original student faces, poses, and scene.\nPrimary scene: two Filipino college-aged students, clearly adults age 18–22, one young man and one young woman, in neat white and navy schoolwear with navy backpacks. They are the dominant subjects, shown from about the waist upward, close together but naturally posed. Warm medium-brown Filipino skin tones, expressive natural facial features, thoughtful hopeful smiles, both looking slightly upward toward their future. One casually holds a backpack shoulder strap. Distinctive, carefully painted hair and believable hands and anatomy.\nSetting integrated behind and below them: a subtle Pasig-inspired graceful blue arch bridge, a quiet modern blue city skyline, and a flowing blue river winding across the lower base. The bridge, skyline, and river are supporting elements, never competing with the students. Airy very pale blue atmospheric shapes blend the small cityscape into the composition; generous transparent organic margins around the entire silhouette make it easy to composite over a white-to-light-blue web page. Keep heads and hair fully visible with comfortable breathing room.\nStyle: premium contemporary 2D editorial illustration, confident refined linework, softly painted dimensional shading, sophisticated shape language and gentle natural light. Warm and aspirational, polished enough for a public-facing educational website. Match the reference's inviting illustration quality while creating visibly original artwork. Not a photo, not a 3D render, not flat clip art, not crude SVG cartoons.\nPalette: deep navy #102A51, rich blue #155BB0, pale atmospheric blue #EEF6FF, natural warm skin, white shirts; only very sparse warm yellow #F7C744 highlights. Most of the scenery stays blue.\nTransparency: genuine transparent background with a clean alpha channel, including the generous organic outer margins. Any airy atmosphere stays within the organic illustrated silhouette, with soft alpha edges; no opaque rectangular background, no white canvas, no checkerboard pattern.\nStrict constraints: no text, no letters or numbers, no typography, no logos, no seals, no badges, no lettering on clothes, no watermark, no UI controls, no cards, no frames, no borders, no website screenshot, no official endorsement imagery. One cohesive original illustration asset only."
+}
