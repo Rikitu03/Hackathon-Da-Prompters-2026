@@ -22,6 +22,27 @@ Owner: Member 2 (Admin UI/UX). Backend authorization, versioned publication and 
 - Publishing is blocked pending verifiable server checks, RAG indexing and role enforcement. The backend should implement `POST /api/admin/publish` and a readiness endpoint. Do not remove the safety gate merely for the demo.
 - Steps/FAQ editing currently uses sequential delete+insert on a draft. Member 3 should replace this with an atomic RPC/transaction before production deployment.
 
+## UI/UX refinement — Member 2 review items
+- [x] Replace browser-native selects with accessible Radix Select (custom popper, sufficient chevron inset, consistent option styles and one focused outline).
+- [x] Raise supporting text from hard-to-read microcopy and increase muted-text contrast on light backgrounds.
+- [x] Align notice icons with first text line; consistent 19px icon and flexible text column.
+- [x] Rebuild acquisition steps as structured cards with a dedicated grip handle, keyboard/touch drag-and-drop and persistent Up/Down alternatives.
+- [x] Provide removal + Undo feedback and dynamic step numbers; retain draft editing without automatic save.
+- [x] Add non-blocking route/card/feedback motions; respect prefers-reduced-motion.
+- [x] Move desktop Admin sign-in away from the fixed Next.js development indicator and reserve bottom clearance.
+- [x] Preserve the soft sage/matcha-green selection styling.
+- [ ] User-provided MP4 references: visual samples reviewed. Full spoken narration and exact curve/frame matching not yet verified.
+- [ ] Validate final form behavior and motion against actual devices and accessibility tools.
+
+## Automated browser checks
+The workflow `.github/workflows/admin-frontend-quality.yml` runs:
+- `npm run typecheck`, `npm run lint`, `npm run build`.
+- `npm run test:e2e` via Playwright Chromium with desktop (1440px) and mobile (320px) projects.
+- Screenshot/trace HTML reports uploaded as a workflow artifact.
+- Demo page `/admin/demo` contains fictional examples; no DB writes or source verification.
+
+Browser tests cover overview/navigation, Radix Select opening and keyboard dismissal, step arrow reordering and Undo, no fake save acknowledgements, and no horizontal body overflow at small mobile widths. **This does not replace real iOS Safari, Firefox, Android browser and screen-reader UAT.**
+
 ## Manual UAT checklist
 
 | ID | Scenario | Expected result |
@@ -56,13 +77,13 @@ From GabayIskolar UI/UX specification:
 - S14: Preview/publish (readiness checks and server-only publication)
 - UAT-08: authenticated content editor saves draft; anonymous cannot
 - UAT-09: publishing updates applicant view — **pending backend integration**
-- UAT-10: keyboard and mobile walkthrough — **requires device/browser execution**
+- UAT-10: keyboard and mobile walkthrough — **partial Chromium automation; manual cross-browser/device walkthrough still required**
 
 ## Accessibility and motion targets
 - WCAG 2.2 AA target, semantic form labels, native keyboard-operable inputs, meaningful text states.
 - 44px touch targets where practical; no status conveyed by color alone.
 - Motion for React config `reducedMotion="user"`; route entrance 180ms and button feedback 150ms.
-- Test screen readers (VoiceOver/NVDA) and real mobile browsers; code inspection is not a substitute for UAT.
+- Test screen readers (VoiceOver/NVDA) and real mobile browsers; passing Chromium automation is not a substitute for full UAT.
 
 ## Integration blockers before claiming production readiness
 1. Member 3: working Supabase configuration, seeded pre-provisioned admin role, RLS verification including negative tests.
@@ -72,4 +93,4 @@ From GabayIskolar UI/UX specification:
 5. Whole team: run `npm run typecheck`, `npm run lint`, `npm run build` and full device/browser UAT in a runnable environment.
 
 ## Design foundation
-Uses existing React 19, Next.js 15, Tailwind CSS 4, Lucide and Motion dependencies, with shared shadcn-style cards/forms/buttons. The official shadcn CLI components have not yet been installed in this branch; visual composition follows familiar, accessible dashboard patterns without introducing a paid or unlicensed template. No MP4 motion references were accessible in this conversation, so exact animation matching remains pending their review.
+Uses existing React 19, Next.js 15, Tailwind CSS 4, Lucide and Motion dependencies, with shared shadcn-style cards/forms/buttons. The official shadcn CLI components have not yet been installed in this branch; visual composition follows familiar, accessible dashboard patterns without introducing a paid or unlicensed template. 13 uploaded MP4 references were available for visual-frame review; motion principles and ethics informed the refinement, but exact animation timing and voiceover guidance remain to be validated.
