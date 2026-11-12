@@ -4,10 +4,10 @@ test("demo dashboard renders clear summaries and navigation", async ({ page, isM
   await page.goto("/admin/demo");
   await expect(page.getByRole("heading", {name:"Welcome to your workspace"})).toBeVisible();
   await expect(page.getByText("interactive UI preview")).toBeVisible();
-  await expect(page.getByRole("link", {name:"Scholarships"})).toBeVisible();
-  await expect(page.getByRole("link", {name:"Requirements"})).toBeVisible();
-  await expect(page.getByRole("link", {name:"Knowledge sources"})).toBeVisible();
-  await expect(page.getByRole("link", {name:"Preview & publish"})).toBeVisible();
+  await expect(page.getByRole("link", {name:"Scholarship guides"})).toBeVisible();
+  await expect(page.getByRole("link", {name:"Requirements & FAQs"})).toBeVisible();
+  await expect(page.getByRole("link", {name:"Knowledge & sources"})).toBeVisible();
+  await expect(page.getByRole("link", {name:"Review & publish"})).toBeVisible();
   await page.screenshot({path:test.info().outputPath(isMobile?"dashboard-mobile.png":"dashboard-desktop.png"),fullPage:true});
 });
 
@@ -71,7 +71,7 @@ test("overview program entries are fully clickable and Refresh is not required",
   await expect(program).toBeVisible();
   await program.click();
   await expect(page).toHaveURL(/view=programs&program=demo-program-1/);
-  await expect(page.getByRole("heading", {name:"Scholarship programs"})).toBeVisible();
+  await expect(page.getByRole("heading", {name:"Scholarship guides"})).toBeVisible();
 });
 
 test("selected sage cards keep readable action hierarchy", async ({page}) => {
@@ -201,17 +201,48 @@ test("authenticated admin navigation reuses one verified session and loaded data
 
   const authenticated = authReads;
   const dataLoaded = dataReads;
-  await page.getByRole("link",{name:"Scholarships"}).click();
+  await page.getByRole("link",{name:"Scholarship guides"}).click();
   await expect(page).toHaveURL(/\/admin\/programs$/);
-  await expect(page.getByRole("heading",{name:"Scholarship programs",level:1})).toBeVisible();
-  await page.getByRole("link",{name:"Requirements"}).click();
+  await expect(page.getByRole("heading",{name:"Scholarship guides",level:1})).toBeVisible();
+  await page.getByRole("link",{name:"Requirements & FAQs"}).click();
   await expect(page).toHaveURL(/\/admin\/requirements$/);
-  await expect(page.getByRole("heading",{name:"Requirement builder"})).toBeVisible();
-  await page.getByRole("link",{name:"Knowledge sources"}).click();
-  await expect(page.getByRole("heading",{name:"Knowledge sources"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Requirements & FAQs"})).toBeVisible();
+  await page.getByRole("link",{name:"Knowledge & sources"}).click();
+  await expect(page.getByRole("heading",{name:"Knowledge & sources"})).toBeVisible();
 
   // No refetches or "checking access" flashes on client-side navigation.
   expect(authReads).toBe(authenticated);
   expect(dataReads).toBe(dataLoaded);
   await expect(page.getByText("Checking access securely…")).toHaveCount(0);
+});
+
+
+test("Admin V2 charts derive from sample records and provide practical navigation", async ({page}) => {
+  await page.goto("/admin/demo");
+  await expect(page.getByRole("heading",{name:"Scholarship guide status"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Official source reviews"})).toBeVisible();
+  const charts = page.locator('[aria-label="Content operation charts"]');
+  await expect(charts).toBeVisible();
+  await expect(charts.getByText("Published",{exact:true})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Needs attention"})).toBeVisible();
+  await expect(page.getByRole("link",{name:/Create guide/})).toBeVisible();
+  await page.getByRole("link",{name:/Sources awaiting verification/}).click();
+  await expect(page).toHaveURL(/\/admin\/demo\?view=knowledge/);
+  await expect(page.getByRole("heading",{name:"Knowledge & sources"})).toBeVisible();
+});
+
+test("guided authoring steps and applicant preview use the same saved guide fields", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  const flow=page.getByRole("navigation",{name:"Guide authoring workflow"});
+  await expect(flow).toBeVisible();
+  await expect(flow.getByRole("link",{name:/Guide details/})).toHaveAttribute("aria-current","step");
+  await flow.getByRole("link",{name:/Review & publish/}).click();
+  await expect(page).toHaveURL(/\/admin\/demo\?view=preview/);
+  await expect(page.getByRole("heading",{name:"Review & publish"})).toBeVisible();
+  const preview=page.locator('[aria-label="Applicant content preview"]');
+  await expect(preview).toBeVisible();
+  await expect(preview.getByText("Sample Scholarship Preparation Guide")).toBeVisible();
+  await expect(preview.getByText("Example enrollment document")).toBeVisible();
+  await expect(preview.getByText("How to prepare")).toBeVisible();
+  await expect(page.getByRole("link",{name:/Open editor to fix/}).first()).toBeVisible();
 });
