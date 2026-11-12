@@ -1,0 +1,52 @@
+name: Admin frontend quality
+on:
+  push:
+    branches: ["feat/admin-portal"]
+    paths:
+      - "src/app/admin/**"
+      - "src/components/admin/**"
+      - "docs/ADMIN_FRONTEND_UAT.md"
+      - ".github/workflows/admin-frontend-quality.yml"
+      - "package.json"
+      - "playwright.config.ts"
+      - "tests/admin-ui.spec.ts"
+  pull_request:
+    branches: ["staging"]
+    paths:
+      - "src/app/admin/**"
+      - "src/components/admin/**"
+      - "package.json"
+      - "playwright.config.ts"
+      - "tests/admin-ui.spec.ts"
+jobs:
+  admin-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: TypeScript
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint
+      - name: Production build
+        run: npm run build
+      - name: Install browser for UI tests
+        run: npx playwright install --with-deps chromium
+      - name: Admin desktop and mobile browser tests
+        run: npm run test:e2e
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-ui-playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7

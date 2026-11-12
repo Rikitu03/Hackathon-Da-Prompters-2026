@@ -1,0 +1,79 @@
+/* Scoped premium, accessibility-first visual foundation for the admin console. */
+.admin-portal {
+  --admin-ink: #183f30;
+  --admin-muted: #5a7465;
+  --admin-accent: #1f694b;
+  --admin-surface: #fbfcf9;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+
+/* One clear keyboard focus indicator. Do not stack green borders, rings and outlines. */
+.admin-portal {
+  overflow-x: clip;
+}
+.admin-portal textarea {
+  resize: none;
+}
+.admin-portal :is(input, textarea, button, a, [role="combobox"]):focus-visible {
+  outline: 2px solid #236e4e !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+}
+.admin-portal :is(input, textarea, [role="combobox"]):focus-visible {
+  border-color: #d4e0d7 !important;
+}
+.admin-portal input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+.admin-portal .text-xs {
+  font-size: 0.875rem;
+  line-height: 1.38rem;
+}
+
+.admin-portal .text-sm {
+  font-size: 1rem;
+  line-height: 1.55rem;
+}
+
+.admin-portal .admin-select-content,
+.admin-select-content {
+  transform-origin: var(--radix-select-content-transform-origin);
+  animation: admin-select-in 160ms cubic-bezier(.2,.8,.2,1);
+}
+
+.admin-portal .admin-step-card {
+  will-change: transform;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 180ms ease;
+}
+
+.admin-portal .admin-step-input:focus-visible,
+.admin-portal .admin-select-trigger:focus-visible {
+  outline-width: 2px;
+  outline-offset: 2px;
+}
+
+.admin-portal .admin-bottom-clearance {
+  min-height: 76px;
+  flex-shrink: 0;
+}
+
+@keyframes admin-select-in {
+  from { opacity:0; transform: translateY(-5px) scale(.985); }
+  to { opacity:1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-portal .admin-select-content,
+  .admin-select-content { animation:none !important; }
+  .admin-portal .admin-step-card { transition:none !important; }
+}
+
+@media (max-width: 639px) {
+  .admin-portal .admin-step-card {
+    padding: 12px;
+  }
+}

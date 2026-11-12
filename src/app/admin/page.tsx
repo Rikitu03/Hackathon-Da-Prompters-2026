@@ -1,2 +1,2 @@
-import { redirect } from "next/navigation";
-export default function AdminPage() { redirect("/backend-lab"); }
+import { AdminConsole } from "@/components/admin/console";
+export default function AdminPage() { return <AdminConsole section="overview" />; }
