@@ -10,9 +10,11 @@ import {
   useSortable, verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowDown, ArrowUp, Check, GripVertical, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "./ui";
+import { AutoTextarea } from "./auto-textarea";
 
 type StepItem = { id: string; value: string };
 type RemovedStep = { index: number; id: string; value: string };
@@ -53,7 +55,6 @@ function SortableStep({ step, index, count, disabled, onText, onMove, onRemove }
           aria-label={"Drag to reorder step " + (index + 1) + ". Use Space, arrows, then Space to drop."}
           className="inline-flex h-11 w-11 shrink-0 touch-none items-center justify-center rounded-xl border border-[#e0eae2] bg-[#f5f8f4] text-[#586f60] transition-colors hover:border-[#b5d1bb] hover:bg-[#e9f3eb] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#307751] disabled:cursor-not-allowed disabled:opacity-40"
         ><GripVertical size={19} aria-hidden="true"/></button>
-        <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-[#eaf3eb] px-2 text-[13px] font-bold tabular-nums text-[#245e40]">{String(index + 1).padStart(2, "0")}</span>
         <span className="text-[15px] font-semibold text-[#234736]">Step {index + 1}</span>
       </div>
       <div className="flex items-center gap-0.5 rounded-xl border border-[#e9efe9] bg-[#fbfdfb] p-0.5" aria-label={"Actions for step " + (index + 1)}>
@@ -64,14 +65,14 @@ function SortableStep({ step, index, count, disabled, onText, onMove, onRemove }
       </div>
     </div>
     <label htmlFor={"admin-step-" + step.id} className="sr-only">Instruction for step {index + 1}</label>
-    <textarea
+    <AutoTextarea
       id={"admin-step-" + step.id}
       value={step.value}
       disabled={disabled}
       rows={2}
       placeholder="Write one clear, verified instruction…"
       onChange={event => onText(step.id, event.target.value)}
-      className="admin-step-input mt-3 block min-h-20 w-full resize-y rounded-xl border border-[#dce6de] bg-[#fcfdfb] px-4 py-3 text-base leading-6 text-[#244735] placeholder:text-[#586f60] transition-[border-color,background-color] duration-150 hover:border-[#bfd3c2] focus-visible:border-[#3b8a61] focus-visible:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3b8a61] disabled:cursor-not-allowed disabled:opacity-65"
+      className="admin-step-input mt-3 block min-h-[76px] w-full rounded-xl border border-[#dce6de] bg-[#fcfdfb] px-4 py-3 text-base leading-6 text-[#244735] placeholder:text-[#586f60] transition-[border-color,background-color] duration-150 hover:border-[#bfd3c2] focus-visible:border-[#3b8a61] focus-visible:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3b8a61] disabled:cursor-not-allowed disabled:opacity-65"
     />
   </div>;
 }
@@ -136,9 +137,9 @@ export function StepBuilder({ steps, onChange, disabled = false }: {
       <span className="rounded-full bg-[#edf3ec] px-3 py-1 text-sm font-semibold tabular-nums text-[#496c55]">{steps.length} {steps.length === 1 ? "step" : "steps"}</span>
     </div>
     <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis, restrictToParentElement]} autoScroll={false} onDragEnd={onDragEnd}>
       <SortableContext items={items.map(x=>x.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-3">
+        <div className="relative min-w-0 space-y-3">
           {items.map((step,index)=><SortableStep
             key={step.id} step={step} index={index} count={items.length} disabled={disabled}
             onText={(id,text)=>{const i=ids.current.indexOf(id);if(i>=0)onChange(steps.map((s,j)=>j===i?text:s));}}
