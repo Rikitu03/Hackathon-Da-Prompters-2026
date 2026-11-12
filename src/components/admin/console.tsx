@@ -38,7 +38,7 @@ type FAQDraft = { question: string; answer: string };
 type RequirementDraft = { title: string; description: string; is_required: boolean; steps: string[]; faqs: FAQDraft[] };
 const initRequirement = (): RequirementDraft => ({ title: "", description: "", is_required: true, steps: [""], faqs: [] });
 const errorText = (err: unknown) => err instanceof Error ? err.message : "Something went wrong. Please retry.";
-const stat = (value: number, title: string, icon: ReactNode, subtitle: string) => <Card><div className="flex items-center justify-between gap-3"><span className="text-sm font-medium text-[#597768]">{title}</span><span className="rounded-xl bg-[#ecf5ef] p-2 text-[#28684b]">{icon}</span></div><p className="mt-3 text-3xl font-semibold tracking-tight text-[#163d2f]" style={{ fontVariantNumeric: "tabular-nums" }}>{value}</p><p className="mt-1 text-xs leading-5 text-[#738b7e]">{subtitle}</p></Card>;
+const stat = (value: number, title: string, icon: ReactNode, subtitle: string, delay = 0) => <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{duration:0.26,delay,ease:[0.22,1,0.36,1]}} className="h-full"><Card className="h-full"><div className="flex items-center justify-between gap-3"><span className="text-sm font-medium text-[#597768]">{title}</span><span className="rounded-xl bg-[#ecf5ef] p-2 text-[#28684b]">{icon}</span></div><p className="mt-3 text-3xl font-semibold tracking-tight text-[#163d2f]" style={{ fontVariantNumeric: "tabular-nums" }}>{value}</p><p className="mt-1 text-xs leading-5 text-[#738b7e]">{subtitle}</p></Card></motion.div>;
 
 function LinkNav({ section, mobile = false, demoMode = false }: { section: Section; mobile?: boolean; demoMode?: boolean }) {
   return <nav aria-label="Admin sections" className={mobile ? "flex min-w-max gap-1 px-3 py-2" : "space-y-1"}>
@@ -296,19 +296,22 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
         <div className="overflow-x-auto border-t border-[#edf0ed] lg:hidden"><LinkNav section={section} mobile demoMode={demoMode}/></div>
       </div>
       <main className="mx-auto w-full max-w-[1340px] px-4 py-7 sm:px-7 sm:py-9 lg:px-10 lg:py-10">
-        {demoMode ? <div className="mb-5"><Notice>This is a <strong>read-only UI demo</strong> with fictional examples. No government information, user credentials or live records are loaded. Edit and publish actions do not write data.</Notice></div> : null}
-        {error ? <div className="mb-5"><Notice tone="error">{error}</Notice></div> : null}
-        {message ? <div className="mb-5"><Notice tone="success">{message}</Notice></div> : null}
+        {demoMode ? <div className="mb-5"><Notice>This is an <strong>interactive UI preview</strong> using fictional data. You can try controls and step ordering, but no changes are saved or published. No live records are loaded.</Notice></div> : null}
+        <AnimatePresence initial={false} mode="wait">
+          {error ? <motion.div key="admin-error" initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:0.16}} className="mb-5"><Notice tone="error">{error}</Notice></motion.div>
+           : message ? <motion.div key="admin-success" initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:0.16}} className="mb-5"><Notice tone="success">{message}</Notice></motion.div>
+           : null}
+        </AnimatePresence>
         <AnimatePresence mode="wait"><motion.div key={section} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-4}} transition={{duration:0.18,ease:"easeOut"}}>
           {section === "overview" ? <>
             <Heading eyebrow="Content management" title="Welcome to your workspace" description="A clear view of the scholarship guidance your team is preparing." action={<Button variant="outline" onClick={()=>{if(client)void act(async(sb)=>{await reload(sb);},"Content refreshed.");}} busy={busy}><RefreshCw size={16}/> Refresh</Button>}/>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {stat(data.programs.length,"Programs",<GraduationCap size={19}/>, "All managed programs")}
-              {stat(data.cycles.filter(c=>c.status==="draft").length,"Draft cycles",<FileText size={19}/>, "Not visible to applicants")}
-              {stat(data.cycles.filter(c=>c.status==="published").length,"Published cycles",<Check size={19}/>, "Public guidance")}
-              {stat(data.sources.filter(s=>!s.is_approved).length,"Sources to review",<LibraryBig size={19}/>, "Not approved for retrieval")}
+              {stat(data.programs.length,"Programs",<GraduationCap size={19}/>, "All managed programs",0)}
+              {stat(data.cycles.filter(c=>c.status==="draft").length,"Draft cycles",<FileText size={19}/>, "Not visible to applicants",0.055)}
+              {stat(data.cycles.filter(c=>c.status==="published").length,"Published cycles",<Check size={19}/>, "Public guidance",0.11)}
+              {stat(data.sources.filter(s=>!s.is_approved).length,"Sources to review",<LibraryBig size={19}/>, "Not approved for retrieval",0.165)}
             </div>
-            <div className="mt-6 grid gap-5 xl:grid-cols-[1.6fr_1fr]">
+            <div className="mt-6 grid items-start gap-5 xl:grid-cols-[1.6fr_1fr]">
               <Card><div className="mb-5 flex items-center justify-between"><h2 className="text-lg font-semibold">Scholarship programs</h2><Link href="/admin/programs"><StepLink>Manage all</StepLink></Link></div>
                 {data.programs.length ? <div className="divide-y divide-[#e9eee8]">{data.programs.slice(0,5).map((p)=><div key={p.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div className="min-w-0"><p className="font-semibold text-[#24483a]">{p.title}</p><p className="mt-1 text-xs text-[#75877b]">{data.cycles.filter(c=>c.program_id===p.id).length} application cycle(s)</p></div><Pill status={p.status}/></div>)}</div> : <Empty title="No scholarship programs" message="Create your first draft. It will remain private until publication."/>}
               </Card>
