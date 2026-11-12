@@ -1,6 +1,6 @@
 # Vercel + Supabase free-tier setup
 
-1. Create a free Supabase project. Apply `supabase/migrations/0001_initial.sql`.
+1. For team development, use the existing shared `gabayiskolar-dev` project described in [Shared team environment](TEAM_ENVIRONMENT.md); its migrations are already applied. For a separate deployment database, apply all files in `supabase/migrations/` in filename order and record their versions in migration history.
 2. Add the public Supabase project URL and anon/publishable key to local `.env.local`.
 3. Invite and provision administrator accounts via Supabase dashboard/admin tooling, not open signup.
 4. Check the organizer-provided Lumen API docs and add **verified** endpoint URLs and credentials as server-only environment variables. Keep secrets out of client-side variables and Git.
