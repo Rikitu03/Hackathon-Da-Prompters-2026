@@ -263,7 +263,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
         <Field label="Password" htmlFor="admin-password" required><input id="admin-password" className={inputClass} autoComplete="current-password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} required/></Field>
         <Button className="w-full" type="submit" busy={busy}>Sign in securely <ArrowRight size={16}/></Button>
       </form> : null}</Card><p className="mt-5 text-center text-xs leading-5 text-[#72877c]">Independent project. Not a government administration portal.</p>
-    </div></div></MotionConfig>;
+    <div className="mt-5 border-t border-[#e3ece4] pt-5 text-center"><Link href="/admin/demo" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#176448] underline underline-offset-4">Explore read-only UI demo <ArrowRight size={16}/></Link></div></div></div></MotionConfig>;
 
   return <MotionConfig reducedMotion="user"><div className="min-h-screen bg-[#f7f9f6] text-[#1d3e33] lg:grid lg:grid-cols-[252px_minmax(0,1fr)]">
     <aside className="hidden min-h-screen border-r border-[#e3eae3] bg-white px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
