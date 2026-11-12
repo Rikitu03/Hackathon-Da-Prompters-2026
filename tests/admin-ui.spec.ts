@@ -203,7 +203,7 @@ test("authenticated admin navigation reuses one verified session and loaded data
   const dataLoaded = dataReads;
   await page.getByRole("link",{name:"Scholarships"}).click();
   await expect(page).toHaveURL(/\/admin\/programs$/);
-  await expect(page.getByRole("heading",{name:"Scholarship programs"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Scholarship programs",level:1})).toBeVisible();
   await page.getByRole("link",{name:"Requirements"}).click();
   await expect(page).toHaveURL(/\/admin\/requirements$/);
   await expect(page.getByRole("heading",{name:"Requirement builder"})).toBeVisible();
