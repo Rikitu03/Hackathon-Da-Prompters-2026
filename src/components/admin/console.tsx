@@ -50,7 +50,7 @@ function LinkNav({ section, mobile = false, demoMode = false }: { section: Secti
 }
 function SelectScope({ data, programId, cycleId, onProgram, onCycle }: { data: AdminData; programId: string; cycleId: string; onProgram: (id: string) => void; onCycle: (id: string) => void }) {
   const cycles = data.cycles.filter((c) => c.program_id === programId);
-  return <Card className="mb-5 !p-4"><div className="grid gap-4 sm:grid-cols-2">
+  return <Card className="mb-5 !p-4"><div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
     <Field htmlFor="scope-program" label="Scholarship program"><AdminSelect id="scope-program" value={programId} onChange={(id) => {onProgram(id); onCycle("");}} placeholder="Choose a program" options={data.programs.map(p=>({value:p.id,label:p.title}))}/></Field>
     <Field htmlFor="scope-cycle" label="Application cycle"><AdminSelect id="scope-cycle" value={cycleId} onChange={onCycle} placeholder="Choose a cycle" options={cycles.map(c=>({value:c.id,label:c.academic_year+" — "+c.status}))} disabled={!programId}/></Field>
   </div></Card>;
@@ -295,7 +295,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
         </div>
         <div className="overflow-x-auto border-t border-[#edf0ed] lg:hidden"><LinkNav section={section} mobile demoMode={demoMode}/></div>
       </div>
-      <main className="mx-auto w-full max-w-[1340px] px-4 py-7 sm:px-7 sm:py-9 lg:px-10 lg:py-10">
+      <main className="mx-auto min-w-0 w-full max-w-[1340px] px-4 py-7 sm:px-7 sm:py-9 lg:px-10 lg:py-10">
         {demoMode ? <div className="mb-5"><Notice>This is an <strong>interactive UI preview</strong> using fictional data. You can try controls and step ordering, but no changes are saved or published. No live records are loaded.</Notice></div> : null}
         <AnimatePresence initial={false} mode="wait">
           {error ? <motion.div key="admin-error" initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:0.16}} className="mb-5"><Notice tone="error">{error}</Notice></motion.div>
