@@ -161,3 +161,57 @@ test("active form field displays a single two-pixel focus indicator", async ({pa
   expect(css.border).not.toBe("rgb(53, 120, 84)");
   expect(css.border).not.toBe("rgb(35, 110, 78)");
 });
+
+
+test("authenticated admin navigation reuses one verified session and loaded data", async ({page}) => {
+  const uid = "00000000-0000-4000-8000-000000000001";
+  const user = {id:uid, aud:"authenticated", role:"authenticated", email:"admin@test.invalid"};
+  let authReads = 0;
+  let dataReads = 0;
+
+  await page.addInitScript(({savedUser}) => {
+    const now = Math.floor(Date.now()/1000);
+    localStorage.setItem("sb-mock-auth-token", JSON.stringify({
+      access_token:"mock-e2e-access", refresh_token:"mock-e2e-refresh",
+      token_type:"bearer", expires_in:3600, expires_at:now+3600,
+      user:savedUser
+    }));
+  }, {savedUser:user});
+
+  await page.route("https://mock.supabase.test/**", async route => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === "/auth/v1/user") {
+      authReads++;
+      await route.fulfill({status:200, contentType:"application/json", body:JSON.stringify(user)});
+    } else if (path.startsWith("/rest/v1/admin_profiles")) {
+      dataReads++;
+      await route.fulfill({status:200, contentType:"application/json", body:JSON.stringify([{role:"editor"}])});
+    } else if (path.startsWith("/rest/v1/")) {
+      dataReads++;
+      await route.fulfill({status:200, contentType:"application/json", body:"[]"});
+    } else {
+      await route.fulfill({status:404, contentType:"application/json", body:"{}"});
+    }
+  });
+
+  await page.goto("/admin");
+  await expect(page.getByRole("heading",{name:"Welcome to your workspace"})).toBeVisible();
+  expect(authReads).toBeGreaterThan(0);
+  expect(dataReads).toBeGreaterThanOrEqual(6);
+
+  const authenticated = authReads;
+  const dataLoaded = dataReads;
+  await page.getByRole("link",{name:"Scholarships"}).click();
+  await expect(page).toHaveURL(/\/admin\/programs$/);
+  await expect(page.getByRole("heading",{name:"Scholarship programs",level:1})).toBeVisible();
+  await page.getByRole("link",{name:"Requirements"}).click();
+  await expect(page).toHaveURL(/\/admin\/requirements$/);
+  await expect(page.getByRole("heading",{name:"Requirement builder"})).toBeVisible();
+  await page.getByRole("link",{name:"Knowledge sources"}).click();
+  await expect(page.getByRole("heading",{name:"Knowledge sources"})).toBeVisible();
+
+  // No refetches or "checking access" flashes on client-side navigation.
+  expect(authReads).toBe(authenticated);
+  expect(dataReads).toBe(dataLoaded);
+  await expect(page.getByText("Checking access securely…")).toHaveCount(0);
+});

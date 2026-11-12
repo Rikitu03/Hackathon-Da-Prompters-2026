@@ -110,3 +110,14 @@ From GabayIskolar UI/UX specification:
 
 ## Design foundation
 Uses existing React 19, Next.js 15, Tailwind CSS 4, Lucide and Motion dependencies, with shared shadcn-style cards/forms/buttons. The official shadcn CLI components have not yet been installed in this branch; visual composition follows familiar, accessible dashboard patterns without introducing a paid or unlicensed template. 13 uploaded MP4 references were available for visual-frame review; motion principles and ethics informed the refinement, but exact animation timing and voiceover guidance remain to be validated.
+
+## Persistent navigation performance (follow-up)
+
+- One shared /admin layout renders AdminConsole for every live admin route; it is no longer remounted on ordinary sidebar navigation.
+- The initial Supabase login/role check is retained, while the verified session and loaded records persist during client-side route changes.
+- Background refresh on focus, visibility and every 60 seconds remains active without blanking content.
+- Sign-out in another tab clears the protected content and returns to the login gate.
+- Direct program links and new-program routes still select the requested program or editor.
+- The read-only /admin/demo page is isolated from authenticated data.
+- Browser regression tests mock Supabase on a reserved test-only origin; no shared team database is contacted by automation.
+- This targets repeated navigation requests; initial data loading, real-device checks and backend publishing readiness remain separate tasks.
