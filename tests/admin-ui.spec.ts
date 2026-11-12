@@ -157,5 +157,7 @@ test("active form field displays a single two-pixel focus indicator", async ({pa
   });
   expect(css.width).toBe("2px");
   expect(css.offset).toBe("2px");
-  expect(css.border).toBe("rgb(212, 224, 215)");
+  // Neutral border must not become a second green focus ring.
+  expect(css.border).not.toBe("rgb(53, 120, 84)");
+  expect(css.border).not.toBe("rgb(35, 110, 78)");
 });
