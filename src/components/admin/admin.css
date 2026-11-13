@@ -1,11 +1,11 @@
 /* Scoped premium, accessibility-first visual foundation for the admin console. */
 .admin-portal {
-  --admin-ink: #183f30;
-  --admin-muted: #5a7465;
-  --admin-accent: #1f694b;
-  --admin-surface: #fbfcf9;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 16px;
+  --admin-ink: #102a51;
+  --admin-muted: #53657b;
+  --admin-accent: #155bb0;
+  --admin-surface: #f6faff;
+  font-family: "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  font-size: 15px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -18,25 +18,24 @@
   resize: none;
 }
 .admin-portal :is(input, textarea, button, a, [role="combobox"]):focus-visible {
-  outline: 2px solid #236e4e !important;
+  outline: 2px solid #155bb0 !important;
   outline-offset: 2px !important;
   box-shadow: none !important;
 }
 .admin-portal :is(input, textarea, [role="combobox"]):focus-visible {
-  border-color: #d4e0d7 !important;
+  border-color: #d7e3ef !important;
 }
 .admin-portal input[type="search"]::-webkit-search-cancel-button {
   -webkit-appearance: none;
 }
 
 .admin-portal .text-xs {
-  font-size: 0.875rem;
-  line-height: 1.38rem;
+  font-size: 0.75rem;
+  line-height: 1.125rem;
 }
-
 .admin-portal .text-sm {
-  font-size: 1rem;
-  line-height: 1.55rem;
+  font-size: 0.875rem;
+  line-height: 1.375rem;
 }
 
 .admin-portal .admin-select-content,
@@ -76,4 +75,211 @@
   .admin-portal .admin-step-card {
     padding: 12px;
   }
+}
+
+
+/*
+ * Accessible primary actions in the Admin only.
+ * The unlayered global "a { color: inherit }" overrides Tailwind utility colors
+ * on anchor buttons, so declare the intended foreground here as an unlayered
+ * component rule.  This also covers native primary <button> controls.
+ */
+.admin-portal .admin-primary-action {
+  background-color: #155bb0;
+  color: #f8fbff;
+}
+.admin-portal .admin-primary-action:is(:hover, :focus-visible) {
+  background-color: #104a92;
+  color: #ffffff;
+}
+.admin-portal .admin-primary-action:active {
+  background-color: #0e3e7c;
+  color: #ffffff;
+}
+.admin-portal .admin-primary-action svg {
+  color: inherit;
+}
+.admin-portal .admin-primary-action:disabled {
+  background-color: #55718f;
+  color: #ffffff;
+  opacity: 1;
+}
+
+/* Admin brand: original book-and-wave mark and muted Pasig blue language. */
+@font-face {
+  font-family: "Gabay Sans";
+  src: url("/fonts/InstrumentSans.ttf") format("truetype");
+  font-weight: 400 700;
+  font-display: swap;
+}
+.admin-portal {
+  color: var(--admin-ink);
+  background-color: #f3f5f8;
+  line-height: 1.55;
+}
+.admin-portal .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  line-height: 1.1;
+  text-decoration: none;
+}
+.admin-portal .brand-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 39px;
+  height: 40px;
+  background: #155bb0;
+  color: #fff;
+  border-radius: 10px 10px 13px 4px;
+}
+.admin-portal .brand-mark svg + svg { margin-top: -3px; }
+.admin-portal .brand-dot { color: #155bb0; }
+.admin-portal .admin-sidebar {
+  background: #102a51;
+  border-color: #29486f;
+}
+.admin-portal .admin-sidebar .brand { color: #fff; }
+.admin-portal .admin-sidebar .brand-dot { color: #9bcbff; }
+.admin-portal .admin-sidebar .admin-sidebar-label { color: #bed2ed; }
+.admin-portal .admin-sidebar .admin-sidebar-link {
+  color: #e1eaf7;
+  outline-color: #fff;
+}
+.admin-portal .admin-sidebar .admin-sidebar-link:hover:not([aria-current="page"]) {
+  background-color: #234574;
+  color: #fff;
+}
+.admin-portal .admin-sidebar .admin-sidebar-link[aria-current="page"] {
+  background-color: #fff;
+  color: #102a51;
+  font-weight: 700;
+}
+.admin-portal .admin-sidebar .admin-account {
+  color: #e1eaf7;
+  border-color: #29486f;
+}
+.admin-portal .admin-sidebar .admin-account:hover { background-color: #234574; color: #fff; }
+.admin-portal .admin-sidebar .admin-help {
+  background: #1d3b63;
+  border-color: #335478;
+  color: #e7f1ff;
+}
+.admin-portal .admin-sidebar .admin-help p,
+.admin-portal .admin-sidebar .admin-help span { color: #cedff4; }
+.admin-portal .admin-topbar { border-color: #d7e3ef; background: rgba(255,255,255,.97); }
+.admin-portal .admin-content { max-width: 1360px; }
+.admin-portal .admin-mobile-nav .admin-sidebar-link[aria-current="page"] {
+  background: #e8f2ff;
+  color: #102a51;
+}
+.admin-portal .admin-mobile-nav .admin-sidebar-link:not([aria-current="page"]) {
+  color: #53657b;
+}
+.admin-portal .admin-mobile-nav .admin-sidebar-link:hover { background: #eef6ff; }
+.admin-portal .admin-workflow-step[aria-current="step"] {
+  background: #eaf4ff;
+  border-color: #9abfe6;
+  color: #102a51;
+}
+.admin-portal .admin-workflow-step:not([aria-current="step"]):hover {
+  background: #f3f8ff;
+  border-color: #b5c9e0;
+}
+.admin-portal .admin-applicant-preview {
+  background: #f7fbff;
+  border: 1px solid #d7e3ef;
+  border-radius: 16px;
+  padding: clamp(16px, 2vw, 28px);
+}
+.admin-portal .admin-applicant-preview h3,
+.admin-portal .admin-applicant-preview h4 { color: #102a51; }
+.admin-portal .admin-applicant-preview details {
+  border: 1px solid #d7e3ef;
+  border-radius: 10px;
+  padding: 12px 16px;
+  background: #fff;
+}
+.admin-portal .admin-applicant-preview summary { cursor: pointer; font-weight: 600; }
+.admin-portal .admin-applicant-preview details p { padding-top: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  .admin-portal .admin-workflow-step { transition: none !important; }
+}
+
+
+/* Admin V3: restrained surfaces and consistent typography. */
+.admin-portal .admin-content { letter-spacing: -0.008em; }
+.admin-portal .admin-content h1,
+.admin-portal .admin-content h2,
+.admin-portal .admin-content h3,
+.admin-portal .admin-content h4 {
+  letter-spacing: -0.025em;
+  line-height: 1.3;
+}
+.admin-portal .admin-topbar {
+  border-bottom: 1px solid #d6dde7;
+  background-color: rgba(255,255,255,.96);
+}
+.admin-portal .admin-analytics-card,
+.admin-portal .admin-content > div section:not(.admin-import-shell) {
+  border-color: #d6dde7;
+}
+.admin-portal .admin-analytics-card {
+  border: 1px solid #d6dde7;
+  box-shadow: 0 4px 18px rgba(16,42,81,.055),0 1px 2px rgba(16,42,81,.045);
+}
+.admin-portal .admin-pagination {
+  background: #fff;
+}
+.admin-portal .admin-page-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 7px;
+  border-radius: 8px;
+  border: 1px solid #d8e0e9;
+  background: #fff;
+  color: #41546c;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: background-color .14s ease,border-color .14s ease;
+}
+.admin-portal .admin-page-button:not(:disabled):hover {
+  background: #edf3fa;
+  border-color: #97b2d2;
+}
+.admin-portal .admin-page-button.is-current {
+  background: #155bb0;
+  color: #f8fbff;
+  border-color: #155bb0;
+  cursor: default;
+}
+.admin-portal .admin-page-button:disabled:not(.is-current) {
+  opacity: .4;
+  cursor: not-allowed;
+}
+.admin-portal .admin-page-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  color: #64768d;
+  font-size: 14px;
+}
+@media(max-width: 580px) {
+  .admin-portal .admin-page-number:not([aria-current="page"]) { display: none; }
+  .admin-portal .admin-page-ellipsis { display: none; }
+}
+@media(prefers-reduced-motion: reduce) {
+  .admin-portal .admin-page-button { transition: none; }
 }

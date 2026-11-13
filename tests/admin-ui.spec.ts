@@ -4,10 +4,10 @@ test("demo dashboard renders clear summaries and navigation", async ({ page, isM
   await page.goto("/admin/demo");
   await expect(page.getByRole("heading", {name:"Welcome to your workspace"})).toBeVisible();
   await expect(page.getByText("interactive UI preview")).toBeVisible();
-  await expect(page.getByRole("link", {name:"Scholarships"})).toBeVisible();
-  await expect(page.getByRole("link", {name:"Requirements"})).toBeVisible();
-  await expect(page.getByRole("link", {name:"Knowledge sources"})).toBeVisible();
-  await expect(page.getByRole("link", {name:"Preview & publish"})).toBeVisible();
+  await expect(page.getByRole("link", {name:"Scholarship guides"})).toBeVisible();
+  await expect(page.getByRole("link", {name:"Requirements & FAQs"})).toBeVisible();
+  await expect(page.getByRole("link", {name:"Knowledge & sources"})).toBeVisible();
+  await expect(page.getByRole("link", {name:"Review & publish"})).toBeVisible();
   await page.screenshot({path:test.info().outputPath(isMobile?"dashboard-mobile.png":"dashboard-desktop.png"),fullPage:true});
 });
 
@@ -71,15 +71,15 @@ test("overview program entries are fully clickable and Refresh is not required",
   await expect(program).toBeVisible();
   await program.click();
   await expect(page).toHaveURL(/view=programs&program=demo-program-1/);
-  await expect(page.getByRole("heading", {name:"Scholarship programs"})).toBeVisible();
+  await expect(page.getByRole("heading", {name:"Scholarship guides"})).toBeVisible();
 });
 
-test("selected sage cards keep readable action hierarchy", async ({page}) => {
+test("selected blue cards keep readable action hierarchy", async ({page}) => {
   await page.goto("/admin/demo?view=programs");
   const listRow = page.getByRole("listitem").filter({hasText:"Sample Scholarship Preparation Guide"});
   await expect(listRow.getByRole("button",{name:"Edit"})).toHaveCSS("background-color","rgb(255, 255, 255)");
-  await expect(listRow.getByRole("button",{name:"View cycles"})).toHaveCSS("color","rgb(255, 255, 255)");
-  await expect(page.getByRole("button",{name:"Select"}).first()).toHaveCSS("color","rgb(255, 255, 255)");
+  await expect(listRow.getByRole("button",{name:"View cycles"})).toHaveCSS("color","rgb(248, 251, 255)");
+  await expect(page.getByRole("button",{name:"Select"}).first()).toHaveCSS("color","rgb(248, 251, 255)");
 });
 
 test("step editor has a single label and constrains drag movement horizontally", async ({page}) => {
@@ -201,17 +201,208 @@ test("authenticated admin navigation reuses one verified session and loaded data
 
   const authenticated = authReads;
   const dataLoaded = dataReads;
-  await page.getByRole("link",{name:"Scholarships"}).click();
+  await page.getByRole("link",{name:"Scholarship guides"}).click();
   await expect(page).toHaveURL(/\/admin\/programs$/);
-  await expect(page.getByRole("heading",{name:"Scholarship programs",level:1})).toBeVisible();
-  await page.getByRole("link",{name:"Requirements"}).click();
+  await expect(page.getByRole("heading",{name:"Scholarship guides",level:1})).toBeVisible();
+  await page.getByRole("link",{name:"Requirements & FAQs"}).click();
   await expect(page).toHaveURL(/\/admin\/requirements$/);
-  await expect(page.getByRole("heading",{name:"Requirement builder"})).toBeVisible();
-  await page.getByRole("link",{name:"Knowledge sources"}).click();
-  await expect(page.getByRole("heading",{name:"Knowledge sources"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Requirements & FAQs"})).toBeVisible();
+  await page.getByRole("link",{name:"Knowledge & sources"}).click();
+  await expect(page.getByRole("heading",{name:"Knowledge & sources"})).toBeVisible();
 
   // No refetches or "checking access" flashes on client-side navigation.
   expect(authReads).toBe(authenticated);
   expect(dataReads).toBe(dataLoaded);
   await expect(page.getByText("Checking access securely…")).toHaveCount(0);
+});
+
+
+test("Admin V2 charts derive from sample records and provide practical navigation", async ({page}) => {
+  await page.goto("/admin/demo");
+  await expect(page.getByRole("heading",{name:"Scholarship guide status"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Official source reviews"})).toBeVisible();
+  const charts = page.locator('[aria-label="Content operation charts"]');
+  await expect(charts).toBeVisible();
+  await expect(charts.getByText("Published",{exact:true})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Needs attention"})).toBeVisible();
+  await expect(page.getByRole("link",{name:/Create guide/})).toBeVisible();
+  await page.getByRole("link",{name:/Sources awaiting verification/}).click();
+  await expect(page).toHaveURL(/\/admin\/demo\?view=knowledge/);
+  await expect(page.getByRole("heading",{name:"Knowledge & sources"})).toBeVisible();
+});
+
+test("guided authoring steps and applicant preview use the same saved guide fields", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  const flow=page.getByRole("navigation",{name:"Guide authoring workflow"});
+  await expect(flow).toBeVisible();
+  await expect(flow.getByRole("link",{name:/Guide details/})).toHaveAttribute("aria-current","step");
+  await flow.getByRole("link",{name:/Review & publish/}).click();
+  await expect(page).toHaveURL(/\/admin\/demo\?view=preview/);
+  await expect(page.getByRole("heading",{name:"Review & publish"})).toBeVisible();
+  const preview=page.locator('[aria-label="Applicant content preview"]');
+  await expect(preview).toBeVisible();
+  await expect(preview.getByText("Sample Scholarship Preparation Guide")).toBeVisible();
+  await expect(preview.getByText("Example enrollment document")).toBeVisible();
+  await expect(preview.getByRole("heading",{name:"How to prepare"}).first()).toBeVisible();
+  await expect(page.getByRole("link",{name:/Open editor to fix/}).first()).toBeVisible();
+});
+
+test("Admin V2 primary blue links and buttons have readable white text", async ({page}) => {
+  await page.goto("/admin/demo");
+  const create = page.getByRole("link",{name:"Create guide"});
+  await expect(create).toBeVisible();
+  await expect(create).toHaveCSS("background-color","rgb(21, 91, 176)");
+  await expect(create).toHaveCSS("color","rgb(248, 251, 255)");
+  await expect(create.locator("svg")).toHaveCSS("color","rgb(248, 251, 255)");
+  await create.hover();
+  await expect(create).toHaveCSS("color","rgb(255, 255, 255)");
+
+  await page.goto("/admin/demo?view=programs");
+  const newProgram = page.getByRole("button",{name:"New program"});
+  await expect(newProgram).toHaveCSS("background-color","rgb(21, 91, 176)");
+  await expect(newProgram).toHaveCSS("color","rgb(248, 251, 255)");
+  await expect(newProgram.locator("svg")).toHaveCSS("color","rgb(248, 251, 255)");
+  await newProgram.hover();
+  await expect(newProgram).toHaveCSS("color","rgb(255, 255, 255)");
+});
+
+
+test("context importer offers a real Markdown template and visible supported formats", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  await expect(page.getByRole("heading",{name:/Start with a document/})).toBeVisible();
+  await expect(page.getByRole("button",{name:"Browse files"})).toBeVisible();
+  const downloadEvent=page.waitForEvent("download");
+  await page.getByRole("button",{name:"Download template"}).click();
+  const download=await downloadEvent;
+  expect(download.suggestedFilename()).toBe("GabayIskolar-Scholarship-Guide-Template.md");
+});
+
+test("context text import stages reviewed fields but never claims to save in demo mode", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  await page.getByLabel("Choose scholarship source file").setInputFiles({
+    name:"sample-guide.md",mimeType:"text/markdown",
+    buffer:Buffer.from("# Official sample\nScholarship Name: Example Education Grant\nDescription: A fictional guide used for accessibility and usability tests.\nAcademic Year: 2026-2027\nOfficial Application URL: https://example.test/official\n")
+  });
+  await expect(page.getByRole("heading",{name:"Review suggested fields"})).toBeVisible();
+  await expect(page.getByLabel("Scholarship name")).toHaveValue("Example Education Grant");
+  await expect(page.getByLabel("Academic year")).toHaveValue("2026-2027");
+  await expect(page.getByText("LOCAL TEXT PREFILL · NOT AI")).toBeVisible();
+  await page.getByRole("button",{name:/Apply to draft form/}).click();
+  await expect(page.getByRole("textbox",{name:"Program name"})).toHaveValue("Example Education Grant");
+  await expect(page.getByRole("textbox",{name:"Program description"})).toHaveValue(/fictional guide/);
+  await expect(page.getByText("Fields copied to the editor")).toBeVisible();
+  await page.getByRole("button",{name:"Create draft"}).click();
+  await expect(page.getByText(/Preview mode: changes are not saved/)).toBeVisible();
+});
+
+test("context importer explains rejected files and missing Lumen extraction", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  const input=page.getByLabel("Choose scholarship source file");
+  await input.setInputFiles({name:"unsafe.exe",mimeType:"application/octet-stream",buffer:Buffer.from("not a document")});
+  await expect(page.getByRole("region",{name:/Start with a document/}).getByRole("alert")).toContainText("This file type is not supported");
+  await expect(page.getByRole("region",{name:/Start with a document/}).getByRole("alert")).toContainText("415");
+  await page.getByRole("button",{name:"Dismiss upload error"}).click();
+
+  await input.setInputFiles({name:"reference.pdf",mimeType:"application/pdf",buffer:Buffer.from("%PDF-1.7\nexample bytes")});
+  await expect(page.getByText("AI document extraction is not connected yet")).toBeVisible();
+  await expect(page.getByText(/No document was sent or saved/)).toBeVisible();
+  await expect(page.getByRole("button",{name:/Apply to draft form/})).toHaveCount(0);
+});
+
+
+test("import progress is backed by completed device reading, not fictitious AI upload", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  await page.getByLabel("Choose scholarship source file").setInputFiles({
+    name:"progress-check.md",mimeType:"text/markdown",
+    buffer:Buffer.from("Scholarship Name: Mock Scholarship\nDescription: Fictional progress indicator sample for UI testing.\nAcademic Year: 2026-2027\n")
+  });
+  const preparation=page.getByRole("progressbar",{name:"Import preparation milestones"});
+  await expect(preparation).toHaveAttribute("aria-valuenow","75");
+  await expect(preparation).toHaveAttribute("aria-valuetext","3 of 4 import preparation steps complete");
+  const progress=page.getByRole("progressbar",{name:"Local source file reading progress"});
+  await expect(progress).toBeVisible();
+  await expect(progress).toHaveAttribute("aria-valuenow","100");
+  await expect(page.getByText("Local file reading complete")).toBeVisible();
+  await expect(page.getByText("Real device-read progress only.")).toBeVisible();
+  await page.getByRole("button",{name:"Apply to draft form"}).click();
+  await expect(preparation).toHaveAttribute("aria-valuenow","100");
+  await expect(page.getByText("Fields applied to draft editor")).toBeVisible();
+  await page.getByRole("button",{name:"Remove"}).click();
+  await expect(preparation).toHaveAttribute("aria-valuenow","0");
+  await expect(progress).toHaveCount(0);
+  await page.getByLabel("Choose scholarship source file").setInputFiles({
+    name:"scanned.pdf",mimeType:"application/pdf",buffer:Buffer.from("%PDF-1.7\nnot a real document")
+  });
+  await expect(page.getByRole("progressbar",{name:"Local source file reading progress"})).toHaveCount(0);
+  await expect(preparation).toHaveAttribute("aria-valuenow","50");
+  await expect(page.getByText("Needs Lumen backend")).toBeVisible();
+  await expect(page.getByText("AI document extraction is not connected yet")).toBeVisible();
+});
+
+
+test("import preparation tracker exposes errors without simulated completion", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  const preparation=page.getByRole("progressbar",{name:"Import preparation milestones"});
+  await expect(preparation).toHaveAttribute("aria-valuenow","0");
+  await expect(page.getByText("Choose a document to start")).toBeVisible();
+  await page.getByLabel("Choose scholarship source file").setInputFiles({
+    name:"not-supported.exe",mimeType:"application/octet-stream",buffer:Buffer.from("invalid test fixture")
+  });
+  await expect(preparation).toHaveAttribute("aria-valuenow","0");
+  await expect(page.getByText("File rejected — see correction below")).toBeVisible();
+  await expect(page.getByText("Fix selected file")).toBeVisible();
+  await expect(page.getByRole("region",{name:/Start with a document/}).getByRole("alert")).toContainText("415");
+});
+
+
+test("Admin V3 uses a real-dated gradient chart and hides pagers for short lists", async ({page}) => {
+  await page.goto("/admin/demo");
+  await expect(page.getByRole("heading",{name:"Scholarship activity"})).toBeVisible();
+  const chart=page.getByRole("img",{name:/Monthly scholarship activity:/});
+  await expect(chart).toBeVisible();
+  await expect(chart.locator("linearGradient")).toHaveCount(1);
+  await page.getByRole("link",{name:"Scholarship guides"}).click();
+  await expect(page.getByRole("navigation",{name:"scholarship guides pagination"})).toHaveCount(0);
+  await page.getByRole("link",{name:"Requirements & FAQs"}).click();
+  await expect(page.getByRole("navigation",{name:"requirements pagination"})).toHaveCount(0);
+  await page.getByRole("link",{name:"Knowledge & sources"}).click();
+  await expect(page.getByRole("navigation",{name:"sources pagination"})).toHaveCount(0);
+});
+
+test("Admin V3 paginates more than 10 Supabase-visible guides and resets on search", async ({page}) => {
+  const user={id:"00000000-0000-4000-8000-000000000001",aud:"authenticated",role:"authenticated",email:"admin@test.invalid"};
+  await page.addInitScript(({savedUser})=>{
+    const now=Math.floor(Date.now()/1000);
+    localStorage.setItem("sb-mock-auth-token",JSON.stringify({
+      access_token:"mock-e2e-access",refresh_token:"mock-e2e-refresh",
+      token_type:"bearer",expires_in:3600,expires_at:now+3600,user:savedUser
+    }));
+  },{savedUser:user});
+  const guides=Array.from({length:13},(_,i)=>({
+    id:"v3-guide-"+(i+1),
+    title:"Test Scholarship "+String(i+1).padStart(2,"0"),
+    description:"Fictional record for pagination regression testing only.",
+    status:"draft",created_at:"2026-11-01T00:00:00Z"
+  }));
+  await page.route("https://mock.supabase.test/**",async route=>{
+    const path=new URL(route.request().url()).pathname;
+    let body:unknown=[];
+    if(path==="/auth/v1/user")body=user;
+    else if(path.startsWith("/rest/v1/admin_profiles"))body=[{role:"editor"}];
+    else if(path.startsWith("/rest/v1/scholarship_programs"))body=guides;
+    await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(body)});
+  });
+  await page.goto("/admin/programs");
+  const pager=page.getByRole("navigation",{name:"scholarship guides pagination"});
+  await expect(pager).toBeVisible();
+  await expect(pager).toContainText("Showing");
+  await expect(pager).toContainText("13");
+  await expect(page.getByRole("heading",{name:"Test Scholarship 01"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Test Scholarship 11"})).toHaveCount(0);
+  await pager.getByRole("button",{name:"Next page"}).click();
+  await expect(page.getByRole("heading",{name:"Test Scholarship 11"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Test Scholarship 01"})).toHaveCount(0);
+  await page.getByRole("combobox",{name:"Search scholarship programs"}).fill("Scholarship 03");
+  await expect(page.getByRole("heading",{name:"Test Scholarship 03"})).toBeVisible();
+  await expect(pager).toHaveCount(0);
 });
