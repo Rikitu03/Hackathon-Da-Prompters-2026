@@ -1,0 +1,70 @@
+{
+  "version": "1.0.0",
+  "purpose": "Key information to read from each priority document, the printed labels (English/Filipino) that introduce it, and the checks that use it. Configuration only: values read from a student's document are never written here.",
+  "rules": {
+    "schoolYearStartMonth": 6,
+    "enrollmentRecency": { "warnYearsBehind": 1, "alertYearsBehind": 3 },
+    "studentNoPattern": "^\\d{2}-\\d{5}$",
+    "studentNoExample": "23-00314"
+  },
+  "profiles": [
+    {
+      "id": "certificate_of_registration",
+      "title": "Certificate of Registration",
+      "shortTitle": "COR",
+      "requirementIds": ["illustrative-enrollment"],
+      "requirementTitleKeywords": ["certificate of registration", "registration", "enrollment", "enrolment"],
+      "titleKeywords": ["certificate of registration", "registration form", "certificate of enrollment", "cor"],
+      "fields": [
+        { "key": "student_no", "label": "Student number", "priority": "P0", "valueKind": "student_no", "keywords": ["student no", "student no.", "student number", "student id no", "id no", "id number", "numero ng mag-aaral"] },
+        { "key": "student_name", "label": "Student name", "priority": "P0", "valueKind": "name", "keywords": ["student name", "name of student", "name", "pangalan"] },
+        { "key": "address", "label": "Address", "priority": "P1", "valueKind": "text", "keywords": ["address", "home address", "permanent address", "tirahan"] },
+        { "key": "course", "label": "Course", "priority": "P1", "valueKind": "text", "keywords": ["course", "program", "degree program", "kurso"] },
+        { "key": "department", "label": "Department", "priority": "P1", "valueKind": "text", "keywords": ["department", "college", "kolehiyo"] },
+        { "key": "enrollment_date", "label": "Enrollment date", "priority": "P0", "valueKind": "date", "keywords": ["enrollment date", "date enrolled", "date of enrollment", "registration date", "date registered", "petsa ng pagpapatala"] },
+        { "key": "school_year", "label": "School year", "priority": "P0", "valueKind": "school_year", "keywords": ["school year", "academic year", "s.y.", "sy", "a.y.", "ay", "taong panuruan"] },
+        { "key": "year_level", "label": "Year level", "priority": "P0", "valueKind": "year_level", "keywords": ["year level", "grade level", "year", "level", "antas"] }
+      ]
+    },
+    {
+      "id": "certificate_of_residency",
+      "title": "Certificate of Residency",
+      "shortTitle": "Residency",
+      "requirementIds": ["illustrative-residency"],
+      "requirementTitleKeywords": ["residency", "residence"],
+      "titleKeywords": ["certificate of residency", "certification of residency", "barangay residency", "residency certificate", "katibayan ng paninirahan"],
+      "fields": [
+        { "key": "full_name", "label": "Name", "priority": "P0", "valueKind": "name", "keywords": ["name", "full name", "name of resident", "resident", "pangalan", "buong pangalan"] },
+        { "key": "address", "label": "Address", "priority": "P0", "valueKind": "text", "keywords": ["address", "residence address", "tirahan"] },
+        { "key": "years_stayed", "label": "Years stayed", "priority": "P0", "valueKind": "years", "keywords": ["years of residence", "years of residency", "years stayed", "years of stay", "length of stay", "resident since", "tagal ng paninirahan"], "patterns": ["\\bfor\\s+(?:the\\s+past\\s+)?(\\d{1,2})\\s+years?\\b", "\\bresident\\s+since\\s+(\\d{4})\\b"] },
+        { "key": "date_issued", "label": "Date issued", "priority": "P0", "valueKind": "date", "keywords": ["date issued", "issued on", "date of issuance", "petsa ng pag-isyu", "petsa"] },
+        { "key": "city_issued", "label": "City issued", "priority": "P1", "valueKind": "text", "keywords": ["city", "issued at", "issued in", "place of issue", "municipality", "lungsod", "bayan"] }
+      ]
+    },
+    {
+      "id": "school_id",
+      "title": "School ID or government-issued ID",
+      "shortTitle": "ID",
+      "requirementIds": ["illustrative-school-id"],
+      "requirementTitleKeywords": ["school id", "valid id", "valid-id", "government id", "identification"],
+      "titleKeywords": ["school id", "student id", "school identification", "student identification", "identification card"],
+      "governmentIdKeywords": ["philippine identification", "philsys", "national id", "driver's license", "drivers license", "passport", "umid", "postal identity card", "postal id", "voter's id", "tin id", "prc id"],
+      "fields": [
+        { "key": "full_name", "label": "Name", "priority": "P0", "valueKind": "name", "keywords": ["name", "student name", "full name", "pangalan"] },
+        { "key": "student_no", "label": "Student number", "priority": "P0", "valueKind": "student_no", "keywords": ["student no", "student no.", "student number", "id no", "id no.", "id number"] },
+        { "key": "section", "label": "Section", "priority": "P1", "valueKind": "text", "keywords": ["section", "block", "seksyon"] }
+      ]
+    }
+  ],
+  "otherDocuments": [
+    { "title": "Certificate of Indigency", "keywords": ["certificate of indigency", "indigency"] },
+    { "title": "Report card", "keywords": ["report card", "form 138", "report on learning progress"] },
+    { "title": "Certificate of Good Moral Character", "keywords": ["good moral"] }
+  ],
+  "crossChecks": [
+    { "id": "id-name", "label": "Name", "kind": "name", "left": { "profile": "school_id", "field": "full_name" }, "right": { "profile": "certificate_of_registration", "field": "student_name" } },
+    { "id": "id-student-no", "label": "Student number", "kind": "id", "left": { "profile": "school_id", "field": "student_no" }, "right": { "profile": "certificate_of_registration", "field": "student_no" } },
+    { "id": "residency-name", "label": "Name", "kind": "name", "left": { "profile": "certificate_of_residency", "field": "full_name" }, "right": { "profile": "certificate_of_registration", "field": "student_name" } },
+    { "id": "residency-address", "label": "Address", "kind": "address", "left": { "profile": "certificate_of_residency", "field": "address" }, "right": { "profile": "certificate_of_registration", "field": "address" } }
+  ]
+}
