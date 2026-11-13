@@ -19,6 +19,7 @@ import { AutoTextarea } from "./auto-textarea";
 import { ProgramSearch } from "./program-search";
 import { GabayBrand } from "@/components/shared/gabay-brand";
 import { OperationsPanel, AdminWorkflow, ApplicantContentPreview } from "./operations";
+import { ContextImport, type ContextDraft } from "./context-import";
 import "./admin.css";
 
 export type Section = "overview" | "programs" | "requirements" | "knowledge" | "preview";
@@ -78,6 +79,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
   const [programForm, setProgramForm] = useState(initProgram);
   const [cycleMode, setCycleMode] = useState<"none"|"new"|"edit">("none");
   const [cycleForm, setCycleForm] = useState(initCycle);
+  const [importedCycle, setImportedCycle] = useState<typeof initCycle | null>(null);
   const [requirementId, setRequirementId] = useState<string | null>(null);
   const [requirementForm, setRequirementForm] = useState<RequirementDraft>(initRequirement);
   const [sourceTitle, setSourceTitle] = useState("");
@@ -215,6 +217,18 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
   ] : [];
   const preflightReady = checks.length > 0 && checks.every((c) => c.ok);
 
+  function applyContextDraft(draft: ContextDraft) {
+    setProgramMode("new");
+    setProgramForm({ title: draft.title, description: draft.description });
+    setImportedCycle({
+      academic_year: draft.academic_year,
+      application_start: draft.application_start,
+      application_end: draft.application_end,
+      official_url: draft.official_url
+    });
+    setError("");
+    setMessage("");
+  }
   function editProgram(p: Program) {
     setProgramId(p.id); setCycleMode("none");
     setProgramForm({title:p.title,description:p.description}); setProgramMode("edit");
@@ -234,6 +248,11 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
         if (saved) setProgramId(saved.id as string);
       }
       setProgramMode("none"); setProgramForm(initProgram);
+      if (!editingId && importedCycle) {
+        setCycleForm(importedCycle);
+        setCycleMode("new");
+        setImportedCycle(null);
+      }
     }, editingId ? "Program changes saved." : "Draft program created. Add an application cycle next.");
   }
   function editCycle(c: Cycle) {
@@ -400,8 +419,9 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
           </> : null}
 
           {section === "programs" ? <>
-            <Heading eyebrow="Content library" title="Scholarship guides" description="Step 1: Enter verified scholarship details and academic year. Then prepare the student checklist." action={<Button onClick={()=>{setProgramForm(initProgram);setProgramMode("new");setError("");}}><Plus size={17}/> New program</Button>}/>
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,1fr)]">
+            <Heading eyebrow="Content library" title="Scholarship guides" description="Step 1: Enter verified scholarship details and academic year. Then prepare the student checklist." action={<Button onClick={()=>{setProgramForm(initProgram);setImportedCycle(null);setProgramMode("new");setError("");}}><Plus size={17}/> New program</Button>}/>
+            <ContextImport demoMode={demoMode} onApply={applyContextDraft}/>
+             <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,1fr)]">
               <div className="space-y-5">
                 <Card><div className="grid gap-3 sm:grid-cols-[1fr_160px]"><ProgramSearch value={search} onChange={setSearch} programNames={data.programs.map(p=>p.title)} scope={demoMode?"demo":"admin"}/><div><label htmlFor="program-filter" className="sr-only">Filter publication status</label><AdminSelect id="program-filter" value={filter} onChange={setFilter} placeholder="All statuses" options={[{value:"all",label:"All statuses"},{value:"draft",label:"Draft"},{value:"published",label:"Published"},{value:"archived",label:"Archived"}]}/></div></div></Card>
                 <Card className="!p-0"><div className="border-b border-[#d7e3ef] px-5 py-4 text-sm font-semibold">{filteredPrograms.length} program(s)</div>{!filteredPrograms.length ? <div className="p-5"><Empty title="No matching programs" message="Try a different search or create a draft program."/></div> : <ul className="divide-y divide-[#d7e3ef]">{filteredPrograms.map(p=><li key={p.id} className={"p-5 transition-colors hover:bg-[#f7fbff] "+(activeProgramId===p.id?"bg-[#eef6ff]":"")}><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><h2 className="font-semibold text-[#102a51]">{p.title}</h2><p className="mt-2 line-clamp-2 text-sm leading-6 text-[#53657b]">{p.description}</p><p className="mt-2 text-xs text-[#53657b]">{data.cycles.filter(c=>c.program_id===p.id).length} cycle(s)</p></div><Pill status={p.status}/></div><div className="mt-4 flex flex-wrap gap-2"><Button onClick={()=>{setProgramId(p.id);setCycleId("");setCycleMode("none");setProgramMode("none");}}>View cycles</Button><Button variant="outline" onClick={()=>editProgram(p)}>Edit <ChevronRight size={15}/></Button></div></li>)}</ul>}</Card>
