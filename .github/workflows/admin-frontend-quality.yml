@@ -1,7 +1,7 @@
 name: Admin frontend quality
 on:
   push:
-    branches: ["feat/admin-portal"]
+    branches: ["feat/admin-portal", "feat/admin-login-redesign"]
     paths:
       - "src/app/admin/**"
       - "src/components/admin/**"
@@ -14,6 +14,7 @@ on:
       - "package.json"
       - "playwright.config.ts"
       - "tests/admin-ui.spec.ts"
+      - "tests/admin-login.spec.ts"
   pull_request:
     branches: ["staging"]
     paths:
@@ -48,6 +49,8 @@ jobs:
         run: npm run lint
       - name: Applicant model and API regression tests
         run: npm run test:applicant
+      - name: Admin login unit tests
+        run: npx vitest run src/components/admin/login-validation.test.ts
       - name: Production build
         run: npm run build
       - name: Install browser for UI tests
