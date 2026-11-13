@@ -399,7 +399,7 @@ test("Admin V3 paginates more than 10 Supabase-visible guides and resets on sear
   await expect(pager).toContainText("13");
   await expect(page.getByRole("heading",{name:"Test Scholarship 01"})).toBeVisible();
   await expect(page.getByRole("heading",{name:"Test Scholarship 11"})).toHaveCount(0);
-  await pager.getByRole("button",{name:"Page 2"}).click();
+  await pager.getByRole("button",{name:"Next page"}).click();
   await expect(page.getByRole("heading",{name:"Test Scholarship 11"})).toBeVisible();
   await expect(page.getByRole("heading",{name:"Test Scholarship 01"})).toHaveCount(0);
   await page.getByRole("combobox",{name:"Search scholarship programs"}).fill("Scholarship 03");
