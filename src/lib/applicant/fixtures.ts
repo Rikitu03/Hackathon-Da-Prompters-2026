@@ -19,58 +19,58 @@ export const demoGuide: Guide = {
       requirements: [
         {
           id: "illustrative-enrollment",
-          title: "Enrollment certificate",
+          title: "Certificate of Registration",
           description:
-            "A sample school document. Confirm the exact document and academic period in the current official guide.",
+            "A sample school document showing your name, student number, course, school year and year level. Confirm the exact document and academic period in the current official guide.",
           required: true,
           steps: [
-            "Read the current official guide to confirm which enrollment document and academic period are requested.",
-            "Ask your school registrar about its official request process, fees, and release time. These details are not verified here.",
-            "Keep a complete, readable copy and check that its details match your original.",
+            "Read the current official guide to confirm which enrollment document and academic period are requested. Some guides ask for enrollment evidence under a different title.",
+            "Ask your school registrar how to request your Certificate of Registration, and about any fees or release time. These details are not verified here.",
+            "Keep a complete, readable copy, then use “Check this document” on this page to compare the details read from it with your original.",
           ],
           faqs: [
             {
-              question: "Can I use last year’s certificate?",
+              question: "Can I use last year’s Certificate of Registration?",
               answer:
-                "This walkthrough cannot confirm accepted periods. Check the current published requirements or ask the scholarship office.",
-            },
-          ],
-        },
-        {
-          id: "illustrative-grades",
-          title: "Record of grades",
-          description:
-            "A sample academic record. This guide sets no grade cutoff or eligibility rule.",
-          required: true,
-          steps: [
-            "Confirm the exact academic term and accepted record type with the current official scholarship guide.",
-            "Ask your school registrar how to request that record.",
-            "Check that your copy is readable, complete, and shows the requested period.",
-          ],
-          faqs: [
-            {
-              question: "Is a screenshot accepted?",
-              answer:
-                "Accepted formats are not verified in this walkthrough. Confirm with the scholarship office.",
+                "This walkthrough cannot confirm accepted periods. The document check flags an enrollment date from an earlier year so you can confirm the right document with the scholarship office.",
             },
           ],
         },
         {
           id: "illustrative-residency",
-          title: "Proof of residency",
+          title: "Certificate of Residency",
           description:
-            "An example category only. Confirm the accepted document and issuing office before requesting a copy.",
+            "A sample barangay document showing your name, address, years stayed, date issued and city. Confirm the accepted document and issuing office before requesting a copy.",
           required: true,
           steps: [
-            "Check the official requirements for the exact accepted proof of residence.",
-            "Confirm the issuing office and request process with the scholarship office.",
+            "Check the official requirements for the exact accepted proof of residence. A Certificate of Indigency is a different document.",
+            "Confirm the issuing office and request process with the barangay or the scholarship office.",
             "Ask the issuing office what to bring and how to collect the document. Do not assume any fees or office hours from this example.",
           ],
           faqs: [
             {
-              question: "Which proof should I get?",
+              question: "Is a Certificate of Indigency the same as a Certificate of Residency?",
               answer:
-                "No specific proof is verified here. Use the current official guide to avoid requesting the wrong document.",
+                "No, they are different documents. This walkthrough cannot confirm which one a cycle accepts, so use the current official guide.",
+            },
+          ],
+        },
+        {
+          id: "illustrative-school-id",
+          title: "School ID or government-issued ID",
+          description:
+            "A sample ID showing your name, student number and section. Confirm which ID types the current official guide accepts, and whether both sides are needed.",
+          required: true,
+          steps: [
+            "Read the current official guide to confirm which ID types are accepted and whether the front and back are both requested.",
+            "Take a clear, well-lit photo or scan that shows every printed detail.",
+            "Compare the name and student number with your Certificate of Registration, then use “Check this document” on this page to see any differences.",
+          ],
+          faqs: [
+            {
+              question: "Can I use a different valid ID?",
+              answer:
+                "Accepted alternatives depend on the cycle. This walkthrough cannot confirm them, so check the current official guide or ask the scholarship office.",
             },
           ],
         },

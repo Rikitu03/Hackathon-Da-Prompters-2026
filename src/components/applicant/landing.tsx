@@ -275,9 +275,9 @@ export function Landing() {
               requirements.
             </p>
             {[
-              "Enrollment certificate",
-              "Record of grades",
-              "Proof of residency",
+              "Certificate of Registration",
+              "Certificate of Residency",
+              "School ID or government-issued ID",
             ].map((t, i) => (
               <div className="preview-row" key={t}>
                 <span
