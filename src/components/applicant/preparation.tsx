@@ -480,7 +480,6 @@ export function RequirementDetail({
               </p>
             )}
           </section>
-          {cycle && <DocumentCheckPanel cycleId={cycle.id} requirement={requirement} />}
           {(requirement.issuingOffice || requirement.officeAddress || requirement.officeHours || requirement.mapUrl) && (
              <section className="surface" aria-label="Where to get this document">
                <h2><MapPin size={20} aria-hidden="true" /> Where to get this document</h2>
@@ -493,6 +492,7 @@ export function RequirementDetail({
                <p className="helper">Confirm the address and opening hours with the issuing office before visiting.</p>
              </section>
            )}
+          {cycle && <DocumentCheckPanel cycleId={cycle.id} requirement={requirement} />}
            <section className="surface">
              <h2>Questions you might have</h2>
             {requirement.faqs.length ? (
