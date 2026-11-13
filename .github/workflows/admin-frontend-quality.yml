@@ -49,8 +49,8 @@ jobs:
         run: npm run lint
       - name: Applicant model and API regression tests
         run: npm run test:applicant
-      - name: Admin login unit tests
-        run: npx vitest run src/components/admin/login-validation.test.ts
+      - name: Origin security and login validation tests
+        run: npx vitest run src/lib/api-origin.test.ts src/components/admin/login-validation.test.ts
       - name: Production build
         run: npm run build
       - name: Install browser for UI tests
