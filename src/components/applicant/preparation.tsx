@@ -34,6 +34,8 @@ import {
 } from "./workspace";
 import { Sources, useGuide } from "./catalogue";
 import { DocumentCheckPanel } from "./verification/document-check";
+import { DocumentTrio } from "./verification/document-trio";
+import { VerificationChip } from "./verification/verification-chip";
 
 export function StatusBadge({ status }: { status: Status }) {
   return (
@@ -311,6 +313,7 @@ export function Checklist() {
           those items to prepared again.
         </Notice>
       )}
+      <DocumentTrio cycleId={cycle.id} />
       {!prep.ready ? (
         <Loading />
       ) : cycle.requirements.length ? (
@@ -336,6 +339,7 @@ export function Checklist() {
                   <h2>{r.title}</h2>
                 </Link>
                 <p>{r.description}</p>
+                <VerificationChip cycleId={cycle.id} programId={guide.id} requirement={r} />
                 <Link
                   href={`/requirements/${r.id}?program=${guide.id}&cycle=${cycle.id}`}
                   className="text-link"

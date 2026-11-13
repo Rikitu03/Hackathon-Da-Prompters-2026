@@ -157,3 +157,51 @@ test("an unreadable upload explains recovery", async ({ page }) => {
   await expect(page.getByText("Couldn't check this document")).toBeVisible();
   await expect(page.locator("#document-check").getByRole("alert")).toContainText("Try a clearer, well-lit photo"); // scoped: the toast may also be an alert
 });
+
+const CHECKLIST_REGION = "How your documents compare";
+
+test("the checklist summarises checks and opens results", async ({ page }) => {
+  await useDemoGuide(page);
+  await page.goto(requirementUrl("illustrative-enrollment"));
+  await page.getByRole("button", { name: "Try a clean sample" }).click();
+  await page.keyboard.press("Escape");
+  await page.goto(requirementUrl("illustrative-school-id"));
+  await page.getByRole("button", { name: "Try a sample with issues" }).click();
+  await page.keyboard.press("Escape");
+  await page.goto("/my-checklist");
+  const trio = page.getByRole("region", { name: CHECKLIST_REGION });
+  await expect(trio.getByText("Student number differs")).toBeVisible();
+  await expect(trio.getByText("Not compared yet")).toBeVisible();
+  await expect(page.getByLabel("Check document for Certificate of Residency")).toHaveAttribute(
+    "href", /illustrative-residency\?program=illustrative-college&cycle=illustrative-college-cycle#document-check$/);
+  await expect(page.locator(".checklist-row").nth(0)).toContainText("Possible mismatch");
+  await page.getByRole("button", { name: "View check for School ID or government-issued ID" }).click();
+  await expect(dialogFor(page, "School ID or government-issued ID")).toBeVisible();
+});
+
+test("a correction updates the checklist chip", async ({ page }) => {
+  await useDemoGuide(page);
+  await page.goto(requirementUrl("illustrative-enrollment"));
+  await page.getByRole("button", { name: "Try a clean sample" }).click();
+  await page.keyboard.press("Escape");
+  await page.goto(requirementUrl("illustrative-school-id"));
+  await page.getByRole("button", { name: "Try a sample with issues" }).click();
+  const dialog = dialogFor(page, "School ID or government-issued ID");
+  await dialog.getByRole("button", { name: /Extracted details/ }).click();
+  await dialog.getByLabel("Student number").fill("23-00314");
+  await dialog.getByRole("button", { name: "Save corrections" }).click();
+  await page.keyboard.press("Escape");
+  await page.goto("/my-checklist");
+  await expect(page.getByRole("region", { name: CHECKLIST_REGION }).getByText("Details match")).toBeVisible();
+});
+
+test("clearing checked details resets the checklist", async ({ page }) => {
+  await useDemoGuide(page);
+  await page.goto(requirementUrl("illustrative-enrollment"));
+  await page.getByRole("button", { name: "Try a clean sample" }).click();
+  await page.keyboard.press("Escape");
+  await page.goto("/my-checklist");
+  await page.getByRole("button", { name: "Clear checked details" }).click();
+  await expect(page.getByText("Checked details cleared")).toBeVisible();
+  await expect(page.getByRole("region", { name: CHECKLIST_REGION })).toHaveCount(0);
+});
