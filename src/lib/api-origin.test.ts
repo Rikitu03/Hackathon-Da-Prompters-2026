@@ -21,7 +21,7 @@ describe("same-origin write guard", () => {
   });
   it("accepts Codespaces HTTPS requests when forwarded-host is absent or internally rewritten", () => {
     const origin = "https://cautious-adventure-5gxxg9w6q7q427rxq-3000.app.github.dev";
-    const scenarios = [
+    const scenarios: Record<string, string>[] = [
       { host: "localhost:3000" },
       { host: "localhost:3000", "x-forwarded-host": "localhost:3000" },
       { host: new URL(origin).host, "x-forwarded-host": "localhost:3000" },
