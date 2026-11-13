@@ -291,7 +291,8 @@
   border: 0;
   background: transparent;
   color: #075ba9;
-  font: 650 inherit;
+  font-family: inherit;
+  font-size: inherit;
   font-weight: 650;
   cursor: pointer;
 }
