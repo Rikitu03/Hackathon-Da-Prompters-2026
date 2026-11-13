@@ -123,7 +123,7 @@ test("login copy is concise and the small labels use legible font styling", asyn
       text: element.textContent?.trim(),
       fontSize: parseFloat(style.fontSize),
       fontWeight: Number(style.fontWeight),
-      tracking: parseFloat(style.letterSpacing),
+      tracking: style.letterSpacing === "normal" ? 0 : parseFloat(style.letterSpacing),
       textTransform: style.textTransform,
       fontFamily: style.fontFamily,
     };
