@@ -26,10 +26,12 @@ import {
 } from "lucide-react";
 import { demoGuide } from "@/lib/applicant/fixtures";
 import { fetchGuide } from "@/lib/applicant/api";
+import { toast } from "@/components/ui/toast";
 import {
   OFFICIAL_PORTAL,
   reconcile,
   signature,
+  statusLabels,
   storageKey,
   type Preferences,
   type Guide,
@@ -212,8 +214,11 @@ export function usePreparation(cycle: Cycle | undefined) {
     try {
       localStorage.setItem(storageKey(cycle.id, id), JSON.stringify(entry));
       refreshPreparation();
+      if (status === "prepared") toast.add({ title: "Marked as prepared", description: requirement.title, type: "success" });
+      else toast.add({ title: "Status updated", description: `${requirement.title}: ${statusLabels[status]}`, type: "info" });
     } catch {
       setWarning("This status could not be saved. It may reset after refresh.");
+      toast.add({ title: "Status not saved", description: "It may reset after refresh.", type: "warning" });
     }
   }
   const changed = (cycle?.requirements ?? []).filter(

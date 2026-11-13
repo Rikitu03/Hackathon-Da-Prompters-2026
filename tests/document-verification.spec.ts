@@ -17,3 +17,12 @@ test("the demo checklist covers the three priority documents in order", async ({
   await page.goto(requirementUrl("illustrative-enrollment"));
   await expect(page.getByRole("heading", { level: 1, name: "Certificate of Registration" })).toBeVisible();
 });
+
+test("changing a status confirms it with a toast", async ({ page }) => {
+  await useDemoGuide(page);
+  await page.goto("/my-checklist");
+  await page.getByLabel("Preparation status for Certificate of Registration").selectOption("prepared");
+  await expect(page.getByText("Marked as prepared")).toBeVisible();
+  await page.getByLabel("Preparation status for Certificate of Residency").selectOption("in-progress");
+  await expect(page.getByText("Certificate of Residency: In progress")).toBeVisible();
+});
