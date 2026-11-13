@@ -6,6 +6,7 @@ import type { AdminData, Cycle, Program } from "./data";
 import { formatDate, isHttpsLink } from "./data";
 import type { Section } from "./console";
 import { FaqAccordion } from "./faq-accordion";
+import { ScholarshipActivityChart } from "./activity-chart";
 
 const route = (demoMode: boolean, section: Exclude<Section, "overview">, programId?: string) =>
   demoMode
@@ -55,10 +56,10 @@ type Bar = { label: string; value: number; color: string };
 function Distribution({ title, description, values }: { title: string; description: string; values: Bar[] }) {
   const total = values.reduce((sum, item) => sum + item.value, 0);
   return (
-    <section className="rounded-2xl border border-[#d7e3ef] bg-white p-5 shadow-sm sm:p-6">
+    <section className="admin-analytics-card rounded-2xl bg-white p-5 sm:p-6">
       <h3 className="text-base font-semibold text-[#102a51]">{title}</h3>
       <p className="mt-1 text-xs text-[#53657b]">{description}</p>
-      <div className="mt-5 flex h-3 overflow-hidden rounded-full bg-[#eef6ff]" role="img" aria-label={total === 0 ? title + ": no records" : values.map(v => v.label + " " + v.value).join(", ")}>
+      <div className="mt-5 flex h-1.5 overflow-hidden rounded-full bg-[#edf0f4]" role="img" aria-label={total === 0 ? title + ": no records" : values.map(v => v.label + " " + v.value).join(", ")}>
         {values.map(item => <span key={item.label} style={{width: total ? (item.value / total * 100) + "%" : "0%",backgroundColor:item.color}}/>)}
       </div>
       <ul className="mt-4 space-y-3">
@@ -76,13 +77,13 @@ function Distribution({ title, description, values }: { title: string; descripti
 
 export function OperationsPanel({ data, demoMode }: { data: AdminData; demoMode: boolean }) {
   const guideCounts: Bar[] = [
-    { label: "Published", value: data.programs.filter(p => p.status === "published").length, color: "#155bb0" },
-    { label: "Draft", value: data.programs.filter(p => p.status === "draft").length, color: "#90bceb" },
-    { label: "Archived", value: data.programs.filter(p => p.status === "archived").length, color: "#f7c744" },
+    { label: "Published", value: data.programs.filter(p => p.status === "published").length, color: "#4779b2" },
+    { label: "Draft", value: data.programs.filter(p => p.status === "draft").length, color: "#aebfd4" },
+    { label: "Archived", value: data.programs.filter(p => p.status === "archived").length, color: "#d2a55f" },
   ];
   const sourceCounts: Bar[] = [
-    { label: "Approved", value: data.sources.filter(s => s.is_approved).length, color: "#155bb0" },
-    { label: "Awaiting review", value: data.sources.filter(s => !s.is_approved).length, color: "#f7c744" },
+    { label: "Approved", value: data.sources.filter(s => s.is_approved).length, color: "#4779b2" },
+    { label: "Awaiting review", value: data.sources.filter(s => !s.is_approved).length, color: "#d2a55f" },
   ];
   const draftCycles = data.cycles.filter(c => c.status === "draft");
   const missingDocs = draftCycles.filter(c => !data.requirements.some(r => r.cycle_id === c.id));
@@ -96,7 +97,7 @@ export function OperationsPanel({ data, demoMode }: { data: AdminData; demoMode:
   const firstDraft = data.programs.find(p => p.status === "draft");
   return (
     <div className="mt-6 space-y-5">
-      <section className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-[#bcd6f0] bg-[#eef6ff] p-5 sm:p-6">
+      <section className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-[#d3dce8] bg-[#f8fafc] p-5 sm:p-6">
         <div className="max-w-2xl">
           <p className="text-xs font-bold uppercase tracking-[.12em] text-[#155bb0]">Start here</p>
           <h2 className="mt-1 text-xl font-bold text-[#102a51]">Manage the scholarship guides students will see</h2>
@@ -107,11 +108,12 @@ export function OperationsPanel({ data, demoMode }: { data: AdminData; demoMode:
           {firstDraft && <Link href={route(demoMode,"programs",firstDraft.id)} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#b5c9e0] bg-white px-4 py-2.5 text-sm font-semibold text-[#102a51] hover:bg-[#eaf4ff]"><FilePenLine size={17}/>Continue draft</Link>}
         </div>
       </section>
+      <ScholarshipActivityChart data={data}/>
       <div className="grid gap-4 xl:grid-cols-2" aria-label="Content operation charts">
         <Distribution title="Scholarship guide status" description="Current guide records in the content library" values={guideCounts}/>
         <Distribution title="Official source reviews" description="Current source approval state; indexing is tracked separately" values={sourceCounts}/>
       </div>
-      <section className="rounded-2xl border border-[#d7e3ef] bg-white p-5 sm:p-6" aria-labelledby="admin-needs-attention">
+      <section className="admin-analytics-card rounded-2xl bg-white p-5 sm:p-6" aria-labelledby="admin-needs-attention">
         <div className="flex flex-wrap items-center gap-2">
           <AlertCircle size={20} className="text-[#155bb0]"/>
           <h2 id="admin-needs-attention" className="text-lg font-semibold text-[#102a51]">Needs attention</h2>
@@ -120,7 +122,7 @@ export function OperationsPanel({ data, demoMode }: { data: AdminData; demoMode:
         <ul className="mt-4 grid gap-3 md:grid-cols-3">
           {attention.map(item => (
             <li key={item.title}>
-              <Link href={item.href} className="flex h-full min-h-28 flex-col gap-3 rounded-xl border border-[#d7e3ef] p-4 transition-colors hover:border-[#8eb5e1] hover:bg-[#f6fbff]">
+              <Link href={item.href} className="flex h-full min-h-28 flex-col gap-3 rounded-xl border border-[#dde3eb] bg-[#fbfcfe] p-4 transition-colors hover:border-[#8eb5e1] hover:bg-[#f6fbff]">
                 <div className="flex items-center justify-between">
                   <item.icon size={20} className="text-[#155bb0]"/>
                   <span className="text-xl font-bold tabular-nums text-[#102a51]">{item.count}</span>

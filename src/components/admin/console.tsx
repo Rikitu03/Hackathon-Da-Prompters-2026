@@ -353,7 +353,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     } catch (err) {setError(errorText(err));} finally {setBusy(false);}
   }
 
-  if (gate !== "ready") return <MotionConfig reducedMotion="user"><div className="admin-portal flex min-h-screen items-center justify-center bg-[#f5f9ff] px-4 py-10">
+  if (gate !== "ready") return <MotionConfig reducedMotion="user"><div className="admin-portal flex min-h-screen items-center justify-center bg-[#f3f5f8] px-4 py-10">
     <div className="w-full max-w-md">
       <GabayBrand className="mb-7 text-[#102a51]"/>
       <Card className="!p-7 sm:!p-9"><div className="mb-6 inline-flex rounded-2xl bg-[#eef6ff] p-3 text-[#155bb0]"><LockKeyhole size={25} aria-hidden="true"/></div><h1 className="text-2xl font-semibold tracking-tight text-[#102a51]">Admin workspace</h1><p className="mt-2 text-sm leading-6 text-[#53657b]">Sign in with your pre-provisioned administrator account. Applicant accounts cannot edit scholarship guidance.</p>
@@ -369,7 +369,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
       </form> : null}</Card><p className="mt-5 text-center text-xs leading-5 text-[#53657b]">Independent project. Not a government administration portal.</p>
     <div className="mt-5 border-t border-[#d7e3ef] pt-5 text-center"><Link href="/admin/demo" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#155bb0] underline underline-offset-4">Explore read-only UI demo <ArrowRight size={16}/></Link></div></div></div></MotionConfig>;
 
-  return <MotionConfig reducedMotion="user"><div className="admin-portal min-h-screen bg-[#f5f9ff] text-[#102a51] lg:grid lg:grid-cols-[268px_minmax(0,1fr)]">
+  return <MotionConfig reducedMotion="user"><div className="admin-portal min-h-screen bg-[#f3f5f8] text-[#102a51] lg:grid lg:grid-cols-[268px_minmax(0,1fr)]">
     <aside className="admin-sidebar hidden min-h-screen overflow-y-auto border-r border-[#d7e3ef] bg-white px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
       <GabayBrand inverse className="mb-10 px-3"/>
       <p className="admin-sidebar-label mb-3 px-3 text-xs font-bold uppercase tracking-[.12em] text-[#53657b]">Workspace</p><LinkNav section={section} demoMode={demoMode}/>

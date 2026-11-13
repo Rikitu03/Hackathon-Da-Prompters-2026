@@ -1,9 +1,9 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { AlertCircle, ArrowRight, Inbox, LoaderCircle } from "lucide-react";
 
-export const inputClass = "mt-1.5 block min-w-0 min-h-12 w-full rounded-xl border border-[#d7e3ef] bg-white px-4 py-3 text-base leading-6 text-[#102a51] placeholder:text-[#53657b] shadow-[0_1px_1px_rgba(20,55,30,.035)] transition-[border-color,background-color] duration-150 hover:border-[#9cbde0] focus-visible:border-[#155bb0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155bb0] disabled:cursor-not-allowed disabled:bg-[#f3f6fa]";
+export const inputClass = "mt-1.5 block min-w-0 min-h-12 w-full rounded-xl border border-[#d7e3ef] bg-white px-4 py-3 text-base leading-6 text-[#102a51] placeholder:text-[#53657b] shadow-[0_1px_1px_rgba(16,42,81,.035)] transition-[border-color,background-color] duration-150 hover:border-[#9cbde0] focus-visible:border-[#155bb0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155bb0] disabled:cursor-not-allowed disabled:bg-[#f3f6fa]";
 export const areaClass = inputClass + " min-h-[92px] resize-y";
-export const cardClass = "min-w-0 rounded-2xl border border-[#d7e3ef] bg-white p-5 shadow-[0_6px_30px_rgba(28,61,37,0.035)] sm:p-6";
+export const cardClass = "min-w-0 rounded-2xl border border-[#d7e3ef] bg-white p-5 shadow-[0_5px_18px_rgba(16,42,81,0.055),0_1px_2px_rgba(16,42,81,0.04)] sm:p-6";
 
 export function Button({ children, variant = "primary", busy, className = "", disabled, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "outline" | "quiet" | "danger"; busy?: boolean }) {
   const variants = {
