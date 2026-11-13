@@ -20,6 +20,7 @@ import { GabayBrand } from "@/components/shared/gabay-brand";
 import { OperationsPanel, AdminWorkflow, ApplicantContentPreview } from "./operations";
 import { ContextImport, type ContextDraft } from "./context-import";
 import { AdminPagination, ADMIN_PAGE_SIZE, safeAdminPage } from "./pagination";
+import { AdminLoginScreen } from "./login-screen";
 import "./admin.css";
 
 export type Section = "overview" | "programs" | "requirements" | "knowledge" | "preview";
@@ -342,21 +343,20 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     }, publish ? "Guide published. Verify the applicant view." : "Cycle returned to draft for review.");
   }
 
-  if (gate !== "ready") return <MotionConfig reducedMotion="user"><div className="admin-portal flex min-h-screen items-center justify-center bg-[#f3f5f8] px-4 py-10">
-    <div className="w-full max-w-md">
-      <GabayBrand className="mb-7 text-[#102a51]"/>
-      <Card className="!p-7 sm:!p-9"><div className="mb-6 inline-flex rounded-2xl bg-[#eef6ff] p-3 text-[#155bb0]"><LockKeyhole size={25} aria-hidden="true"/></div><h1 className="text-2xl font-semibold tracking-tight text-[#102a51]">Admin workspace</h1><p className="mt-2 text-sm leading-6 text-[#53657b]">Sign in with your pre-provisioned administrator account. Applicant accounts cannot edit scholarship guidance.</p>
-      {error ? <div className="mt-4"><Notice tone="error">{error}</Notice></div> : null}
-      {gate === "loading" ? <p role="status" className="mt-6 flex items-center gap-2 text-sm text-[#53657b]"><LoaderCircle size={18} className="animate-spin"/> Checking access securely…</p> : null}
-      {gate === "setup" ? <div className="mt-6"><Notice>Supabase configuration is missing. Ask the backend team to configure public environment variables. Admin actions are disabled.</Notice></div> : null}
-      {gate === "denied" ? <div className="mt-6 space-y-4"><Notice tone="error">Access denied. This account is not assigned an editor or publisher role.</Notice><Button variant="outline" onClick={() => void signOut()}>Sign out and use another account</Button></div> : null}
-      {gate === "error" ? <div className="mt-6"><Button variant="outline" onClick={() => void authenticate()}><RefreshCw size={16}/> Retry connection</Button></div> : null}
-      {gate === "login" ? <form onSubmit={(e)=>void signIn(e)} className="mt-7 space-y-5">
-        <Field label="Email address" htmlFor="admin-email" required><input id="admin-email" className={inputClass} autoComplete="username" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} required/></Field>
-        <Field label="Password" htmlFor="admin-password" required><input id="admin-password" className={inputClass} autoComplete="current-password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} required/></Field>
-        <Button className="w-full" type="submit" busy={busy}>Sign in securely <ArrowRight size={16}/></Button>
-      </form> : null}</Card><p className="mt-5 text-center text-xs leading-5 text-[#53657b]">Independent project. Not a government administration portal.</p>
-    <div className="mt-5 border-t border-[#d7e3ef] pt-5 text-center"><Link href="/admin/demo" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#155bb0] underline underline-offset-4">Explore read-only UI demo <ArrowRight size={16}/></Link></div></div></div></MotionConfig>;
+  if (gate !== "ready") return (
+    <AdminLoginScreen
+      gate={gate}
+      email={email}
+      password={password}
+      busy={busy}
+      error={error}
+      onEmailChange={setEmail}
+      onPasswordChange={setPassword}
+      onSubmit={(event) => void signIn(event)}
+      onRetry={() => void authenticate()}
+      onSignOut={() => void signOut()}
+    />
+  );
 
   return <MotionConfig reducedMotion="user"><div className="admin-portal min-h-screen bg-[#f3f5f8] text-[#102a51] lg:grid lg:grid-cols-[268px_minmax(0,1fr)]">
     <aside className="admin-sidebar hidden min-h-screen overflow-y-auto border-r border-[#d7e3ef] bg-white px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
