@@ -73,15 +73,15 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [data, setData] = useState<AdminData>(demoMode ? demoData : emptyData);
-  const [demoHydrated, setDemoHydrated] = useState(false);
   useEffect(() => {
     if (!demoMode) return;
     setData(readDemoSandbox());
-    setDemoHydrated(true);
   }, [demoMode]);
-  useEffect(() => {
-    if (demoMode && demoHydrated) writeDemoSandbox(data);
-  }, [demoMode, demoHydrated, data]);
+  // Persist synchronously before route navigation can unmount this view.
+  function commitDemo(next: AdminData) {
+    writeDemoSandbox(next);
+    setData(next);
+  }
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -298,7 +298,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     const editingId = programMode === "edit" ? activeProgram?.id : null;
     if (demoMode) {
       const id = editingId || demoId("program");
-      setData(current => upsertDemoProgram(current, {
+      commitDemo(upsertDemoProgram(data, {
         id, title, description, status: editingId ? activeProgram?.status ?? "draft" : "draft",
         created_at: editingId ? activeProgram?.created_at ?? new Date().toISOString() : new Date().toISOString(),
       }));
@@ -331,7 +331,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     const editingId = cycleMode === "edit" ? activeCycle?.id : null;
     if (demoMode) {
       const id = editingId || demoId("cycle");
-      setData(current => upsertDemoCycle(current, {
+      commitDemo(upsertDemoCycle(data, {
         id, program_id: activeProgram.id,
         academic_year: cycleForm.academic_year.trim(),
         application_start: cycleForm.application_start || null,
@@ -389,7 +389,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     if (demoMode) {
       const id = editingId || demoId("requirement");
       const position = editingId ? (cycleRequirements.find(r => r.id === id)?.position ?? cycleRequirements.length) : cycleRequirements.length;
-      setData(current => upsertDemoRequirement(current, {
+      commitDemo(upsertDemoRequirement(data, {
         id, cycle_id: activeCycle.id, title: requirementForm.title.trim(),
         description: requirementForm.description.trim(), is_required: requirementForm.is_required, position,
         issuing_office: requirementForm.issuingOffice.trim(), office_address: requirementForm.officeAddress.trim(),
@@ -418,7 +418,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
       const existing = data.sources.find(row => row.id === sourceId);
       const id = sourceId || demoId("source");
       const updatedText = !existing || existing.content !== sourceContent || existing.source_url !== sourceUrl.trim();
-      setData(current => upsertDemoSource(current, {
+      commitDemo(upsertDemoSource(data, {
         id, cycle_id: activeCycle.id, title: sourceTitle.trim(),
         source_url: sourceUrl.trim(), content: sourceContent.trim(),
         is_approved: sourceApproved, reviewed_at: sourceApproved ? new Date().toISOString() : null,
