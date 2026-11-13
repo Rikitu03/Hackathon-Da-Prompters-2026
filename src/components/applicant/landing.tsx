@@ -7,7 +7,7 @@ import { Brand, OfficialLink } from "./workspace";
 import { useGabay } from "./gabay-context";
 import "./landing.css";
 
-const documents = ["Certificate of Registration", "Certificate of Residency", "School ID or government-issued ID"];
+const documents = ["Certificate of Registration", "Barangay Certificate of Residency", "School ID or any Valid-ID"];
 function Start({ yellow = false }: { yellow?: boolean }) { return <Link className={`gp-button${yellow ? " gp-button-yellow" : ""}`} href="/onboarding">Start preparing<ArrowRight size={17} aria-hidden="true" /></Link>; }
 
 export function Landing() {

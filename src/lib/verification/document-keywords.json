@@ -12,7 +12,7 @@
       "id": "certificate_of_registration",
       "title": "Certificate of Registration",
       "shortTitle": "COR",
-      "requirementIds": ["illustrative-enrollment"],
+      "requirementIds": ["certificate-of-registration"],
       "requirementTitleKeywords": ["certificate of registration", "registration", "enrollment", "enrolment"],
       "titleKeywords": ["certificate of registration", "registration form", "certificate of enrollment", "cor"],
       "fields": [
@@ -28,9 +28,9 @@
     },
     {
       "id": "certificate_of_residency",
-      "title": "Certificate of Residency",
+      "title": "Barangay Certificate of Residency",
       "shortTitle": "Residency",
-      "requirementIds": ["illustrative-residency"],
+      "requirementIds": ["barangay-residency"],
       "requirementTitleKeywords": ["residency", "residence"],
       "titleKeywords": ["certificate of residency", "certification of residency", "barangay residency", "residency certificate", "katibayan ng paninirahan"],
       "fields": [
@@ -43,9 +43,9 @@
     },
     {
       "id": "school_id",
-      "title": "School ID or government-issued ID",
+      "title": "School ID or any Valid-ID",
       "shortTitle": "ID",
-      "requirementIds": ["illustrative-school-id"],
+      "requirementIds": ["school-or-valid-id"],
       "requirementTitleKeywords": ["school id", "valid id", "valid-id", "government id", "identification"],
       "titleKeywords": ["school id", "student id", "school identification", "student identification", "identification card"],
       "governmentIdKeywords": ["philippine identification", "philsys", "national id", "driver's license", "drivers license", "passport", "umid", "postal identity card", "postal id", "voter's id", "tin id", "prc id"],

@@ -23,7 +23,7 @@ import {
   Info,
   AlertCircle,
 } from "lucide-react";
-import { demoGuide } from "@/lib/applicant/fixtures";
+import { builtInGuide } from "@/lib/applicant/built-in-guides";
 import { fetchGuide } from "@/lib/applicant/api";
 import { toast } from "@/components/ui/toast";
 import {
@@ -121,8 +121,9 @@ export function ApplicantProvider({ children }: { children: React.ReactNode }) {
     setError("");
     setLoading(false);
     if (!programId) return;
-    if (programId === demoGuide.id) {
-      setGuide(demoGuide);
+    const builtIn = builtInGuide(programId);
+    if (builtIn) {
+      setGuide(builtIn);
       return;
     }
     const controller = new AbortController();

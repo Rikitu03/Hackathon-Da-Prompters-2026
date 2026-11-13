@@ -10,7 +10,7 @@ import {
   Search,
 } from "lucide-react";
 import { fetchGuide, fetchGuides } from "@/lib/applicant/api";
-import { demoGuide } from "@/lib/applicant/fixtures";
+import { BUILT_IN_GUIDES, builtInGuide } from "@/lib/applicant/built-in-guides";
 import type { Guide } from "@/lib/applicant/model";
 import { closedCycleNotice, cycleWindow, formatCycleDate } from "@/lib/cycle-window";
 import { JourneyRail } from "./journey";
@@ -34,8 +34,9 @@ export function useGuide(id: string) {
       setLoading(false);
       return;
     }
-    if (id === demoGuide.id) {
-      setGuide(demoGuide);
+    const builtIn = builtInGuide(id);
+    if (builtIn) {
+      setGuide(builtIn);
       setLoading(false);
       return;
     }
@@ -89,7 +90,6 @@ export function Explorer() {
   const [query, setQuery] = useState(""),
     [level, setLevel] = useState(""),
     [classification, setClassification] = useState(""),
-    [sample, setSample] = useState(false),
     [revision, setRevision] = useState(0);
   useEffect(() => {
     const c = new AbortController();
@@ -106,7 +106,7 @@ export function Explorer() {
       });
     return () => c.abort();
   }, [revision]);
-  const available = sample ? [...guides, demoGuide] : guides;
+  const available = [...BUILT_IN_GUIDES, ...guides];
   const levels = [
     ...new Set(available.flatMap((g) => (g.level ? [g.level] : []))),
   ];
@@ -187,19 +187,6 @@ export function Explorer() {
           </button>
         </Notice>
       )}
-      <div className="demo-switch">
-        <div>
-          <strong>Want to see how preparation works?</strong>
-          <p>Use a clearly labeled sample to explore the preparation tools.</p>
-        </div>
-        <button
-          className="btn secondary compact"
-          onClick={() => setSample(!sample)}
-          aria-pressed={sample}
-        >
-          {sample ? "Hide illustrative guide" : "Try illustrative guide"}
-        </button>
-      </div>
       {loading ? (
         <Loading label="Loading scholarship guides" />
       ) : (
@@ -444,8 +431,7 @@ export function Onboarding() {
   const [guides, setGuides] = useState<Guide[]>([]),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
-  const [sample, setSample] = useState(false),
-    [level, setLevel] = useState(""),
+  const [level, setLevel] = useState(""),
     [type, setType] = useState("New applicant"),
     [id, setId] = useState(""),
     [cycleId, setCycleId] = useState("");
@@ -464,7 +450,7 @@ export function Onboarding() {
       });
     return () => c.abort();
   }, []);
-  const available = sample ? [...guides, demoGuide] : guides;
+  const available = [...BUILT_IN_GUIDES, ...guides];
   const guide = available.find((g) => g.id === id);
   const cycle = guide?.cycles.find((c) => c.id === cycleId) ?? guide?.cycles[0];
   return (
@@ -521,25 +507,9 @@ export function Onboarding() {
           <>
             {error && (
               <Notice tone="warning">
-                {error} You can still explore an illustrative walkthrough.
+                {error} The built-in Pasig City guide is still available.
               </Notice>
             )}
-            <label className="checkbox-field">
-              <input
-                type="checkbox"
-                checked={sample}
-                onChange={(e) => {
-                  setSample(e.target.checked);
-                  if (!e.target.checked && id === demoGuide.id) setId("");
-                }}
-              />
-              <span>
-                Include the illustrative preparation walkthrough
-                <small>
-                  Sample content, not an official scholarship offering.
-                </small>
-              </span>
-            </label>
             <label className="field">
               Intended scholarship guide
               <select
@@ -578,7 +548,7 @@ export function Onboarding() {
             {!available.length && (
               <p>
                 No published guides are available right now. Check the official
-                portal, or include the illustrative walkthrough.
+                portal.
               </p>
             )}
           </>
