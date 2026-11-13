@@ -44,7 +44,7 @@ test("admin login shows inline errors and blocks invalid submissions", async ({ 
 
   await page.getByRole("textbox", { name: "Email address" }).fill("editor@example.com");
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("Invalid credentials");
+  await expect(page.locator(".admin-login-server-error[role=\"alert\"]")).toContainText("Invalid credentials");
   expect(requests).toBe(1);
   await expect(page.locator("#admin-password")).toHaveValue("");
 });
