@@ -33,6 +33,7 @@ import {
   useWorkspace,
 } from "./workspace";
 import { Sources, useGuide } from "./catalogue";
+import { DocumentCheckPanel } from "./verification/document-check";
 
 export function StatusBadge({ status }: { status: Status }) {
   return (
@@ -477,6 +478,7 @@ export function RequirementDetail({
               </p>
             )}
           </section>
+          {cycle && <DocumentCheckPanel cycleId={cycle.id} requirement={requirement} />}
           <section className="surface">
             <h2>Questions you might have</h2>
             {requirement.faqs.length ? (
