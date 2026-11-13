@@ -1,0 +1,300 @@
+
+    
+    
+    .applicant-ui.landing.marketing-v2{color-scheme:light;--gp-accent:#155bb0;--gp-accent-ink:light-dark(var(--gp-accent),#8fc5ff);--gp-bg:light-dark(#fff,#111d2d);--gp-soft:light-dark(#f1f7fe,#192b43);--gp-ink:light-dark(#102a51,#edf5ff);--gp-muted:light-dark(#526782,#afc1d9);--gp-line:light-dark(#dce7f3,#31465f);--gp-header:light-dark(#fff,#111d2d);--gp-navy:light-dark(#102a51,#0b1728);--gp-yellow:#f7c744;--gp-on-accent:#fff;--gp-success:light-dark(#25724f,#80d6ad);--gp-success-bg:light-dark(#eaf6ee,#1d3a32);font-family:"Gabay Sans",Arial,sans-serif;width:100%}
+    .applicant-ui.landing.marketing-v2 *{box-sizing:border-box}
+    .applicant-ui.landing.marketing-v2 button,.applicant-ui.landing.marketing-v2 input,.applicant-ui.landing.marketing-v2 select{font:inherit}
+    .applicant-ui.landing.marketing-v2 button,.applicant-ui.landing.marketing-v2 a{-webkit-tap-highlight-color:transparent}
+    .applicant-ui.landing.marketing-v2 button{cursor:var(--cursor-interaction,pointer)}
+    .applicant-ui.landing.marketing-v2 h1,.applicant-ui.landing.marketing-v2 h2,.applicant-ui.landing.marketing-v2 h3,.applicant-ui.landing.marketing-v2 p{margin:0}
+    .applicant-ui.landing.marketing-v2 svg{flex-shrink:0;width:18px;height:18px}
+    .applicant-ui.landing.marketing-v2 [hidden]{display:none!important}
+    .applicant-ui.landing.marketing-v2 .gp-page{position:relative;isolation:isolate;container-type:inline-size;width:100%;max-width:1100px;margin:0 auto;background:var(--gp-bg);color:var(--gp-ink);font-size:14px;line-height:1.55;overflow:clip;transition:max-width .2s}
+    .applicant-ui.landing.marketing-v2 .gp-inner{width:calc(100% - 80px);max-width:980px;margin:0 auto}
+    .applicant-ui.landing.marketing-v2 .gp-header{height:78px;display:flex;align-items:center;gap:20px;border-bottom:1px solid var(--gp-line);background:var(--gp-header)}
+    .applicant-ui.landing.marketing-v2 .gp-header-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;width:100%;padding:0 32px}
+    .applicant-ui.landing.marketing-v2 .gp-brand{display:inline-flex;gap:9px;align-items:center;text-decoration:none;color:var(--gp-ink);font-size:19px;letter-spacing:-.8px;font-weight:700;white-space:nowrap}
+    .applicant-ui.landing.marketing-v2 .gp-brand-mark{width:34px;height:37px;border-radius:9px;background:var(--gp-accent);color:var(--gp-on-accent);display:grid;place-items:center}
+    .applicant-ui.landing.marketing-v2 .gp-brand-mark svg{width:23px;height:23px}
+    .applicant-ui.landing.marketing-v2 .gp-nav{display:flex;align-items:center;gap:21px}
+    .applicant-ui.landing.marketing-v2 .gp-nav a{color:var(--gp-muted);text-decoration:none;font-size:12px;font-weight:600}
+    .applicant-ui.landing.marketing-v2 .gp-nav a:hover{text-decoration:underline;text-underline-offset:4px}
+    .applicant-ui.landing.marketing-v2 .gp-button{display:inline-flex;gap:9px;align-items:center;justify-content:center;min-height:44px;padding:11px 18px;border:1px solid transparent;border-radius:10px;background:var(--gp-accent);color:var(--gp-on-accent);font-weight:650;font-size:13px;text-decoration:none;white-space:normal;text-align:center}
+    .applicant-ui.landing.marketing-v2 .gp-button:hover{filter:brightness(.94)}
+    .applicant-ui.landing.marketing-v2 .gp-button-secondary{border-color:var(--gp-line);background:var(--gp-bg);color:var(--gp-ink)}
+    .applicant-ui.landing.marketing-v2 .gp-button-yellow{background:var(--gp-yellow);color:#102a51}
+    .applicant-ui.landing.marketing-v2 .gp-menu-button{display:none;border:1px solid var(--gp-line);border-radius:9px;width:42px;height:42px;background:var(--gp-bg);color:var(--gp-ink);place-items:center}
+    .applicant-ui.landing.marketing-v2 .gp-hero{position:relative;background:var(--gp-soft);padding:45px 0 35px}
+    .applicant-ui.landing.marketing-v2 .gp-hero-grid{display:grid;grid-template-columns:1.05fr 1fr;align-items:center;gap:20px}
+    .applicant-ui.landing.marketing-v2 .gp-eyebrow{display:inline-flex;align-items:center;gap:7px;color:var(--gp-accent-ink);font-size:11px;font-weight:650;letter-spacing:.11em;text-transform:uppercase;margin-bottom:16px}
+    .applicant-ui.landing.marketing-v2 .gp-eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gp-yellow)}
+    .applicant-ui.landing.marketing-v2 h1{font-size:clamp(32px,4.9cqi,52px);font-weight:700;line-height:1.08;letter-spacing:-2px;max-width:490px}
+    .applicant-ui.landing.marketing-v2 h1 em{font-style:normal;color:var(--gp-accent-ink)}
+    .applicant-ui.landing.marketing-v2 .gp-hero-description{font-size:14px;color:var(--gp-muted);max-width:400px;line-height:1.7;margin-top:18px}
+    .applicant-ui.landing.marketing-v2 .gp-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:23px}
+    .applicant-ui.landing.marketing-v2 .gp-reassurance{margin-top:13px;color:var(--gp-muted);font-size:11px;display:flex;align-items:center;gap:6px}
+    .applicant-ui.landing.marketing-v2 .gp-reassurance svg{color:var(--gp-success);width:14px;height:14px}
+    .applicant-ui.landing.marketing-v2 .gp-art{position:relative;align-self:center;min-width:0}
+    .applicant-ui.landing.marketing-v2 .gp-art img{display:block;width:100%;height:auto;border-radius:26px}
+    .applicant-ui.landing.marketing-v2 .gp-art-caption{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:10px;font-size:11px;color:var(--gp-muted)}
+    .applicant-ui.landing.marketing-v2 .gp-art-caption svg{width:14px;height:14px;color:var(--gp-accent-ink)}
+    .applicant-ui.landing.marketing-v2 .gp-trust{background:var(--gp-bg);border-bottom:1px solid var(--gp-line);padding:13px 20px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:11px;color:var(--gp-muted);text-align:center}
+    .applicant-ui.landing.marketing-v2 .gp-trust svg{width:16px;height:16px;color:var(--gp-accent-ink)}
+    .applicant-ui.landing.marketing-v2 .gp-preview{padding:49px 0 43px}
+    .applicant-ui.landing.marketing-v2 .gp-preview-grid{display:grid;grid-template-columns:.86fr 1.14fr;align-items:center;gap:46px}
+    .applicant-ui.landing.marketing-v2 .gp-kicker{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gp-accent-ink);font-weight:700;margin-bottom:12px}
+    .applicant-ui.landing.marketing-v2 h2{font-size:29px;font-weight:700;line-height:1.13;letter-spacing:-1px}
+    .applicant-ui.landing.marketing-v2 .gp-section-description{margin-top:14px;color:var(--gp-muted);font-size:13px;line-height:1.7;max-width:370px}
+    .applicant-ui.landing.marketing-v2 .gp-benefits{list-style:none;margin:20px 0 0;padding:0;display:grid;gap:12px;font-size:12px}
+    .applicant-ui.landing.marketing-v2 .gp-benefits li{display:flex;align-items:center;gap:8px}
+    .applicant-ui.landing.marketing-v2 .gp-benefits svg{color:var(--gp-accent-ink);width:16px;height:16px}
+    .applicant-ui.landing.marketing-v2 .gp-checklist{border:1px solid var(--gp-line);background:var(--gp-bg);border-radius:18px;box-shadow:0 10px 30px color-mix(in srgb,var(--gp-ink) 7%,transparent);padding:23px}
+    .applicant-ui.landing.marketing-v2 .gp-checklist-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+    .applicant-ui.landing.marketing-v2 .gp-badge{background:var(--gp-soft);border:1px solid var(--gp-line);color:var(--gp-muted);border-radius:6px;font-size:10px;padding:3px 7px}
+    .applicant-ui.landing.marketing-v2 .gp-checklist-top>svg{color:var(--gp-accent-ink);width:20px;height:20px}
+    .applicant-ui.landing.marketing-v2 .gp-checklist h3{font-size:18px;font-weight:650;letter-spacing:-.5px;line-height:1.3}
+    .applicant-ui.landing.marketing-v2 .gp-checklist-description{margin-top:4px;font-size:11px;color:var(--gp-muted)}
+    .applicant-ui.landing.marketing-v2 .gp-progress-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:18px 0 8px;font-size:11px;color:var(--gp-muted)}
+    .applicant-ui.landing.marketing-v2 .gp-progress-heading strong{font-weight:650;color:var(--gp-ink)}
+    .applicant-ui.landing.marketing-v2 .gp-progress-track{height:5px;background:var(--gp-soft);border-radius:5px;overflow:hidden;margin-bottom:8px}
+    .applicant-ui.landing.marketing-v2 .gp-progress-bar{height:100%;width:33.333%;background:var(--gp-accent);border-radius:5px;transition:width .2s}
+    .applicant-ui.landing.marketing-v2 .gp-check-row{display:flex;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid var(--gp-line);font-size:12px;cursor:var(--cursor-interaction,pointer)}
+    .applicant-ui.landing.marketing-v2 .gp-check-row input{accent-color:var(--gp-accent-ink);width:17px;height:17px;margin:0;flex-shrink:0}
+    .applicant-ui.landing.marketing-v2 .gp-check-row>span:first-of-type{flex:1;min-width:0}
+    .applicant-ui.landing.marketing-v2 .gp-check-status{font-size:10px;color:var(--gp-muted);white-space:nowrap}
+    .applicant-ui.landing.marketing-v2 .gp-check-row:has(input:checked) .gp-check-status{color:var(--gp-success)}
+    .applicant-ui.landing.marketing-v2 .gp-checklist-foot{font-size:10px;color:var(--gp-muted);margin-top:13px;display:flex;gap:5px;align-items:center}
+    .applicant-ui.landing.marketing-v2 .gp-checklist-foot svg{width:12px;height:12px}
+    .applicant-ui.landing.marketing-v2 .gp-journey{padding:39px 0;background:var(--gp-soft)}
+    .applicant-ui.landing.marketing-v2 .gp-section-top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
+    .applicant-ui.landing.marketing-v2 .gp-section-top h2{font-size:25px}
+    .applicant-ui.landing.marketing-v2 .gp-section-top p{color:var(--gp-muted);font-size:12px;max-width:260px}
+    .applicant-ui.landing.marketing-v2 .gp-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px;margin-top:28px;list-style:none;padding:0}
+    .applicant-ui.landing.marketing-v2 .gp-step-number{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--gp-accent-ink);display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .applicant-ui.landing.marketing-v2 .gp-step-number::after{content:"";height:1px;flex:1;background:var(--gp-line)}
+    .applicant-ui.landing.marketing-v2 .gp-steps h3{font-size:15px;font-weight:650;letter-spacing:-.3px;margin-bottom:7px}
+    .applicant-ui.landing.marketing-v2 .gp-steps p{font-size:12px;line-height:1.65;color:var(--gp-muted)}
+    .applicant-ui.landing.marketing-v2 .gp-optional{margin-top:22px;padding-top:18px;border-top:1px solid var(--gp-line);display:flex;align-items:center;justify-content:space-between;gap:18px;font-size:11px;color:var(--gp-muted)}
+    .applicant-ui.landing.marketing-v2 .gp-optional>span{display:flex;align-items:center;gap:7px}
+    .applicant-ui.landing.marketing-v2 .gp-link-button{border:0;padding:0;background:none;color:var(--gp-accent-ink);display:inline-flex;gap:5px;align-items:center;font-size:11px;font-weight:650;text-decoration:underline;text-underline-offset:4px}
+    .applicant-ui.landing.marketing-v2 .gp-faq{padding:43px 0}
+    .applicant-ui.landing.marketing-v2 .gp-faq-grid{display:grid;grid-template-columns:.75fr 1.25fr;gap:45px}
+    .applicant-ui.landing.marketing-v2 .gp-faq h2{font-size:25px}
+    .applicant-ui.landing.marketing-v2 .gp-faq-title p{color:var(--gp-muted);font-size:12px;margin-top:10px}
+    .applicant-ui.landing.marketing-v2 details{border-bottom:1px solid var(--gp-line);font-size:12px}
+    .applicant-ui.landing.marketing-v2 details:first-child{border-top:1px solid var(--gp-line)}
+    .applicant-ui.landing.marketing-v2 summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0;font-weight:650;cursor:var(--cursor-interaction,pointer)}
+    .applicant-ui.landing.marketing-v2 summary::-webkit-details-marker{display:none}
+    .applicant-ui.landing.marketing-v2 summary svg{width:15px;height:15px;color:var(--gp-muted);transition:transform .15s}
+    .applicant-ui.landing.marketing-v2 details[open] summary svg{transform:rotate(180deg)}
+    .applicant-ui.landing.marketing-v2 details>p{padding:0 17px 14px 0;color:var(--gp-muted);font-size:12px;line-height:1.7}
+    .applicant-ui.landing.marketing-v2 .gp-final{padding:0 0 32px}
+    .applicant-ui.landing.marketing-v2 .gp-final-inner{padding:29px 30px;border-radius:16px;background:var(--gp-navy);color:#f5f9ff;display:flex;align-items:center;justify-content:space-between;gap:25px}
+    .applicant-ui.landing.marketing-v2 .gp-final h2{font-size:25px;letter-spacing:-.8px;color:#f5f9ff}
+    .applicant-ui.landing.marketing-v2 .gp-final p{font-size:12px;color:#c7d9ee;margin-top:7px}
+    .applicant-ui.landing.marketing-v2 .gp-footer{border-top:1px solid var(--gp-line);padding:23px 0 19px}
+    .applicant-ui.landing.marketing-v2 .gp-footer-top{display:flex;justify-content:space-between;gap:18px;align-items:center}
+    .applicant-ui.landing.marketing-v2 .gp-footer .gp-brand{font-size:16px}
+    .applicant-ui.landing.marketing-v2 .gp-footer .gp-brand-mark{width:27px;height:29px;border-radius:7px}
+    .applicant-ui.landing.marketing-v2 .gp-footer .gp-brand-mark svg{width:18px;height:18px}
+    .applicant-ui.landing.marketing-v2 .gp-footer-links{display:flex;gap:16px;align-items:center}
+    .applicant-ui.landing.marketing-v2 .gp-footer-links>a{font-size:11px;color:var(--gp-muted);text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+    .applicant-ui.landing.marketing-v2 .gp-footer-links>a svg{width:13px;height:13px}
+    .applicant-ui.landing.marketing-v2 .gp-footer-note{font-size:10px;color:var(--gp-muted);margin-top:17px;border-top:1px solid var(--gp-line);padding-top:13px;display:flex;justify-content:space-between;gap:20px}
+    .applicant-ui.landing.marketing-v2 .gp-mobile-nav{display:none;border-bottom:1px solid var(--gp-line);padding:10px 22px;background:var(--gp-bg)}
+    .applicant-ui.landing.marketing-v2 .gp-mobile-nav a{display:block;padding:9px 0;color:var(--gp-muted);text-decoration:none;font-size:13px}
+    @container (max-width:650px){
+      .applicant-ui.landing.marketing-v2 .gp-inner{width:calc(100% - 40px)}
+      .applicant-ui.landing.marketing-v2 .gp-header{height:65px}
+      .applicant-ui.landing.marketing-v2 .gp-header-inner{padding:0 20px}
+      .applicant-ui.landing.marketing-v2 .gp-brand{font-size:19px}
+      .applicant-ui.landing.marketing-v2 .gp-nav{display:none}
+      .applicant-ui.landing.marketing-v2 .gp-menu-button{display:grid}
+      .applicant-ui.landing.marketing-v2 .gp-mobile-nav:not([hidden]){display:block}
+      .applicant-ui.landing.marketing-v2 .gp-hero{padding:33px 0 29px}
+      .applicant-ui.landing.marketing-v2 .gp-hero-grid{grid-template-columns:1fr;gap:17px}
+      .applicant-ui.landing.marketing-v2 h1{font-size:39px;letter-spacing:-1.6px;max-width:440px}
+      .applicant-ui.landing.marketing-v2 .gp-hero-description{font-size:14px;margin-top:15px}
+      .applicant-ui.landing.marketing-v2 .gp-eyebrow{font-size:10px;margin-bottom:13px}
+      .applicant-ui.landing.marketing-v2 .gp-actions{margin-top:21px;gap:9px}
+      .applicant-ui.landing.marketing-v2 .gp-actions>.gp-button{font-size:12px;padding:11px 13px;flex:1}
+      .applicant-ui.landing.marketing-v2 .gp-art{max-width:330px;margin:0 auto}
+      .applicant-ui.landing.marketing-v2 .gp-art img{max-height:230px;object-fit:contain}
+      .applicant-ui.landing.marketing-v2 .gp-art-caption{display:none}
+      .applicant-ui.landing.marketing-v2 .gp-trust{padding:15px 19px;font-size:10px;gap:7px;text-align:left}
+      .applicant-ui.landing.marketing-v2 .gp-trust>span{max-width:340px}
+      .applicant-ui.landing.marketing-v2 .gp-preview{padding:35px 0}
+      .applicant-ui.landing.marketing-v2 .gp-preview-grid{grid-template-columns:1fr;gap:23px}
+      .applicant-ui.landing.marketing-v2 h2{font-size:28px}
+      .applicant-ui.landing.marketing-v2 .gp-section-description{font-size:13px;margin-top:10px;max-width:100%}
+      .applicant-ui.landing.marketing-v2 .gp-benefits{display:flex;flex-wrap:wrap;gap:8px 13px;margin-top:15px;font-size:11px}
+      .applicant-ui.landing.marketing-v2 .gp-benefits li:last-child{display:none}
+      .applicant-ui.landing.marketing-v2 .gp-checklist{padding:18px}
+      .applicant-ui.landing.marketing-v2 .gp-check-row{font-size:11px;gap:8px;min-height:48px}
+      .applicant-ui.landing.marketing-v2 .gp-check-status{font-size:10px}
+      .applicant-ui.landing.marketing-v2 .gp-section-top{display:block}
+      .applicant-ui.landing.marketing-v2 .gp-section-top p{margin-top:9px;max-width:100%}
+      .applicant-ui.landing.marketing-v2 .gp-journey{padding:31px 0}
+      .applicant-ui.landing.marketing-v2 .gp-steps{grid-template-columns:1fr;gap:23px;margin-top:25px}
+      .applicant-ui.landing.marketing-v2 .gp-steps li{display:grid;grid-template-columns:31px 1fr;column-gap:12px}
+      .applicant-ui.landing.marketing-v2 .gp-step-number{grid-row:1/3;align-self:start;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--gp-bg);margin:0;font-size:11px;letter-spacing:0}
+      .applicant-ui.landing.marketing-v2 .gp-step-number::after{display:none}
+      .applicant-ui.landing.marketing-v2 .gp-steps h3{font-size:15px;margin:2px 0 5px}
+      .applicant-ui.landing.marketing-v2 .gp-steps p{font-size:12px}
+      .applicant-ui.landing.marketing-v2 .gp-optional{display:block;margin-top:22px;font-size:11px}
+      .applicant-ui.landing.marketing-v2 .gp-optional>button{margin:11px 0 0 24px;min-height:32px}
+      .applicant-ui.landing.marketing-v2 .gp-faq{padding:34px 0}
+      .applicant-ui.landing.marketing-v2 .gp-faq-grid{grid-template-columns:1fr;gap:21px}
+      .applicant-ui.landing.marketing-v2 .gp-faq-title p{margin-top:7px}
+      .applicant-ui.landing.marketing-v2 .gp-final-inner{padding:25px 21px;display:block}
+      .applicant-ui.landing.marketing-v2 .gp-final h2{font-size:25px}
+      .applicant-ui.landing.marketing-v2 .gp-final .gp-button{width:100%;margin-top:20px}
+      .applicant-ui.landing.marketing-v2 .gp-footer-top{align-items:flex-start;flex-direction:column;gap:15px}
+      .applicant-ui.landing.marketing-v2 .gp-footer-links{flex-wrap:wrap;gap:15px}
+      .applicant-ui.landing.marketing-v2 .gp-footer-note{display:block;font-size:10px}
+      .applicant-ui.landing.marketing-v2 .gp-footer-note span{display:block;margin-top:7px}
+    }
+    @container (max-width:350px){.applicant-ui.landing.marketing-v2 h1{font-size:34px}.applicant-ui.landing.marketing-v2 .gp-actions{flex-direction:column}.applicant-ui.landing.marketing-v2 .gp-check-status{display:none}}
+    @media(prefers-reduced-motion:reduce){.applicant-ui.landing.marketing-v2 *{transition:none!important;scroll-behavior:auto!important}}
+  
+    .applicant-ui.landing.marketing-v2 .gp-page{max-width:1100px}
+    .applicant-ui.landing.marketing-v2 .gp-header{height:72px}
+    .applicant-ui.landing.marketing-v2 .gp-header-inner{padding:0 40px}
+    .applicant-ui.landing.marketing-v2 .gp-nav{gap:24px}
+    .applicant-ui.landing.marketing-v2 .gp-hero{padding:42px 0 26px;background:#f0f7ff;overflow:clip}
+    .applicant-ui.landing.marketing-v2 .gp-hero-grid{grid-template-columns:1fr 1.02fr;gap:8px;position:relative}
+    .applicant-ui.landing.marketing-v2 .gp-eyebrow{font-size:10px;letter-spacing:.13em;color:#155bb0;margin-bottom:18px}
+    .applicant-ui.landing.marketing-v2 h1{font-size:57px;line-height:1.02;letter-spacing:-2.6px;max-width:510px}
+    .applicant-ui.landing.marketing-v2 h1 em{color:#155bb0}
+    .applicant-ui.landing.marketing-v2 h1 .gm-underline{box-shadow:inset 0 -.13em #f7c744}
+    .applicant-ui.landing.marketing-v2 .gp-hero-description{max-width:365px;font-size:14px;line-height:1.75;margin-top:21px}
+    .applicant-ui.landing.marketing-v2 .gp-art{margin:0 -34px 0 0}
+    .applicant-ui.landing.marketing-v2 .gp-art img{width:100%;max-width:560px;border-radius:0}
+    .applicant-ui.landing.marketing-v2 .gm-image-note{position:absolute;bottom:5px;left:24px;display:flex;align-items:center;gap:10px;background:#fff;color:#102a51;padding:11px 15px;border-radius:12px;box-shadow:0 8px 25px #102a5114;border:1px solid #dce7f3;transform:rotate(-3deg);font-size:11px}
+    .applicant-ui.landing.marketing-v2 .gm-image-note>span:first-child{display:grid;place-items:center;background:#eef6ff;color:#155bb0;width:31px;height:31px;border-radius:9px}
+    .applicant-ui.landing.marketing-v2 .gm-image-note small{display:block;font-size:10px;color:#526782}
+    .applicant-ui.landing.marketing-v2 .gm-image-note strong{font-weight:650}
+    .applicant-ui.landing.marketing-v2 .gm-scroll-cue{display:flex;gap:8px;align-items:center;width:max-content;max-width:100%;margin-top:29px;font-size:11px;color:#526782;text-decoration:none}
+    .applicant-ui.landing.marketing-v2 .gm-scroll-cue svg{width:14px;height:14px}
+    .applicant-ui.landing.marketing-v2 .gm-friction{background:#102a51;color:#fff;padding:24px 0}
+    .applicant-ui.landing.marketing-v2 .gm-friction-inner{display:flex;align-items:center;justify-content:space-between;gap:30px}
+    .applicant-ui.landing.marketing-v2 .gm-friction h2{font-size:24px;font-weight:650;letter-spacing:-.7px;color:#fff}
+    .applicant-ui.landing.marketing-v2 .gm-friction h2 span{color:#a8d4ff}
+    .applicant-ui.landing.marketing-v2 .gm-friction p{color:#c8d9ee;max-width:360px;font-size:12px;line-height:1.7}
+    .applicant-ui.landing.marketing-v2 .gm-path-intro{text-align:center;padding:42px 0 6px}
+    .applicant-ui.landing.marketing-v2 .gm-path-intro .gp-kicker{margin-bottom:12px}
+    .applicant-ui.landing.marketing-v2 .gm-path-intro h2{font-size:31px;letter-spacing:-1px;line-height:1.2}
+    .applicant-ui.landing.marketing-v2 .gm-path-intro h2 span{color:#155bb0}
+    .applicant-ui.landing.marketing-v2 .gm-story-row{display:grid;grid-template-columns:1fr 1.12fr;gap:65px;align-items:center;padding:37px 0 46px}
+    .applicant-ui.landing.marketing-v2 .gm-story-text{max-width:365px}
+    .applicant-ui.landing.marketing-v2 .gm-chapter{display:flex;align-items:center;gap:9px;margin-bottom:15px;font-size:10px;font-weight:650;letter-spacing:.11em;color:#155bb0;text-transform:uppercase}
+    .applicant-ui.landing.marketing-v2 .gm-chapter>span{width:28px;height:28px;display:grid;place-items:center;border:1px solid #d0e1f3;background:#fff;border-radius:50%;letter-spacing:0;font-size:10px}
+    .applicant-ui.landing.marketing-v2 .gm-story-text h2{font-size:34px;line-height:1.13;letter-spacing:-1.2px}
+    .applicant-ui.landing.marketing-v2 .gm-story-text p{font-size:13px;color:#526782;line-height:1.8;margin-top:16px}
+    .applicant-ui.landing.marketing-v2 .gm-outcome{display:flex;align-items:center;gap:8px;margin-top:19px;color:#155bb0;font-weight:600;font-size:11px}
+    .applicant-ui.landing.marketing-v2 .gm-outcome svg{width:15px;height:15px}
+    .applicant-ui.landing.marketing-v2 .gm-guide-scene{position:relative;padding:18px 23px 21px 16px;background:#eef5ff;border-radius:25px}
+    .applicant-ui.landing.marketing-v2 .gm-guide-preview{background:#fff;border:1px solid #dce7f3;border-radius:16px;box-shadow:7px 8px 0 #d9eaff;overflow:hidden;transform:rotate(1.5deg)}
+    .applicant-ui.landing.marketing-v2 .gm-mini-bar{display:flex;align-items:center;gap:4px;padding:11px 15px;border-bottom:1px solid #e5edf5;background:#f9fbff}
+    .applicant-ui.landing.marketing-v2 .gm-mini-bar>span{height:5px;width:5px;border-radius:50%;background:#cfdeef}
+    .applicant-ui.landing.marketing-v2 .gm-mini-bar>p{font-size:10px;color:#647890;margin-left:8px}
+    .applicant-ui.landing.marketing-v2 .gm-guide-body{padding:20px}
+    .applicant-ui.landing.marketing-v2 .gm-guide-top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px}
+    .applicant-ui.landing.marketing-v2 .gm-guide-top .gp-badge{font-size:9px}
+    .applicant-ui.landing.marketing-v2 .gm-guide-top>span:last-child{font-size:10px;color:#526782;display:flex;align-items:center;gap:5px}
+    .applicant-ui.landing.marketing-v2 .gm-guide-top svg{width:13px;height:13px;color:#155bb0}
+    .applicant-ui.landing.marketing-v2 .gm-guide-body h3{font-size:21px;letter-spacing:-.6px;line-height:1.25;font-weight:650}
+    .applicant-ui.landing.marketing-v2 .gm-guide-sub{font-size:11px;color:#647890;margin:5px 0 17px}
+    .applicant-ui.landing.marketing-v2 .gm-guide-line{display:flex;gap:10px;align-items:center;border-top:1px solid #e5edf5;padding:11px 0;font-size:11px}
+    .applicant-ui.landing.marketing-v2 .gm-guide-line>svg{width:17px;height:17px;color:#155bb0}
+    .applicant-ui.landing.marketing-v2 .gm-guide-line strong{font-weight:600;display:block}
+    .applicant-ui.landing.marketing-v2 .gm-guide-line small{font-size:10px;color:#647890}
+    .applicant-ui.landing.marketing-v2 .gm-prep{background:#f1f7fe;border-radius:30px;margin:0 20px;padding:5px 0 23px}
+    .applicant-ui.landing.marketing-v2 .gm-prep .gp-inner{width:calc(100% - 80px)}
+    .applicant-ui.landing.marketing-v2 .gm-prep .gm-story-row{grid-template-columns:1.12fr 1fr;gap:62px;padding-top:33px;padding-bottom:25px}
+    .applicant-ui.landing.marketing-v2 .gp-checklist{padding:21px;transform:rotate(-1.5deg);box-shadow:0 12px 28px #155bb010;border-color:#d1e0f1}
+    .applicant-ui.landing.marketing-v2 .gp-checklist h3{font-size:19px}
+    .applicant-ui.landing.marketing-v2 .gp-checklist-description{font-size:10px}
+    .applicant-ui.landing.marketing-v2 .gp-check-row{padding:13px 0;font-size:11px}
+    .applicant-ui.landing.marketing-v2 .gp-checklist-foot{font-size:9px}
+    .applicant-ui.landing.marketing-v2 .gm-together{display:flex;align-items:center;gap:16px;padding:13px 18px 13px 9px;background:#fff9e6;border:1px solid #f1e6bd;border-radius:15px}
+    .applicant-ui.landing.marketing-v2 .gm-together img{width:66px;height:66px;object-fit:contain;flex-shrink:0;align-self:center}
+    .applicant-ui.landing.marketing-v2 .gm-together-copy{flex:1;min-width:0}
+    .applicant-ui.landing.marketing-v2 .gm-together h3{font-size:16px;font-weight:650;letter-spacing:-.3px;color:#102a51}
+    .applicant-ui.landing.marketing-v2 .gm-together p{font-size:11px;color:#68614a;margin-top:4px;line-height:1.6}
+    .applicant-ui.landing.marketing-v2 .gm-together .gp-button{white-space:nowrap;font-size:11px;padding:9px 13px;min-height:39px;background:#fff;color:#155bb0;border:1px solid #d5e2f0}
+    .applicant-ui.landing.marketing-v2 .gp-faq{padding:36px 0}
+    .applicant-ui.landing.marketing-v2 .gp-faq-grid{grid-template-columns:.8fr 1.2fr;gap:65px}
+    .applicant-ui.landing.marketing-v2 .gp-faq-title h2{font-size:27px}
+    .applicant-ui.landing.marketing-v2 .gp-faq-title p{font-size:12px;max-width:260px;line-height:1.7}
+    .applicant-ui.landing.marketing-v2 .gm-final{position:relative;text-align:center;overflow:clip;padding:42px 20px 39px;background:#102a51;color:#fff}
+    .applicant-ui.landing.marketing-v2 .gm-final::before{content:"";position:absolute;left:-10%;bottom:-150px;width:120%;height:190px;background:#17427a;border-radius:50%;z-index:-1}
+    .applicant-ui.landing.marketing-v2 .gm-final .gm-chapter{justify-content:center;color:#b0d7ff;margin-bottom:15px}
+    .applicant-ui.landing.marketing-v2 .gm-final h2{font-size:38px;line-height:1.15;letter-spacing:-1.2px;color:#fff}
+    .applicant-ui.landing.marketing-v2 .gm-final h2 em{color:#f7c744;font-style:normal}
+    .applicant-ui.landing.marketing-v2 .gm-final p{font-size:12px;color:#c7d9ef;max-width:465px;margin:13px auto 20px;line-height:1.75}
+    .applicant-ui.landing.marketing-v2 .gm-final .gp-button{padding:12px 24px;background:#f7c744;color:#102a51}
+    .applicant-ui.landing.marketing-v2 .gm-final small{display:block;font-size:10px;color:#c7d9ef;margin-top:11px}
+    .applicant-ui.landing.marketing-v2 .gp-footer{padding:21px 0 15px}
+    .applicant-ui.landing.marketing-v2 .gp-footer-note{font-size:9px;margin-top:14px;padding-top:11px}
+    @container(max-width:700px){
+      .applicant-ui.landing.marketing-v2 .gp-nav{display:none}
+      .applicant-ui.landing.marketing-v2 .gp-menu-button{display:grid}
+      .applicant-ui.landing.marketing-v2 .gp-header{height:65px}
+      .applicant-ui.landing.marketing-v2 .gp-header-inner{padding:0 20px}
+      .applicant-ui.landing.marketing-v2 .gp-hero{padding:29px 0 23px}
+      .applicant-ui.landing.marketing-v2 .gp-hero-grid{grid-template-columns:1fr;gap:20px}
+      .applicant-ui.landing.marketing-v2 h1{font-size:43px;letter-spacing:-1.9px}
+      .applicant-ui.landing.marketing-v2 .gp-hero-description{font-size:13px;margin-top:17px}
+      .applicant-ui.landing.marketing-v2 .gp-art{max-width:355px;width:100%;margin:0 auto}
+      .applicant-ui.landing.marketing-v2 .gp-art img{max-height:244px}
+      .applicant-ui.landing.marketing-v2 .gm-image-note{bottom:-1px;left:2px;padding:8px 11px;font-size:10px}
+      .applicant-ui.landing.marketing-v2 .gm-image-note small{font-size:9px}
+      .applicant-ui.landing.marketing-v2 .gm-scroll-cue{margin-top:18px;font-size:10px}
+      .applicant-ui.landing.marketing-v2 .gm-friction{padding:22px 0}
+      .applicant-ui.landing.marketing-v2 .gm-friction-inner{display:block}
+      .applicant-ui.landing.marketing-v2 .gm-friction h2{font-size:23px;line-height:1.3}
+      .applicant-ui.landing.marketing-v2 .gm-friction p{font-size:11px;max-width:none;margin-top:10px}
+      .applicant-ui.landing.marketing-v2 .gm-path-intro{padding-top:30px}
+      .applicant-ui.landing.marketing-v2 .gm-path-intro h2{font-size:26px}
+      .applicant-ui.landing.marketing-v2 .gm-story-row,.applicant-ui.landing.marketing-v2 .gm-prep .gm-story-row{grid-template-columns:1fr;gap:24px;padding:27px 0 32px}
+      .applicant-ui.landing.marketing-v2 .gm-story-text{max-width:none}
+      .applicant-ui.landing.marketing-v2 .gm-story-text h2{font-size:30px}
+      .applicant-ui.landing.marketing-v2 .gm-story-text p{margin-top:12px;font-size:12px}
+      .applicant-ui.landing.marketing-v2 .gm-chapter{margin-bottom:13px}
+      .applicant-ui.landing.marketing-v2 .gm-guide-scene{padding:14px 15px 17px}
+      .applicant-ui.landing.marketing-v2 .gm-guide-body{padding:16px}
+      .applicant-ui.landing.marketing-v2 .gm-guide-body h3{font-size:19px}
+      .applicant-ui.landing.marketing-v2 .gm-guide-top>span:last-child{font-size:9px}
+      .applicant-ui.landing.marketing-v2 .gm-prep{margin:0 10px;border-radius:22px;padding-bottom:15px}
+      .applicant-ui.landing.marketing-v2 .gm-prep .gp-inner{width:calc(100% - 30px)}
+      .applicant-ui.landing.marketing-v2 .gm-prep .gm-story-text{grid-row:1}
+      .applicant-ui.landing.marketing-v2 .gp-checklist{padding:17px}
+      .applicant-ui.landing.marketing-v2 .gm-together{gap:9px;padding:11px;flex-wrap:wrap}
+      .applicant-ui.landing.marketing-v2 .gm-together img{height:47px;width:47px}
+      .applicant-ui.landing.marketing-v2 .gm-together h3{font-size:14px}
+      .applicant-ui.landing.marketing-v2 .gm-together p{font-size:10px}
+      .applicant-ui.landing.marketing-v2 .gm-together .gp-button{margin-left:56px}
+      .applicant-ui.landing.marketing-v2 .gp-faq-grid{grid-template-columns:1fr;gap:19px}
+      .applicant-ui.landing.marketing-v2 .gp-faq{padding:31px 0}
+      .applicant-ui.landing.marketing-v2 .gm-final{padding:34px 20px}
+      .applicant-ui.landing.marketing-v2 .gm-final h2{font-size:32px}
+      .applicant-ui.landing.marketing-v2 .gm-final p{font-size:12px}
+    }
+  
+.applicant-ui.landing.marketing-v2 .gp-page { max-width: none; }
+.applicant-ui.landing.marketing-v2 .gp-inner { max-width: 1120px; }
+.applicant-ui.landing.marketing-v2 .gm-outcome { min-height: 36px; text-decoration: none; }
+.applicant-ui.landing.marketing-v2 .gm-outcome:hover { text-decoration: underline; text-underline-offset: 4px; }
+.applicant-ui.landing.marketing-v2 .gp-faq summary > span { font-size: 20px; font-weight: 400; }
+.applicant-ui.landing.marketing-v2 .gp-footer { padding-bottom: 95px; }
+.applicant-ui.landing.marketing-v2 section[id] { scroll-margin-top: 20px; }
+@media(max-width:700px) { .applicant-ui.landing.marketing-v2 .lp-desktop-break { display:none; } }
+
+@media(max-width:700px) { .applicant-ui.landing.marketing-v2 .gp-mobile-nav:not([hidden]) { display:block; } }
+
+.applicant-ui.landing.marketing-v2 .gp-nav a.gp-button { color: var(--gp-on-accent); }
+@media(max-width:700px) {
+.applicant-ui.landing.marketing-v2 .gm-together { display:grid; grid-template-columns:47px minmax(0,1fr); align-items:center; gap:10px; }
+.applicant-ui.landing.marketing-v2 .gm-together > .gp-button { grid-column:2; margin-left:0; justify-self:start; white-space:normal; }
+}
