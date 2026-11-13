@@ -126,6 +126,32 @@ test("demo Save source and review adds a local reference", async ({page}) => {
   await expect(page.getByRole("button", { name: "Publish verified guide" })).toBeDisabled();
 });
 
+
+test("demo Edit program updates its list item without server storage", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  const row = page.getByRole("listitem").filter({hasText:"Sample Scholarship Preparation Guide"});
+  await row.getByRole("button", { name:"Edit" }).click();
+  await page.getByRole("textbox", { name:"Program name" }).fill("Edited fictional guide");
+  await page.getByRole("button", { name:"Save changes" }).click();
+  await expect(page.getByRole("listitem").filter({hasText:"Edited fictional guide"})).toBeVisible();
+});
+
+test("demo Edit source invalidates local approval when its reference text changes", async ({page}) => {
+  await page.goto("/admin/demo?view=knowledge");
+  await page.locator("#source-title").fill("Sandbox reviewed reference");
+  await page.locator("#source-url").fill("https://example.test/reference");
+  await page.locator("#source-content").fill("Fictional example reference text.");
+  await page.getByLabel(/I have reviewed this source/).check();
+  await page.getByRole("button", { name:"Save source and review" }).click();
+  const article = page.locator("article").filter({hasText:"Sandbox reviewed reference"});
+  await expect(article.getByText("approved")).toBeVisible();
+  await article.getByRole("button", { name:"Edit source and review" }).click();
+  await page.locator("#source-content").fill("Edited fictional reference text.");
+  await expect(page.getByLabel(/I have reviewed this source/)).not.toBeChecked();
+  await page.getByRole("button", { name:"Save source and review" }).click();
+  await expect(page.locator("article").filter({hasText:"Sandbox reviewed reference"}).getByText("in review")).toBeVisible();
+});
+
 test("overview program entries are fully clickable and Refresh is not required", async ({page}) => {
   await page.goto("/admin/demo");
   await expect(page.getByRole("button", {name:/^Refresh$/})).toHaveCount(0);
