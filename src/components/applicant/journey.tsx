@@ -4,8 +4,10 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { JOURNEY_STAGES, journeyProgress, nextStage, progressOf, type StageId } from "@/lib/applicant/model";
 import { usePreparation, useWorkspace } from "./workspace";
+import { useGabay } from "./gabay-context";
 
 export function JourneyRail({ current }: { current: StageId | null }) {
+  const { openChat } = useGabay();
   const { cycle, visit } = useWorkspace();
   const prep = usePreparation(cycle);
   const counts = progressOf(cycle?.requirements ?? [], prep.entries);
@@ -22,11 +24,14 @@ export function JourneyRail({ current }: { current: StageId | null }) {
       <ol>
         {JOURNEY_STAGES.map((stage) => (
           <li key={stage.id} className={progress[stage.id] === "done" ? "is-done" : ""}>
-            <Link href={stage.href} aria-label={`${stage.label}${progress[stage.id] === "done" ? ", done" : ""}`} aria-current={stage.id === active ? "step" : undefined}>
+            {stage.id === "ask" ? <button type="button" onClick={() => openChat()} aria-label={`${stage.label}${progress[stage.id] === "done" ? ", done" : ""}`} aria-current={stage.id === active ? "step" : undefined}>
+              <span className="journey-stop" aria-hidden="true">{progress[stage.id] === "done" && <Check size={16} />}</span>
+              <span className="journey-stage-label">{stage.label}{progress[stage.id] === "done" && <span className="sr-only">, done</span>}</span>
+            </button> : <Link href={stage.href} aria-label={`${stage.label}${progress[stage.id] === "done" ? ", done" : ""}`} aria-current={stage.id === active ? "step" : undefined}>
               <span className="journey-stop" aria-hidden="true">{progress[stage.id] === "done" && <Check size={16} />}</span>
               <span className="journey-stage-label">{stage.label}{progress[stage.id] === "done" && <span className="sr-only">, done</span>}</span>
               {stage.id === "checklist" && cycle && <small>{counts.prepared} of {counts.total} ready</small>}
-            </Link>
+            </Link>}
           </li>
         ))}
       </ol>

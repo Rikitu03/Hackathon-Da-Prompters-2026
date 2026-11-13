@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { Brand, OfficialLink } from "./workspace";
+import { useGabay } from "./gabay-context";
 import { JOURNEY_STAGES } from "@/lib/applicant/model";
 
 const journeyIcons = [Search, ClipboardCheck, ScanText, MessageCircle, ExternalLink];
@@ -36,14 +37,6 @@ const tools = [
       "One requirement at a time. Save your progress in this browser.",
     href: "/my-checklist",
     action: "Open checklist",
-  },
-  {
-    icon: MessageCircle,
-    title: "Ask Gabay",
-    description:
-      "Ask about your selected guide, with source references when available.",
-    href: "/assistant",
-    action: "Ask a question",
   },
   {
     icon: ScanText,
@@ -78,6 +71,7 @@ function River() {
   );
 }
 export function Landing() {
+  const { openChat } = useGabay();
   const [open, setOpen] = useState(false);
   const reduced = useReducedMotion();
   return (
@@ -332,7 +326,7 @@ export function Landing() {
           <div>
             <h2>Preparation tools</h2>
             <Link href="/my-checklist">My checklist</Link>
-            <Link href="/assistant">Ask Gabay</Link>
+            <button className="text-link" type="button" onClick={() => openChat()}>Ask Gabay</button>
             <Link href="/document-review">Check a document</Link>
           </div>
           <div>

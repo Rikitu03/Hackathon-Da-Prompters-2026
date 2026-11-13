@@ -31,7 +31,7 @@ test("dashboard marks the next stage and offers consistent navigation", async ({
   await expect(rail.locator('[aria-current="step"]')).toHaveAccessibleName("Prepare your checklist");
   if (isMobile) await page.getByRole("button", { name: "Open navigation", exact: true }).click();
   await expect(page.getByRole("navigation", { name: "Student workspace" }).getByRole("link"))
-    .toHaveText(["Dashboard", "Scholarships", "My checklist", "Private draft", "Check a document", "Ask Gabay", "Official step"]);
+    .toHaveText(["Dashboard", "Scholarships", "My checklist", "Private draft", "Check a document", "Official step"]);
 });
 
 test("onboarding offers all PSCS levels and creates the selected workspace", async ({ page }) => {
@@ -65,7 +65,9 @@ test("a requirement leads to a document check without changing its status", asyn
   await checkDocument(page);
   await expect(page.getByRole("heading", { name: /What's next for/ })).toBeVisible();
   await expect(page.getByLabel(/Preparation status for/)).toHaveValue("not-started");
-  await expect(page.getByRole("link", { name: /Ask Gabay about Proof/ })).toHaveAttribute("href", `/assistant?requirement=${REQ_ENROLL_ID}`);
+  await page.getByRole("button", { name: /Ask Gabay about Proof/ }).click();
+  await expect(page.getByRole("dialog", { name: "Ask Gabay" })).toBeVisible();
+  await expect(page.getByLabel("Ask about", { exact: true })).toHaveValue(REQ_ENROLL_ID);
 });
 
 test("requirement questions show linked citations and server notices", async ({ page }) => {
@@ -78,11 +80,10 @@ test("requirement questions show linked citations and server notices", async ({ 
   expect(chat.bodies[0]).toMatchObject({ cycleId: CYCLE_ID, requirementId: REQ_ENROLL_ID });
   await page.getByLabel("Your scholarship question").fill("What is the office fee?");
   await page.getByLabel("Your scholarship question").press("Enter");
-  const notice = page.getByRole("note");
-  await expect(notice.getByRole("heading", { name: "Not in the published guide" })).toBeVisible();
+  const notice = page.locator(".gabay-message-notice");
+  await expect(notice.getByText("Published guidance unavailable")).toBeVisible();
   await expect(notice).toContainText("The published guide does not give an office fee.");
   await expect(notice.getByRole("link", { name: "Open the official page" })).toHaveAttribute("href", OFFICIAL_URL);
-  await expect(notice).not.toContainText("Gabay");
 });
 
 test("long pastes are capped and stale requirement links send whole-guide context", async ({ page }) => {
@@ -155,11 +156,12 @@ test("a student completes the whole preparation journey", async ({ page, isMobil
   await page.getByLabel(/Preparation status for/).selectOption("in-progress");
   await page.getByRole("link", { name: "Check my document" }).click(); await checkDocument(page);
   await expect(page.getByLabel(/Preparation status for/)).toHaveValue("in-progress");
-  await page.getByRole("link", { name: /Ask Gabay about Proof/ }).click();
+  await page.getByRole("button", { name: /Ask Gabay about Proof/ }).click();
   await page.getByLabel("Your scholarship question").fill("Where do I get this certificate?");
   await page.getByLabel("Your scholarship question").press("Enter");
   await expect(page.getByRole("link", { name: "[1]", exact: true })).toHaveAttribute("href", SOURCE_URL);
   expect(chat.bodies[0].requirementId).toBe(REQ_ENROLL_ID);
+  await page.getByRole("button", { name: "Close Ask Gabay", exact: true }).click();
   if (isMobile) await page.getByRole("button", { name: "Open navigation", exact: true }).click();
   await page.getByRole("link", { name: "Official step", exact: true }).click();
   await expect(page.getByText("Documents you checked this visit: 1")).toBeVisible();

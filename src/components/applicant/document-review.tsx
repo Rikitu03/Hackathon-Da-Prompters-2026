@@ -7,6 +7,7 @@ import { reviewDocument, type OcrResult } from "@/lib/applicant/api";
 import { validateFile } from "@/lib/applicant/model";
 import { OCR_CLIENT_TIMEOUT_MS } from "@/lib/ai-limits";
 import { JourneyRail } from "./journey";
+import { useGabay } from "./gabay-context";
 import { StatusSelect } from "./preparation";
 import { Notice, usePreparation, useWorkspace } from "./workspace";
 
@@ -37,6 +38,7 @@ const example: OcrResult = {
   disclaimer: "Automatically read text may contain errors. Please review every field. This tool does not verify documents or decide eligibility.",
 };
 export function DocumentReview({ initialRequirementId = "" }: { initialRequirementId?: string }) {
+  const { openChat } = useGabay();
   const { cycle, recordDocumentCheck } = useWorkspace();
   const prep = usePreparation(cycle);
   const [requirementId, setRequirementId] = useState("");
@@ -424,7 +426,7 @@ export function DocumentReview({ initialRequirementId = "" }: { initialRequireme
                 <h2>What&apos;s next for {requirement.title}</h2>
                 <p>Choose your own preparation status after reviewing the guide.</p>
                 {prep.ready && <StatusSelect id={requirement.id} title={requirement.title} value={prep.entries[requirement.id]?.status ?? "not-started"} onChange={(status) => prep.update(requirement.id, status)} />}
-                <Link className="btn secondary" href={`/assistant?requirement=${requirement.id}`}>Ask Gabay about {requirement.title}<ArrowRight size={16} /></Link>
+                <button type="button" className="btn secondary" onClick={() => openChat(requirement.id)}>Ask Gabay about {requirement.title}<ArrowRight size={16} /></button>
                 <Link className="text-link" href="/my-checklist">Back to my checklist</Link>
               </section>}
               <button className="text-link" onClick={clear}>
