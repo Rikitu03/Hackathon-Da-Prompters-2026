@@ -48,10 +48,28 @@ export function sameOrigin(request: Request) {
   const origin = request.headers.get("origin");
   const url = new URL(request.url);
   // Next may reconstruct request.url with its internal hostname (localhost).
-  // Host is the browser's actual destination; do not trust forwarded-host.
+  // Prefer the actual Host header rather than general-purpose forwarded headers.
   const host = request.headers.get("host");
   if (host) url.host = host;
-  if (request.headers.get("sec-fetch-site") === "cross-site" || (origin && origin !== url.origin)) {
+
+  // Codespaces forwards HTTPS browser requests to a localhost Next.js server.
+  // Only recognize its verified *.app.github.dev browser host when the request
+  // came through a local proxy and the forwarded host exactly matches Origin.
+  // Never treat an arbitrary X-Forwarded-Host as sufficient authorization.
+  let verifiedCodespacesProxy = false;
+  if (origin && request.headers.get("sec-fetch-site") === "same-origin") {
+    try {
+      const browser = new URL(origin);
+      const forwarded = request.headers.get("x-forwarded-host");
+      const internalHost = (host || new URL(request.url).host).split(":")[0].toLowerCase();
+      const isLocal = internalHost === "localhost" || internalHost === "127.0.0.1" || internalHost === "[::1]";
+      const isCodespaces = /^[a-z0-9-]+\.app\.github\.dev$/.test(browser.hostname);
+      verifiedCodespacesProxy = browser.protocol === "https:" && isCodespaces &&
+        isLocal && forwarded?.toLowerCase() === browser.host;
+    } catch { /* An invalid Origin never qualifies for the proxy exception. */ }
+  }
+  if (request.headers.get("sec-fetch-site") === "cross-site" ||
+    (origin && origin !== url.origin && !verifiedCodespacesProxy)) {
     throw new ApiError(403, "Cross-site writes are not allowed");
   }
 }
