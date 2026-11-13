@@ -409,3 +409,92 @@ test("Admin V3 paginates more than 10 Supabase-visible guides and resets on sear
   await expect(page.getByRole("heading",{name:"Test Scholarship 03"})).toBeVisible();
   await expect(pager).toHaveCount(0);
 });
+
+
+test("requirement text import reviews labeled fields and stages an office map pin", async ({page}) => {
+  await page.goto("/admin/demo?view=requirements");
+  await page.getByRole("button",{name:/Example enrollment document/}).click();
+  const open=page.getByRole("button",{name:"Import text / file"});
+  await open.click();
+  const dialog=page.getByRole("dialog",{name:"Import requirement details"});
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button",{name:"Close requirement import"})).toBeFocused();
+  const overlay=await dialog.evaluate(node=>getComputedStyle(node,"::backdrop").backgroundColor);
+  expect(overlay).toBe("rgba(8, 17, 31, 0.72)");
+  await dialog.getByLabel("Or paste source text").fill(
+    "Document name: Fictional Proof of Enrollment\n"+
+    "Purpose: Confirm active enrollment for this demonstration.\n"+
+    "Issuing office: Sample Campus Registrar\n"+
+    "Office address: Example Street, Pasig City, Philippines\n"+
+    "Office hours: Mon–Fri, 9:00 AM–4:00 PM\n"+
+    "Maps URL: https://www.google.com/maps?q=14.58,121.07\n"+
+    "Step 1: Request the document at the registrar.\n"+
+    "Step 2: Check the official stamp before submitting."
+  );
+  await dialog.getByRole("button",{name:"Extract from pasted text"}).click();
+  await expect(dialog.getByRole("textbox",{name:"Requirement title"})).toHaveValue("Fictional Proof of Enrollment");
+  await expect(dialog.getByRole("textbox",{name:"Issuing office"})).toHaveValue("Sample Campus Registrar");
+  await expect(dialog.getByRole("textbox",{name:"Full office address"})).toHaveValue("Example Street, Pasig City, Philippines");
+  await expect(dialog.getByLabel("Pinned map link")).toHaveValue("https://www.google.com/maps?q=14.58,121.07");
+  await dialog.getByRole("button",{name:"Apply suggestions to requirement"}).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(open).toBeFocused();
+  await expect(page.locator("#req-title")).toHaveValue("Fictional Proof of Enrollment");
+  await expect(page.locator("#req-office")).toHaveValue("Sample Campus Registrar");
+  await expect(page.locator("#req-address")).toHaveValue("Example Street, Pasig City, Philippines");
+  await expect(page.locator("#req-map")).toHaveValue("https://www.google.com/maps?q=14.58,121.07");
+  await expect(page.getByRole("link",{name:"Preview pinned location"})).toHaveAttribute("target","_blank");
+  await expect(page.getByLabel("Instruction for step 1")).toHaveValue("Request the document at the registrar.");
+  await expect(page.getByText("Suggestions are copied to the draft editor")).toBeVisible();
+  await page.getByRole("button",{name:"Save requirement draft"}).click();
+  await expect(page.getByText(/Preview mode: changes are not saved/)).toBeVisible();
+});
+
+test("requirement importer supports local files and rejects unsupported or oversized files",async ({page})=>{
+  await page.goto("/admin/demo?view=requirements");
+  await page.getByRole("button",{name:/Example enrollment document/}).click();
+  await page.getByRole("button",{name:"Import text / file"}).click();
+  const dialog=page.getByRole("dialog",{name:"Import requirement details"});
+  const file=dialog.getByLabel("Choose requirement source file");
+  await file.setInputFiles({name:"guide.docx",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",buffer:Buffer.from("unsupported")});
+  await expect(dialog.getByRole("alert")).toContainText("Unsupported format");
+  await file.setInputFiles({name:"guide.md",mimeType:"text/markdown",buffer:Buffer.from("Requirement title: University certificate\nStep 1: Contact the issuing office for current requirements.\n")});
+  await expect(dialog.getByRole("textbox",{name:"Requirement title"})).toHaveValue("University certificate");
+  await dialog.getByRole("button",{name:"Close requirement import"}).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole("button",{name:"Import text / file"})).toBeFocused();
+});
+
+test("PDF requirement extraction requires explicit consent and does not auto-publish",async ({page})=>{
+  await page.route("**/api/ai/ocr",route=>route.fulfill({status:200,json:{
+    rawText:"Document name: Certified enrollment letter\nIssuing office: Records Office\nStep 1: Ask the official office to issue an original.",
+    fields:[],warnings:[],disclaimer:"Review all extracted fields."
+  }}));
+  await page.goto("/admin/demo?view=requirements");
+  await page.getByRole("button",{name:/Example enrollment document/}).click();
+  await page.getByRole("button",{name:"Import text / file"}).click();
+  const dialog=page.getByRole("dialog",{name:"Import requirement details"});
+  await dialog.getByLabel("Choose requirement source file").setInputFiles({name:"sample.pdf",mimeType:"application/pdf",buffer:Buffer.from("%PDF-1.7\nexample")});
+  const extract=dialog.getByRole("button",{name:"Extract text with OCR"});
+  await expect(extract).toBeDisabled();
+  await dialog.getByRole("checkbox").check();
+  await extract.click();
+  await expect(dialog.getByRole("textbox",{name:"Requirement title"})).toHaveValue("Certified enrollment letter");
+  await dialog.getByRole("button",{name:"Apply suggestions to requirement"}).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.locator("#req-title")).toHaveValue("Certified enrollment letter");
+});
+
+test("requirement importer never accepts arbitrary map links as verified pins",async ({page})=>{
+  await page.goto("/admin/demo?view=requirements");
+  await page.getByRole("button",{name:/Example enrollment document/}).click();
+  await page.getByRole("button",{name:"Import text / file"}).click();
+  const dialog=page.getByRole("dialog",{name:"Import requirement details"});
+  await dialog.getByLabel("Or paste source text").fill("Document name: Example certificate\nMaps URL: https://unsafe.example.invalid/location\n");
+  await dialog.getByRole("button",{name:"Extract from pasted text"}).click();
+  await dialog.getByRole("button",{name:"Apply suggestions to requirement"}).click();
+  await expect(dialog.getByRole("alert")).toContainText("direct HTTPS Google Maps");
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+});
