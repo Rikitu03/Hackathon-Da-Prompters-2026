@@ -85,6 +85,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
   const [cycleMode, setCycleMode] = useState<"none"|"new"|"edit">("none");
   const [cycleForm, setCycleForm] = useState(initCycle);
   const [importedCycle, setImportedCycle] = useState<typeof initCycle | null>(null);
+  const [showImport,setShowImport] = useState(false);
   const [requirementId, setRequirementId] = useState<string | null>(null);
   const [requirementForm, setRequirementForm] = useState<RequirementDraft>(initRequirement);
   const [sourceTitle, setSourceTitle] = useState("");
@@ -380,13 +381,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
           ? <Link href="/admin" className="admin-account group flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium text-[#cddff4] transition-colors hover:bg-[#eef6ff]"><LockKeyhole size={18} aria-hidden="true"/> Admin sign-in</Link>
           : <button onClick={() => void signOut()} className="admin-account flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-[#cddff4] transition-colors hover:bg-[#eef6ff]"><LogOut size={18} aria-hidden="true"/> Sign out</button>}
       </div>
-      <div className="mt-auto pt-6">
-        <div className="admin-help rounded-xl border border-[#d7e3ef] bg-[#eaf4ff] p-4">
-          <div className="mb-2 flex items-center gap-2 text-[#bed2ed]"><ShieldCheck aria-hidden="true" className="h-5 w-5"/><span className="text-sm font-semibold text-[#e1eaf7]">Source-first publishing</span></div>
-          <p className="text-sm leading-6 text-[#53657b]">Verify the source before applicants see guidance.</p>
-        </div>
-        <div className="admin-bottom-clearance" aria-hidden="true"/>
-      </div>
+      <div className="mt-auto pt-6"><div className="admin-bottom-clearance" aria-hidden="true"/></div>
     </aside>
     <div className="min-w-0">
       <div className="admin-topbar sticky top-0 z-20 border-b border-[#d7e3ef] bg-white/95 backdrop-blur-xl">
@@ -397,7 +392,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
         <div className="overflow-x-auto border-t border-[#d7e3ef] lg:hidden"><LinkNav section={section} mobile demoMode={demoMode}/></div>
       </div>
       <main className="admin-content mx-auto min-w-0 w-full max-w-[1340px] px-4 py-7 sm:px-7 sm:py-9 lg:px-10 lg:py-10">
-        {demoMode ? <div className="mb-5"><Notice>This is an <strong>interactive UI preview</strong> using fictional data. You can try controls and step ordering, but no changes are saved or published. No live records are loaded.</Notice></div> : null}
+        {demoMode ? <div className="mb-5"><Notice>This <strong>interactive UI preview</strong> uses fictional records. Changes here are not saved.</Notice></div> : null}
         <AnimatePresence initial={false} mode="wait">
           {error ? <motion.div key="admin-error" initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:0.16}} className="mb-5"><Notice tone="error">{error}</Notice></motion.div>
            : message ? <motion.div key="admin-success" initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:0.16}} className="mb-5"><Notice tone="success">{message}</Notice></motion.div>
@@ -406,7 +401,8 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
         <AdminWorkflow section={section} demoMode={demoMode}/>
         <AnimatePresence mode="wait"><motion.div key={section} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-4}} transition={{duration:0.18,ease:"easeOut"}}>
           {section === "overview" ? <>
-            <Heading eyebrow="Content management" title="Welcome to your workspace" description="A clear view of the scholarship guidance your team is preparing."/>
+            <Heading eyebrow="Content management" title="Welcome to your workspace" description="Manage the scholarship guides your team is preparing."
+              action={<Link href={demoMode?"/admin/demo?view=programs":"/admin/programs/new"} className="admin-primary-action inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#155bb0] px-4 py-2.5 text-sm font-semibold text-[#f8fbff] hover:bg-[#104a92]"><Plus size={17}/>Create guide</Link>}/>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {stat(data.programs.length,"Programs",<GraduationCap size={19}/>, "All managed programs",0)}
               {stat(data.cycles.filter(c=>c.status==="draft").length,"Draft cycles",<FileText size={19}/>, "Not visible to applicants",0.055)}
@@ -414,22 +410,21 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
               {stat(data.sources.filter(s=>!s.is_approved).length,"Sources to review",<LibraryBig size={19}/>, "Not approved for retrieval",0.165)}
             </div>
             <OperationsPanel data={data} demoMode={demoMode}/>
-            <div className="mt-6 grid items-start gap-5 xl:grid-cols-[1.6fr_1fr]">
-              <Card><div className="mb-5 flex items-center justify-between"><h2 className="text-lg font-semibold">Scholarship programs</h2><Link href="/admin/programs"><StepLink>Manage all</StepLink></Link></div>
+            <div className="mt-5">
+              <Card><div className="mb-5 flex items-center justify-between"><h2 className="text-lg font-semibold">Scholarship programs</h2><Link href={demoMode?"/admin/demo?view=programs":"/admin/programs"}><StepLink>Manage all</StepLink></Link></div>
                 {data.programs.length ? <div className="divide-y divide-[#d7e3ef]">{data.programs.slice(0,5).map((p)=><Link key={p.id}
   href={demoMode ? "/admin/demo?view=programs&program=" + encodeURIComponent(p.id) : "/admin/programs/" + encodeURIComponent(p.id)}
   aria-label={"Open " + p.title + " program details"}
   className="group flex min-h-20 items-center justify-between gap-3 rounded-lg px-3 py-4 transition-[background-color,transform] duration-150 hover:bg-[#eef6ff] active:scale-[.997] focus-visible:outline-2 focus-visible:outline-[#155bb0]"
 ><div className="min-w-0"><p className="font-semibold text-[#102a51]">{p.title}</p><p className="mt-1 text-xs text-[#53657b]">{data.cycles.filter(c=>c.program_id===p.id).length} application cycle(s)</p></div><div className="flex shrink-0 items-center gap-2"><Pill status={p.status}/><ChevronRight size={18} aria-hidden="true" className="text-[#155bb0] transition-transform duration-150 group-hover:translate-x-0.5"/></div></Link>)}</div> : <Empty title="No scholarship programs" message="Create your first draft. It will remain private until publication."/>}
               </Card>
-              <Card><h2 className="text-lg font-semibold">Recommended workflow</h2><ol className="mt-6 space-y-6">{[["Create a program","Add a program and application cycle."],["Add requirements","Write actionable document steps and FAQs."],["Verify source material","Review trusted official references."],["Preview before publishing","Confirm readiness with your publisher."]].map(([title,detail],index)=><li key={title} className="flex items-start gap-3"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eef6ff] text-xs font-bold text-[#155bb0]">{index+1}</span><div><p className="text-sm font-semibold">{title}</p><p className="mt-1 text-xs leading-5 text-[#53657b]">{detail}</p></div></li>)}</ol></Card>
             </div>
-            <div className="mt-5"><Notice>Only verified, published scholarship guidance should appear to applicants. This console does not make scholarship eligibility decisions.</Notice></div>
           </> : null}
 
           {section === "programs" ? <>
-            <Heading eyebrow="Content library" title="Scholarship guides" description="Step 1: Enter verified scholarship details and academic year. Then prepare the student checklist." action={<Button onClick={()=>{setProgramForm(initProgram);setImportedCycle(null);setProgramMode("new");setError("");}}><Plus size={17}/> New program</Button>}/>
-            <ContextImport demoMode={demoMode} onApply={applyContextDraft}/>
+            <Heading title="Scholarship guides" description="Create, edit, and prepare scholarship guides for publication."
+              action={<div className="flex flex-wrap items-center gap-2"><Button variant="outline" onClick={()=>setShowImport(value=>!value)} aria-expanded={showImport}>{showImport?"Hide import":"Import file"}</Button><Button onClick={()=>{setProgramForm(initProgram);setImportedCycle(null);setProgramMode("new");setError("");}}><Plus size={17}/> New program</Button></div>}/>
+            {showImport ? <div className="mb-5"><ContextImport demoMode={demoMode} onApply={applyContextDraft}/></div> : null}
              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,1fr)]">
               <div className="space-y-5">
                 <Card><div className="grid gap-3 sm:grid-cols-[1fr_160px]"><ProgramSearch value={search} onChange={value=>{setSearch(value);setProgramPage(1);}} programNames={data.programs.map(p=>p.title)} scope={demoMode?"demo":"admin"}/><div><label htmlFor="program-filter" className="sr-only">Filter publication status</label><AdminSelect id="program-filter" value={filter} onChange={value=>{setFilter(value);setProgramPage(1);}} placeholder="All statuses" options={[{value:"all",label:"All statuses"},{value:"draft",label:"Draft"},{value:"published",label:"Published"},{value:"archived",label:"Archived"}]}/></div></div></Card>
@@ -458,7 +453,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
           </> : null}
 
           {section === "requirements" ? <>
-            <Heading eyebrow="Preparation guidance" title="Requirements & FAQs" description="Step 2: Select a guide and add documents students need, clear preparation steps, and common questions."/>
+            <Heading title="Requirements & FAQs" description="Add documents, preparation steps, and FAQs for the selected guide."/>
             <SelectScope data={data} programId={activeProgramId} cycleId={activeCycleId} onProgram={id=>{setProgramId(id);setCyclePage(1);setRequirementPage(1);setSourcePage(1);}} onCycle={id=>{setCycleId(id);setRequirementPage(1);setSourcePage(1);}}/>
             {!activeCycle ? <Empty title="No application cycle selected" message="Create or choose an application cycle before adding requirements."><Link href="/admin/programs"><StepLink>Manage scholarship programs</StepLink></Link></Empty> : <div className="grid gap-5 xl:grid-cols-[minmax(260px,.8fr)_minmax(0,1.3fr)]">
               <Card className="self-start"><div className="mb-4 flex items-center justify-between gap-2"><h2 className="font-semibold">Checklist items</h2><Pill status={activeCycle.status}/></div><div className="space-y-2">{visibleRequirements.map((r,index)=><button key={r.id} className={"flex min-h-14 w-full items-center gap-3 rounded-xl border p-3 text-left text-sm transition-colors "+(requirementId===r.id?"border-[#9cbde0] bg-[#eef6ff]":"border-[#d7e3ef] hover:bg-[#eef6ff]")} onClick={()=>editRequirement(r)}><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#eef6ff] text-xs font-bold text-[#155bb0]">{(safeAdminPage(requirementPage,cycleRequirements.length)-1)*ADMIN_PAGE_SIZE+index+1}</span><span className="flex-1 font-semibold">{r.title}</span><ChevronRight size={15} className="shrink-0"/></button>)}{!cycleRequirements.length ? <p className="py-4 text-sm leading-6 text-[#53657b]">No requirements yet. Add the first item for this cycle.</p> : null}</div><AdminPagination page={safeAdminPage(requirementPage,cycleRequirements.length)} totalItems={cycleRequirements.length} label="requirements" onPageChange={setRequirementPage}/>{isDraft ? <Button className="mt-5 w-full" variant="outline" onClick={()=>editRequirement()}><Plus size={16}/> Add requirement</Button> : <p className="mt-4 text-xs leading-5 text-[#7b6d4e]">Published cycles are read-only here. Use a versioned update workflow.</p>}</Card>
@@ -486,7 +481,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
           </> : null}
 
           {section === "knowledge" ? <>
-            <Heading eyebrow="Reference governance" title="Knowledge & sources" description="Step 3: Attach official references supporting the guide. New sources require review before use."/>
+            <Heading title="Knowledge & sources" description="Attach official references for the selected guide."/>
             <SelectScope data={data} programId={activeProgramId} cycleId={activeCycleId} onProgram={id=>{setProgramId(id);setCyclePage(1);setRequirementPage(1);setSourcePage(1);}} onCycle={id=>{setCycleId(id);setRequirementPage(1);setSourcePage(1);}}/>
             {!activeCycle ? <Empty title="Choose an application cycle" message="Create a cycle before managing its reference sources."/> : <div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(280px,.8fr)]">
               <Card><h2 className="mb-4 text-lg font-semibold">Reference register</h2>
@@ -497,7 +492,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
           </> : null}
 
           {section === "preview" ? <>
-            <Heading eyebrow="Publication readiness" title="Review & publish" description="Step 4: Review student-facing content and what still needs attention before publication."/>
+            <Heading title="Review & publish" description="Check the applicant preview and fix any issues before publication."/>
             <SelectScope data={data} programId={activeProgramId} cycleId={activeCycleId} onProgram={id=>{setProgramId(id);setCyclePage(1);setRequirementPage(1);setSourcePage(1);}} onCycle={id=>{setCycleId(id);setRequirementPage(1);setSourcePage(1);}}/>
             {!activeCycle ? <Empty title="No cycle to preview" message="Select or create a draft cycle, then return here for pre-publication checks."/> : <div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,.85fr)]">
               <Card>
