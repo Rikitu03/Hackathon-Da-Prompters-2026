@@ -308,3 +308,24 @@ test("context importer explains rejected files and missing Lumen extraction", as
   await expect(page.getByText(/No document was sent or saved/)).toBeVisible();
   await expect(page.getByRole("button",{name:/Apply to draft form/})).toHaveCount(0);
 });
+
+
+test("import progress is backed by completed device reading, not fictitious AI upload", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  await page.getByLabel("Choose scholarship source file").setInputFiles({
+    name:"progress-check.md",mimeType:"text/markdown",
+    buffer:Buffer.from("Scholarship Name: Mock Scholarship\nDescription: Fictional progress indicator sample for UI testing.\nAcademic Year: 2026-2027\n")
+  });
+  const progress=page.getByRole("progressbar",{name:"Local source file reading progress"});
+  await expect(progress).toBeVisible();
+  await expect(progress).toHaveAttribute("aria-valuenow","100");
+  await expect(page.getByText("Local file reading complete")).toBeVisible();
+  await expect(page.getByText("Real device-read progress only.")).toBeVisible();
+  await page.getByRole("button",{name:"Remove"}).click();
+  await expect(progress).toHaveCount(0);
+  await page.getByLabel("Choose scholarship source file").setInputFiles({
+    name:"scanned.pdf",mimeType:"application/pdf",buffer:Buffer.from("%PDF-1.7\nnot a real document")
+  });
+  await expect(page.getByRole("progressbar",{name:"Local source file reading progress"})).toHaveCount(0);
+  await expect(page.getByText("AI document extraction is not connected yet")).toBeVisible();
+});
