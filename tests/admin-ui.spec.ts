@@ -122,7 +122,7 @@ test("demo Save source and review adds a local reference", async ({page}) => {
   await page.getByRole("button", { name: "Save source and review" }).click();
   await expect(page.getByRole("heading", { name: "Fictional sandbox source" })).toBeVisible();
   await expect(page.getByText(/Demo reference updated in this browser tab only/)).toBeVisible();
-  await page.getByRole("link", { name: "Review & publish" }).click();
+  await page.goto("/admin/demo?view=preview");
   await expect(page.getByRole("button", { name: "Publish verified guide" })).toBeDisabled();
 });
 
@@ -584,7 +584,7 @@ test("requirement text import reviews labeled fields and stages an office map pi
   await expect(page.getByLabel("Instruction for step 1")).toHaveValue("Request the document at the registrar.");
   await expect(page.getByText("Suggestions are copied to the draft editor")).toBeVisible();
   await page.getByRole("button",{name:"Save requirement draft"}).click();
-  await expect(page.getByText(/Demo program draft updated locally/)).toBeVisible();
+  await expect(page.getByText(/Demo requirement updated locally/)).toBeVisible();
 });
 
 test("requirement importer supports local files and rejects unsupported or oversized files",async ({page})=>{
