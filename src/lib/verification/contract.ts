@@ -29,3 +29,34 @@ export const classificationSchema = z.object({
 export type Classification = z.infer<typeof classificationSchema>;
 
 export type FieldValues = Record<string, string>;
+
+/** Lumen AI's second opinion, stored with the record it reviewed. */
+export const aiReviewSchema = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("ok"), flags: z.array(flagSchema).max(10), reviewedAt: z.string().max(40) }),
+  z.object({ status: z.literal("unavailable"), message: z.string().max(300) }),
+]);
+export type AiReview = z.infer<typeof aiReviewSchema>;
+
+const recordFieldSchema = z.object({
+  key: z.string().max(40),
+  label: z.string().max(60),
+  value: z.string().max(1000),
+  needsReview: z.boolean(),
+  originalText: z.string().max(2000),
+  warnings: z.array(z.string().max(300)).max(10),
+});
+
+/** One checked document, kept only in this browser tab (see store.ts). */
+export const documentRecordSchema = z.object({
+  profileId: z.enum(PROFILE_IDS),
+  source: z.enum(["upload", "sample"]),
+  sampleVariant: z.enum(["clean", "with-issues"]).optional(),
+  fields: z.array(recordFieldSchema).max(20),
+  rawText: z.string().max(20000),
+  detected: classificationSchema,
+  analyzedAt: z.string().max(40),
+  correctedAt: z.string().max(40).optional(),
+  ai: aiReviewSchema.optional(),
+});
+export type DocumentRecord = z.infer<typeof documentRecordSchema>;
+export type RecordMap = Partial<Record<ProfileId, DocumentRecord>>;
