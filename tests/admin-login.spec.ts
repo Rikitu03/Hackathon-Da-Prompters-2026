@@ -99,9 +99,10 @@ test("desktop login fits 1366x768 and 1920x1080 without vertical scrolling or cl
     expect(measures.docWidth, width + "px horizontal overflow").toBeLessThanOrEqual(width + 1);
     expect(measures.docHeight, width + "x" + height + " vertical overflow").toBeLessThanOrEqual(height + 1);
     expect(measures.card.top).toBeGreaterThanOrEqual(0);
-    expect(measures.card.bottom, "card must fit the viewport").toBeLessThanOrEqual(height - 8);
+    expect(Math.abs(measures.card.bottom - height), "right login card must reach the viewport bottom").toBeLessThanOrEqual(2);
     expect(measures.submit.bottom, "submit must be visible").toBeLessThan(measures.skyline.top);
     expect(Math.abs(measures.skyline.bottom - measures.card.bottom), "skyline anchored to card bottom").toBeLessThanOrEqual(2);
+    expect(Math.abs(measures.skyline.bottom - height), "right skyline must reach the viewport bottom").toBeLessThanOrEqual(2);
     expect(Math.abs(measures.waves.bottom - height), "waves anchored to viewport bottom").toBeLessThanOrEqual(2);
     expect(Math.abs(measures.waves.left), "waves should start at viewport left edge").toBeLessThanOrEqual(2);
 
@@ -117,6 +118,7 @@ test("login copy is concise and the small labels use legible font styling", asyn
   await expect(page.getByText("ADMIN ACCESS", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/Administrator accounts are provisioned/)).toHaveCount(0);
   await expect(page.getByText("Administrator access required", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Independent student project. Not an official Pasig City government portal.")).toHaveCount(0);
   const typography = await page.locator(".admin-login-eyebrow").evaluate((element) => {
     const style = getComputedStyle(element);
     return {
