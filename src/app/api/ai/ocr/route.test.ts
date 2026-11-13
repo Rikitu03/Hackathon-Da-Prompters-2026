@@ -5,6 +5,7 @@ vi.mock("@/lib/lumen/ocr", () => ({ uploadDocument: vi.fn(), waitForRead: vi.fn(
 import { getPages, uploadDocument, waitForRead } from "@/lib/lumen/ocr";
 import { LumenError } from "@/lib/lumen/errors";
 import { demoPages } from "@/lib/ocr/__fixtures__/demo-pages";
+import { samplePages } from "@/lib/verification/samples";
 import { POST } from "./route";
 
 const PNG_HEAD = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -62,11 +63,33 @@ describe("POST /api/ai/ocr", () => {
     expect(res.headers.get("cache-control")).toContain("no-store");
     const body = await res.json();
     expect(body.fields.find((f: { key: string }) => f.key === "full_name").value).toBe("Juan Dela Cruz (fictional)");
+    expect(body.profileId).toBeUndefined();
 
     const [, mediaType, displayName] = vi.mocked(uploadDocument).mock.calls[0];
     expect(mediaType).toBe("image/png");
     expect(displayName).toMatch(/^gabay-upload-[0-9a-f]{8}\.png$/);
     expect(displayName).not.toContain("Juan");
+  });
+
+  it("extracts the selected document's details when a profile is sent", async () => {
+    vi.mocked(uploadDocument).mockResolvedValue({ documentId: "doc-2", status: "READY", failedPages: [] });
+    vi.mocked(getPages).mockResolvedValue(samplePages("certificate_of_registration", "clean", new Date(2026, 10, 13)));
+    const res = await POST(ocrRequest({ consent: "true", file: pngFile(), profile: "certificate_of_registration" }, { "x-forwarded-for": "198.51.100.40" }));
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.profileId).toBe("certificate_of_registration");
+    expect(body.detected).toMatchObject({ detected: "certificate_of_registration" });
+    expect(body.fields.map((f: { key: string }) => f.key)).toEqual(
+      ["student_no", "student_name", "address", "course", "department", "enrollment_date", "school_year", "year_level"]);
+    expect(body.warnings).toEqual([]);
+    expect(body.disclaimer).toMatch(/does not verify documents/);
+  });
+
+  it("rejects an unknown profile before spending credits", async () => {
+    const res = await POST(ocrRequest({ consent: "true", file: pngFile(), profile: "passport_photo" }, { "x-forwarded-for": "198.51.100.41" }));
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "Unknown document type." });
+    expect(uploadDocument).not.toHaveBeenCalled();
   });
 
   it("returns 422 when Lumen could not read the document", async () => {

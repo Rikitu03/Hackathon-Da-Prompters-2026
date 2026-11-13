@@ -6,6 +6,8 @@ import { getPages, uploadDocument, waitForRead } from "@/lib/lumen/ocr";
 import { detectMediaType, type SniffedMediaType } from "@/lib/ocr/file-type";
 import { extractFields } from "@/lib/ocr/extract-fields";
 import { clientKey, createRateLimiter } from "@/lib/rate-limit";
+import { PROFILE_IDS, type ProfileId } from "@/lib/verification/contract";
+import { extractProfileFields } from "@/lib/verification/extract";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // upload (≤15 s) + polling (≤25 s, see waitForRead) + pages (≤15 s)
@@ -48,6 +50,15 @@ export async function POST(request: Request) {
   if (!(file instanceof File)) return json({ error: "Attach a document in the 'file' field." }, 400);
   if (file.size > MAX_UPLOAD_BYTES) return json({ error: "File is too large (max 4 MB)." }, 413);
 
+  // Optional: read the details of one known document instead of the six general fields.
+  const profileField = form.get("profile");
+  let profileId: ProfileId | undefined;
+  if (profileField !== null && profileField !== "") {
+    if (typeof profileField !== "string" || !(PROFILE_IDS as readonly string[]).includes(profileField))
+      return json({ error: "Unknown document type." }, 400);
+    profileId = profileField as ProfileId;
+  }
+
   const buffer = await file.arrayBuffer();
   const mediaType = detectMediaType(new Uint8Array(buffer, 0, Math.min(16, buffer.byteLength)));
   if (!mediaType) return json({ error: "Unsupported file type. Use a JPG, PNG, WebP, TIFF or PDF." }, 415);
@@ -72,7 +83,10 @@ export async function POST(request: Request) {
     if (doc.status !== "READY" && doc.status !== "PARTIAL")
       return json({ error: "Reading is taking longer than expected. Please try again in a moment." }, 504);
     const pages = await getPages(doc.documentId);
-    return json(extractFields(pages, { failedPages: doc.failedPages }), 200);
+    const general = extractFields(pages, { failedPages: doc.failedPages });
+    if (!profileId) return json(general, 200);
+    const read = extractProfileFields(pages, profileId);
+    return json({ ...general, fields: read.fields, profileId, detected: read.detected }, 200);
   } catch (err) {
     if (err instanceof LumenError) {
       console.warn("[ocr] lumen error", { kind: err.kind, status: err.status, code: err.code });

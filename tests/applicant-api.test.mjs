@@ -142,3 +142,22 @@ test("unavailable published data never silently becomes an illustrative guide", 
   );
   await assert.rejects(fetchGuides(), (error) => error.status === 503);
 });
+test("OCR sends the selected document profile and keeps its classification", async (t) => {
+  t.mock.method(globalThis, "fetch", async (_url, options) => {
+    assert.equal(options.body.get("profile"), "school_id");
+    return Response.json({
+      rawText: "", fields: [], warnings: [], disclaimer: "", profileId: "school_id",
+      detected: { detected: "school_id", variant: "government_id", evidence: "PHILIPPINE IDENTIFICATION CARD" },
+    });
+  });
+  const file = new File([new Uint8Array([1])], "id.png", { type: "image/png" });
+  assert.equal((await reviewDocument(file, undefined, "school_id")).detected.variant, "government_id");
+});
+test("OCR without a profile sends no profile field", async (t) => {
+  t.mock.method(globalThis, "fetch", async (_url, options) => {
+    assert.equal(options.body.has("profile"), false);
+    return Response.json({ rawText: "", fields: [], warnings: [], disclaimer: "" });
+  });
+  const file = new File([new Uint8Array([1])], "id.png", { type: "image/png" });
+  assert.equal((await reviewDocument(file)).profileId, undefined);
+});

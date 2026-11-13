@@ -10,6 +10,11 @@ import {
   type Guide,
   type Requirement,
 } from "./model";
+import {
+  PROFILE_IDS,
+  classificationSchema,
+  type ProfileId,
+} from "../verification/contract";
 
 export class ApplicantApiError extends Error {
   readonly status: number;
@@ -208,15 +213,19 @@ const ocrSchema = z.object({
   ),
   warnings: z.array(z.string()).default([]),
   disclaimer: z.string().default(""),
+  profileId: z.enum(PROFILE_IDS).optional(),
+  detected: classificationSchema.optional(),
 });
 export type OcrResult = z.infer<typeof ocrSchema>;
 export async function reviewDocument(
   file: File,
   signal?: AbortSignal,
+  profileId?: ProfileId,
 ): Promise<OcrResult> {
   const form = new FormData();
   form.append("file", file);
   form.append("consent", "true");
+  if (profileId) form.append("profile", profileId);
   const data = await request<unknown>(
     "/api/ai/ocr",
     { method: "POST", body: form, signal },

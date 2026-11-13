@@ -7,4 +7,5 @@ export type ChatRequest={cycleId:string;requirementId?:string;message:string};
 export type ChatSource={title:string;sourceId:string;url?:string};
 export type ChatResponse={answer:string;sources:ChatSource[];grounded:boolean;officialUrl?:string};
 export type OCRReviewField={key:string;label:string;value:string;needsReview:boolean;originalText:string;warnings:string[]};
-export type OCRReviewResponse={rawText:string;fields:OCRReviewField[];warnings:string[];disclaimer:string};
+/** `profileId` and `detected` are present only when the request named a document profile. */
+export type OCRReviewResponse={rawText:string;fields:OCRReviewField[];warnings:string[];disclaimer:string;profileId?:import("@/lib/verification/contract").ProfileId;detected?:import("@/lib/verification/contract").Classification};
