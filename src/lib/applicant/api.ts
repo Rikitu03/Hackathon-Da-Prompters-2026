@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { mapPinUrl } from "@/lib/guides/schema";
+import { mapPinUrl } from "../guides/schema";
 import type {
   PublicProgram,
   ProgramSummary,
