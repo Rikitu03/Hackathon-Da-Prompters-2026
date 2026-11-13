@@ -316,6 +316,7 @@ test("reviewed import keeps cycle fields after saving its program through the ba
   });
   await page.route("**/api/admin/guides/*/readiness", route => route.fulfill({ json: { checks: [], ready: false, status: "draft" } }));
   await page.goto("/admin/programs");
+  await page.getByRole("button", { name: "Import file" }).click();
   await page.getByLabel("Choose scholarship source file").setInputFiles({ name: "synthetic-import.md", mimeType: "text/markdown", buffer: Buffer.from("Scholarship Name: Synthetic Imported Guide\nDescription: Fictional import and backend integration test only.\nAcademic Year: 2026-2027\nApplication Opens: 2026-11-01\nApplication Closes: 2026-12-31\nOfficial Application URL: https://example.test/apply\n") });
   await page.getByRole("button", { name: "Apply to draft form", exact: true }).click();
   await page.getByRole("button", { name: "Create draft", exact: true }).click();
