@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import { chooseGuide, mockPublishedGuide, mockChat, GROUNDED_REPLY, PROGRAM_ID } from "./support/applicant-mocks";
-import { useDemoGuide, requirementUrl, mockVerify } from "./support/verification-mocks";
+import { chooseGuide, mockPublishedGuide, mockChat, GROUNDED_REPLY, PROGRAM_ID, CYCLE_ID } from "./support/applicant-mocks";
+import { useBuiltInGuide, requirementUrl, mockOcrFor } from "./support/verification-mocks";
 
 const reply = { answer: "Open My checklist to track your preparation [1].", grounded: true,
   sources: [{ sourceId: "product-help:checklist:1", title: "GabayIskolar product guide — Saving checklist progress" }] };
@@ -113,7 +113,11 @@ test("product mode is accessible in both themes at a keyboard-sized mobile heigh
 });
 
 test("product help works with the illustrative guide while scholarship mode stays restricted", async ({ page }) => {
-  await useDemoGuide(page);
+  await chooseGuide(page);
+  await page.route(`**/api/scholarships/${PROGRAM_ID}`, route => route.fulfill({ json: { program: {
+    id: PROGRAM_ID, title: "DEMO — fictional walkthrough", description: "Browser fixture only", status: "published",
+    application_cycles: [{ id: CYCLE_ID, academic_year: "Fictional cycle", application_start: null, application_end: null, official_url: "https://example.org/apply", published_at: "2026-11-01T00:00:00Z", status: "published", requirements: [], knowledge_sources: [] }],
+  } } }));
   await page.route("**/api/ai/help", route => route.fulfill({ json: reply }));
   const input = await openProduct(page, "/my-checklist");
   await expect(input).toBeEnabled();
@@ -125,11 +129,16 @@ test("product help works with the illustrative guide while scholarship mode stay
 });
 
 test("verification dialogs stay above the widget and preserve its product draft", async ({ page }) => {
-  await useDemoGuide(page); await mockVerify(page, { status: "unavailable", message: "Fixture only" });
-  const input = await openProduct(page, requirementUrl("illustrative-enrollment"));
+  await useBuiltInGuide(page);
+  await page.route("**/api/ai/verify", route => route.fulfill({ status: 503, json: { error: "Fixture only" } }));
+  await mockOcrFor(page, { rawText: "CERTIFICATE OF REGISTRATION", fields: [], warnings: [], disclaimer: "Fixture only", profileId: "certificate_of_registration", detected: { detected: "certificate_of_registration", evidence: "CERTIFICATE OF REGISTRATION" } });
+  const input = await openProduct(page, requirementUrl("certificate-of-registration"));
   await input.fill("Unsent product draft");
-  const sample = page.getByRole("button", { name: "Try a clean sample", exact: true });
-  await sample.focus(); await sample.press("Enter");
+  await page.locator('#document-check input[type="file"]').setInputFiles("tests/fixtures/demo-certificate.png");
+  const consent = page.getByLabel(/Send this document to Lumen OCR and Lumen AI/);
+  await consent.focus(); await consent.press("Space");
+  const check = page.getByRole("button", { name: "Check document", exact: true });
+  await check.focus(); await check.press("Enter");
   const dialog = page.getByRole("dialog", { name: "Certificate of Registration", exact: true });
   await expect(dialog).toBeVisible();
   const popupLayer = await dialog.evaluate(node => Number(getComputedStyle(node).zIndex));

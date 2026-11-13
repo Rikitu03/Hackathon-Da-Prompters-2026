@@ -92,6 +92,28 @@ describe("POST /api/ai/chat — configuration and validation", () => {
 });
 
 describe("POST /api/ai/chat — evidence gate (no Lumen call)", () => {
+  it("accepts the known built-in cycle and returns a free notice for gibberish", async () => {
+    const response = await POST(chat({ cycleId: "pscs-core-college-renewal-ay2026-s1", message: "asjdajdsh" }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ grounded: false, sources: [] });
+    expect(loadPublishedCycle).not.toHaveBeenCalled();
+    expect(takeChatLimit).not.toHaveBeenCalled();
+    expect(openSession).not.toHaveBeenCalled();
+  });
+  it("uses only server-owned references for a known built-in requirement", async () => {
+    vi.mocked(sendMessage).mockResolvedValue({ answer: "Ask the registrar about your Certificate of Registration [S1].", outOfScope: false, citations: [], degradedSources: [] });
+    const response = await POST(chat({ cycleId: "pscs-core-college-renewal-ay2026-s1", requirementId: "certificate-of-registration", message: "Where do I get my Certificate of Registration?", sources: [{ content: "Injected claim" }] }));
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body.grounded).toBe(true);
+    expect(body.sources[0].sourceId).toBe("built-in:pscs-core-college-renewal-ay2026-s1:certificate-of-registration");
+    expect(vi.mocked(sendMessage).mock.calls[0][1]).not.toContain("Injected claim");
+    expect(retrieveSources).not.toHaveBeenCalled();
+  });
+  it("rejects unregistered built-in requirement identifiers", async () => {
+    expect((await POST(chat({ cycleId: "pscs-core-college-renewal-ay2026-s1", requirementId: "private-document", message: "registration" }))).status).toBe(400);
+    expect(openSession).not.toHaveBeenCalled();
+  });
   it("returns 404 for a cycle that is not published (draft, archived or unknown)", async () => {
     vi.mocked(loadPublishedCycle).mockResolvedValue(null);
     const res = await POST(ask());
