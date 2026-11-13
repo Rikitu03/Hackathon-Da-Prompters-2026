@@ -27,6 +27,10 @@ export type Requirement = {
   required: boolean;
   steps: string[];
   faqs: { question: string; answer: string }[];
+  issuingOffice?: string;
+  officeAddress?: string;
+  officeHours?: string;
+  mapUrl?: string;
 };
 export type Cycle = {
   id: string;

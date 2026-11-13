@@ -43,6 +43,8 @@ export function requirementFrom(row: RequirementRow): Requirement {
     title: row.title,
     description: row.description,
     required: row.is_required,
+    issuingOffice: row.issuing_office ?? "", officeAddress: row.office_address ?? "",
+    officeHours: row.office_hours ?? "", mapUrl: row.map_url ?? "",
     steps: [...(row.requirement_steps ?? [])]
       .sort((a, b) => a.position - b.position)
       .map((s) => s.instruction),
