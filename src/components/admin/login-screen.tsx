@@ -187,7 +187,7 @@ export function AdminLoginScreen({
                 </div>
 
                 <div className="admin-login-form-options">
-                  <Link href="/admin/demo" aria-label="Open read-only admin demo">View demo (read-only)</Link>
+                  <Link href="/admin/demo" aria-label="Open interactive admin demo">Try interactive demo</Link>
                   <button type="button" onClick={() => setHelpOpen((open) => !open)} aria-expanded={helpOpen} aria-controls="admin-login-help">
                     Forgot password?
                   </button>
