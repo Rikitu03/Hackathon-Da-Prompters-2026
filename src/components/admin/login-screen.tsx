@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { useState, type FormEvent } from "react";
 import {
-  ArrowRight, BookmarkCheck, CheckCircle2, Eye, EyeOff,
-  FileCheck2, Info, LoaderCircle, LockKeyhole, Mail,
+  ArrowRight, BookmarkCheck, Eye, EyeOff,
+  FileCheck2, LoaderCircle, LockKeyhole, Mail,
   MessageCircleMore, RefreshCw, ShieldCheck,
 } from "lucide-react";
 import { GabayBrand } from "@/components/shared/gabay-brand";
@@ -68,7 +68,7 @@ export function AdminLoginScreen({
         <section className="admin-login-hero" aria-label="GabayIskolar administration">
           <GabayBrand className="admin-login-brand" />
           <div className="admin-login-hero-copy">
-            <p className="admin-login-eyebrow">GABAYISKOLAR ADMIN WORKSPACE</p>
+            <p className="admin-login-eyebrow">GabayIskolar Admin Workspace</p>
             <h1>Support Every <span>Scholarship Journey</span></h1>
             <p className="admin-login-intro">
               Sign in to manage scholarship programs, verify requirements,
@@ -211,14 +211,6 @@ export function AdminLoginScreen({
               </form>
             ) : null}
 
-            <div className="admin-login-divider"><span>ADMIN ACCESS</span></div>
-            <div className="admin-login-managed"><CheckCircle2 size={20} aria-hidden="true"/><span>Administrator accounts are provisioned by the project team.</span></div>
-            <div className="admin-login-note">
-              <Info size={23} aria-hidden="true"/>
-              <div><strong>Administrator access required</strong>
-                <p>Only approved editors and publishers can access scholarship management tools. Student accounts cannot sign in here.</p>
-              </div>
-            </div>
           </div>
           <Skyline/>
         </main>
