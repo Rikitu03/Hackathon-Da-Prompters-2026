@@ -299,8 +299,8 @@ test("context importer explains rejected files and missing Lumen extraction", as
   await page.goto("/admin/demo?view=programs");
   const input=page.getByLabel("Choose scholarship source file");
   await input.setInputFiles({name:"unsafe.exe",mimeType:"application/octet-stream",buffer:Buffer.from("not a document")});
-  await expect(page.getByRole("alert")).toContainText("This file type is not supported");
-  await expect(page.getByRole("alert")).toContainText("415");
+  await expect(page.getByRole("region",{name:/Start with a document/}).getByRole("alert")).toContainText("This file type is not supported");
+  await expect(page.getByRole("region",{name:/Start with a document/}).getByRole("alert")).toContainText("415");
   await page.getByRole("button",{name:"Dismiss upload error"}).click();
 
   await input.setInputFiles({name:"reference.pdf",mimeType:"application/pdf",buffer:Buffer.from("%PDF-1.7\nexample bytes")});
