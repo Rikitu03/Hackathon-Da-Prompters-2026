@@ -31,7 +31,7 @@ function findLabelled(lines: OcrInputLine[], aliases: string[]): Hit | undefined
   return undefined;
 }
 
-function warningsFor(line: OcrInputLine | undefined): string[] {
+export function warningsFor(line: OcrInputLine | undefined): string[] {
   if (!line) return ["Not found. Please fill this in if it applies."];
   if (line.confidence === undefined) return ["Confidence not reported. Please check."];
   if (line.confidence < LOW_CONFIDENCE) return ["Low confidence. Please check."];
