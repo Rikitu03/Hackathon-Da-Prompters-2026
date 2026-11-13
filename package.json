@@ -16,6 +16,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
+    "test": "vitest run",
     "test:applicant": "node --experimental-strip-types --import ./tests/register-applicant-loader.mjs --test tests/applicant-*.test.mjs"
   },
   "dependencies": {
@@ -45,6 +46,7 @@
     "eslint-config-next": "^15.5.0",
     "postcss": "^8.4.0",
     "tailwindcss": "^4.0.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.4"
   }
 }

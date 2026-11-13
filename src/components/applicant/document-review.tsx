@@ -1,11 +1,14 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Check, FileText, ScanText, Upload, X } from "lucide-react";
 import { reviewDocument, type OcrResult } from "@/lib/applicant/api";
 import { validateFile } from "@/lib/applicant/model";
-import { Notice } from "./workspace";
+import { OCR_CLIENT_TIMEOUT_MS } from "@/lib/ai-limits";
+import { JourneyRail } from "./journey";
+import { StatusSelect } from "./preparation";
+import { Notice, usePreparation, useWorkspace } from "./workspace";
 
 const example: OcrResult = {
   rawText:
@@ -16,19 +19,28 @@ const example: OcrResult = {
       label: "Academic year",
       value: "2025–2026",
       needsReview: true,
+      originalText: "Academic year: 2026–2027",
+      warnings: ["Compare the academic year with the original."],
     },
     {
       key: "educationLevel",
       label: "Education level",
       value: "College",
       needsReview: false,
+      originalText: "Education level: College",
+      warnings: [],
     },
   ],
   warnings: [
     "Possible mismatch — please verify against your document. The example deliberately contains an incorrect extracted academic year.",
   ],
+  disclaimer: "Automatically read text may contain errors. Please review every field. This tool does not verify documents or decide eligibility.",
 };
-export function DocumentReview() {
+export function DocumentReview({ initialRequirementId = "" }: { initialRequirementId?: string }) {
+  const { cycle, recordDocumentCheck } = useWorkspace();
+  const prep = usePreparation(cycle);
+  const [requirementId, setRequirementId] = useState("");
+  const requirement = cycle?.requirements.find((r) => r.id === requirementId);
   const [file, setFile] = useState<File | null>(null),
     [preview, setPreview] = useState(""),
     [consent, setConsent] = useState(false),
@@ -40,7 +52,8 @@ export function DocumentReview() {
     [confirmed, setConfirmed] = useState(false),
     [dragging, setDragging] = useState(false);
   const input = useRef<HTMLInputElement>(null),
-    controller = useRef<AbortController | null>(null);
+    controller = useRef<AbortController | null>(null),
+    reviewed = useRef(false);
   useEffect(() => {
     if (!file) {
       setPreview("");
@@ -62,8 +75,9 @@ export function DocumentReview() {
     setConsent(false);
     setChecked(false);
     setConfirmed(false);
+    reviewed.current = false;
   }
-  function clear() {
+  const clear = useCallback(() => {
     controller.current?.abort();
     setPending(false);
     setFile(null);
@@ -74,7 +88,12 @@ export function DocumentReview() {
     setConfirmed(false);
     setError("");
     if (input.current) input.current.value = "";
-  }
+    reviewed.current = false;
+  }, []);
+  useEffect(() => {
+    clear();
+    setRequirementId(cycle?.requirements.some((r) => r.id === initialRequirementId) ? initialRequirementId : "");
+  }, [cycle, initialRequirementId, clear]);
   async function process() {
     if (!file || !consent || pending) return;
     setPending(true);
@@ -82,13 +101,14 @@ export function DocumentReview() {
     setResult(null);
     setChecked(false);
     setConfirmed(false);
+    reviewed.current = false;
     const c = new AbortController();
     controller.current = c;
     let timedOut = false;
     const timeout = setTimeout(() => {
       timedOut = true;
       c.abort();
-    }, 45000);
+    }, OCR_CLIENT_TIMEOUT_MS);
     try {
       const next = await reviewDocument(file, c.signal);
       if (!c.signal.aborted) setResult(next);
@@ -116,8 +136,9 @@ export function DocumentReview() {
   }
   return (
     <>
+      <JourneyRail current="document" />
       <div className="page-heading">
-        <h1>A closer look at your document.</h1>
+        <h1>Check a document</h1>
         <p>
           Read extracted details, correct mistakes, and compare everything with
           your original.
@@ -128,6 +149,13 @@ export function DocumentReview() {
         authenticity, eligibility, or acceptance. Your files and extracted
         values are not saved in your checklist.
       </Notice>
+      <label className="field document-context">
+        Document for
+        <select value={requirementId} disabled={pending} onChange={(e) => { setRequirementId(e.target.value); setChecked(false); setConfirmed(false); }}>
+          <option value="">Not linked to a requirement</option>
+          {cycle?.requirements.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}
+        </select>
+      </label>
       <div className="document-layout">
         <section className="surface upload-panel">
           <h2>1. Choose a document</h2>
@@ -164,11 +192,12 @@ export function DocumentReview() {
               type="file"
               className="sr-only"
               aria-label="Choose document file"
+              aria-describedby="upload-hint"
               accept="image/jpeg,image/png,application/pdf"
               disabled={pending}
               onChange={(e) => choose(e.target.files?.[0])}
             />
-            <small>JPG, PNG, or PDF · Up to 10 MB in this browser</small>
+            <small id="upload-hint">JPG, PNG or PDF, up to 4 MB</small>
           </div>
           {file && (
             <div className="file-meta">
@@ -231,12 +260,7 @@ export function DocumentReview() {
               onChange={(e) => setConsent(e.target.checked)}
             />
             <span>
-              I consent to sending this document to the review service for text
-              extraction.
-              <small>
-                Only select a document you have permission to process. It stays
-                local until you choose Extract details.
-              </small>
+              Send this document to Lumen OCR to read its text. Lumen keeps a copy that other teams in this hackathon can see, and it can&apos;t be deleted. Use a sample or fictional document only.
             </span>
           </label>
           <button
@@ -266,8 +290,7 @@ export function DocumentReview() {
             </button>
           )}
           <p className="helper">
-            The review service may enforce a smaller limit. Your file is
-            released from the preview when you clear it or leave this screen.
+            Your local preview is released when you clear it or leave this screen. Retrying extraction uploads another copy to Lumen.
           </p>
         </section>
         <section className="surface extraction-panel">
@@ -309,6 +332,7 @@ export function DocumentReview() {
                   {warning}
                 </Notice>
               ))}
+              {result.disclaimer && <Notice>{result.disclaimer}</Notice>}
               <div className="extracted-fields">
                 {result.fields.length ? (
                   result.fields.map((field, i) => (
@@ -320,6 +344,8 @@ export function DocumentReview() {
                         </span>
                       )}
                       <input
+                        aria-label={field.label}
+                        aria-describedby={`ocr-evidence-${i}`}
                         value={field.value}
                         onChange={(e) => {
                           setResult((r) =>
@@ -338,6 +364,10 @@ export function DocumentReview() {
                           setConfirmed(false);
                         }}
                       />
+                      <span className="field-evidence" id={`ocr-evidence-${i}`}>
+                        {field.originalText && <small>Read from document: {field.originalText}</small>}
+                        {field.warnings.map((warning, j) => <small key={j} className="field-warning">{warning}</small>)}
+                      </span>
                     </label>
                   ))
                 ) : (
@@ -370,7 +400,10 @@ export function DocumentReview() {
               <button
                 className="btn primary"
                 disabled={!checked || confirmed}
-                onClick={() => setConfirmed(true)}
+                onClick={() => {
+                  setConfirmed(true);
+                  if (!reviewed.current) { recordDocumentCheck(); reviewed.current = true; }
+                }}
               >
                 <Check size={17} />
                 {confirmed
@@ -387,6 +420,13 @@ export function DocumentReview() {
                   </Link>
                 </Notice>
               )}
+              {confirmed && requirement && <section className="document-next">
+                <h2>What&apos;s next for {requirement.title}</h2>
+                <p>Choose your own preparation status after reviewing the guide.</p>
+                {prep.ready && <StatusSelect id={requirement.id} title={requirement.title} value={prep.entries[requirement.id]?.status ?? "not-started"} onChange={(status) => prep.update(requirement.id, status)} />}
+                <Link className="btn secondary" href={`/assistant?requirement=${requirement.id}`}>Ask Gabay about {requirement.title}<ArrowRight size={16} /></Link>
+                <Link className="text-link" href="/my-checklist">Back to my checklist</Link>
+              </section>}
               <button className="text-link" onClick={clear}>
                 Clear document and extracted details
               </button>

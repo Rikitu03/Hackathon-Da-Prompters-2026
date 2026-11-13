@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests",
+  testMatch: "**/*.spec.ts",
   timeout: 30000,
   expect: { timeout: 10000 },
   retries: process.env.CI ? 1 : 0,
@@ -24,7 +25,9 @@ export default defineConfig({
     // Never contact the shared dev Supabase from automated browser tests.
     env: {
       NEXT_PUBLIC_SUPABASE_URL: "https://mock.supabase.test",
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: "sb_publishable_e2e_mock_key"
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "sb_publishable_e2e_mock_key",
+      LUMEN_CHAT_ENABLED: "false",
+      LUMEN_OCR_ENABLED: "false"
     }
   }
 });

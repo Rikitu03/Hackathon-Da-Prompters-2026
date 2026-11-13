@@ -8,6 +8,10 @@ import {
   validateFile,
   safeHttps,
   serviceMessage,
+  stageForPath,
+  journeyProgress,
+  nextStage,
+  citedSegments,
 } from "../src/lib/applicant/model.ts";
 
 const item = {
@@ -94,9 +98,9 @@ test("file validation rejects empty, oversized, wrong type, and mismatched exten
     validateFile({
       name: "x.pdf",
       type: "application/pdf",
-      size: 10 * 1024 * 1024 + 1,
+      size: 4 * 1024 * 1024 + 1,
     }),
-    /10 MB/,
+    /larger than 4 MB/,
   );
   assert.match(
     validateFile({ name: "x.svg", type: "image/svg+xml", size: 200 }),
@@ -112,7 +116,32 @@ test("file validation rejects empty, oversized, wrong type, and mismatched exten
     ["x.jpg", "image/jpeg"],
     ["x.jpeg", "image/jpeg"],
   ])
-    assert.equal(validateFile({ name, type, size: 10 * 1024 * 1024 }), null);
+    assert.equal(validateFile({ name, type, size: 4 * 1024 * 1024 }), null);
+});
+test("the exact server upload boundary is accepted", () => {
+  assert.equal(validateFile({ name: "x.pdf", type: "application/pdf", size: 4 * 1024 * 1024 }), null);
+});
+test("journey stages follow route families", () => {
+  for (const [path, expected] of [["/", null], ["/dashboard", null], ["/onboarding", "guide"], ["/scholarships", "guide"], ["/scholarships/id", "guide"], ["/my-checklist", "checklist"], ["/requirements/id", "checklist"], ["/document-review", "document"], ["/assistant", "ask"], ["/summary", "official"]])
+    assert.equal(stageForPath(path), expected);
+});
+test("optional visit work and checklist progress do not imply official submission", () => {
+  const input = { hasCycle: false, prepared: 0, total: 0, documentsChecked: 0, asked: false };
+  assert.equal(nextStage(journeyProgress(input)), "guide");
+  assert.equal(nextStage(journeyProgress({ ...input, hasCycle: true, prepared: 1, total: 2 })), "checklist");
+  assert.equal(nextStage(journeyProgress({ ...input, hasCycle: true, prepared: 2, total: 2, documentsChecked: 1 })), "ask");
+  assert.equal(journeyProgress({ ...input, asked: true }).official, "todo");
+});
+test("inline citations map known groups and keep unknown numbers as text", () => {
+  assert.deepEqual(citedSegments("Hall [1]. ID [1, 2]. Odd [7].", 2), [
+    { text: "Hall " }, { cite: 1 }, { text: ". ID " }, { cite: 1 }, { cite: 2 }, { text: ". Odd [7]." },
+  ]);
+  assert.deepEqual(citedSegments("Unknown [1, 9].", 2), [{ text: "Unknown [1, 9]." }]);
+});
+test("contract failures give an actionable explanation", () => {
+  assert.match(serviceMessage(403, "Ask Gabay"), /another site/);
+  assert.match(serviceMessage(404, "Ask Gabay"), /no longer published/);
+  assert.match(serviceMessage(422, "Document review"), /couldn't be read/);
 });
 test("citation links allow HTTPS and block executable protocols", () => {
   for (const url of [

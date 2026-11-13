@@ -4,6 +4,8 @@ A Pasig scholarship preparation assistant for **The Prompters — OVERCLOCK 2026
 
 > **Independent prototype.** Not affiliated with or endorsed by Pasig City Government or the scholarship office. This project guides document preparation; it does not submit applications, verify eligibility, or approve scholarships.
 
+See the [documentation index](docs/README.md), including the [PSCS requirements, demo data, and OCR references](docs/scholarships/pscs/README.md).
+
 ## Stack
 
 - Next.js App Router, React, TypeScript
@@ -24,7 +26,7 @@ A Pasig scholarship preparation assistant for **The Prompters — OVERCLOCK 2026
 5. Use the existing shared `gabayiskolar-dev` database and run `npm run check:db` to verify access. M3 has applied the migrations; teammates should not rerun them. See [Shared team environment](docs/TEAM_ENVIRONMENT.md) for project details and permission tests.
 6. Run `npm run typecheck`, `npm run lint`, and `npm run build` before opening a pull request.
 
-Open `/backend-lab` for a simple visual backend walkthrough: administrator sign-in, atomic draft saving, source review, publishing, and anonymous public results. `/scholarships` reads real published guides and supports a browser-local preparation checklist. See [Backend walkthrough and testing](docs/BACKEND_WALKTHROUGH.md). Lumen chat and OCR still require implementation and intentionally return 501/503.
+Open `/backend-lab` for administrator API sign-in, atomic guide saving, source review, publishing, and anonymous public results. `/admin` has the persistent admin workspace; `/scholarships` connects to the applicant preparation experience. Lumen OCR is implemented and has a recorded live check with fictional data. The local Member 4 chat/RAG work is also implemented, with provider refusals recorded and a successful cited route answer still awaiting suitable reviewed content. Start with [current integration status and next steps](docs/STATUS.md); see [backend walkthrough](docs/BACKEND_WALKTHROUGH.md) and [Lumen evidence](docs/LUMEN_CONTRACT.md).
 
 Teammates integrating this backend should start with [Backend handoff](docs/BACKEND_HANDOFF.md).
 

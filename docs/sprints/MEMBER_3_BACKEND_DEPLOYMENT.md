@@ -5,6 +5,8 @@
 **Primary files:** `supabase/migrations/`, `src/lib/supabase/`, `src/app/api/admin/`, public scholarship read APIs, environment/deploy docs  
 **Blocking impact:** M1 cannot use real data; M2 cannot publish; M4 cannot retrieve published KB until core contracts/data exist.
 
+**Current checkpoint, 13 November 2026:** the core tables, public reads, atomic guide save and publisher publication API already exist. The shared database passed read-only access checks. Use [STATUS.md](../STATUS.md) for remaining work: bridge the final admin UI to the existing API/cookie session and source-review workflow, publish a reviewed PSCS guide, then verify the intended deployment. Do not recreate/reset the shared database or repeat applied migrations from the planning checklist below.
+
 ## Deliverable and acceptance
 
 A secure persistent program/cycle/requirement data layer with authenticated admin operations and published-only public reads, plus a working Vercel deployment. Cross-module integration happens before feature polish.

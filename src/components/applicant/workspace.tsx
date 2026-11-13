@@ -19,6 +19,7 @@ import {
   MessageCircle,
   ScanText,
   X,
+  Waves,
   ArrowRight,
   Info,
   AlertCircle,
@@ -49,6 +50,11 @@ type Workspace = {
   error: string;
   storageWarning: string;
   retry: () => void;
+  visit: { documentsChecked: number; asked: boolean };
+  recordDocumentCheck: () => void;
+  recordQuestion: () => void;
+  preparationRevision: number;
+  refreshPreparation: () => void;
 };
 const WorkspaceContext = createContext<Workspace | null>(null);
 export function ApplicantProvider({ children }: { children: React.ReactNode }) {
@@ -59,6 +65,20 @@ export function ApplicantProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState("");
   const [storageWarning, setStorageWarning] = useState("");
   const [revision, setRevision] = useState(0);
+  const [preparationRevision, setPreparationRevision] = useState(0);
+  const refreshPreparation = useCallback(() => setPreparationRevision((v) => v + 1), []);
+  const [visitState, setVisitState] = useState({ cycleId: "", documentsChecked: 0, asked: false });
+  const selectedCycle = preferences?.cycleId ?? "";
+  const visit = visitState.cycleId === selectedCycle ? visitState : { documentsChecked: 0, asked: false };
+  useEffect(() => {
+    setVisitState({ cycleId: selectedCycle, documentsChecked: 0, asked: false });
+  }, [selectedCycle]);
+  const recordDocumentCheck = useCallback(() => {
+    setVisitState((v) => ({ cycleId: selectedCycle, documentsChecked: (v.cycleId === selectedCycle ? v.documentsChecked : 0) + 1, asked: v.cycleId === selectedCycle && v.asked }));
+  }, [selectedCycle]);
+  const recordQuestion = useCallback(() => {
+    setVisitState((v) => ({ cycleId: selectedCycle, documentsChecked: v.cycleId === selectedCycle ? v.documentsChecked : 0, asked: true }));
+  }, [selectedCycle]);
   useEffect(() => {
     try {
       const p: unknown = JSON.parse(
@@ -134,6 +154,11 @@ export function ApplicantProvider({ children }: { children: React.ReactNode }) {
         loading,
         error,
         storageWarning,
+        visit,
+        recordDocumentCheck,
+        recordQuestion,
+        preparationRevision,
+        refreshPreparation,
         retry: () => setRevision((v) => v + 1),
       }}
     >
@@ -147,6 +172,7 @@ export function useWorkspace() {
   return value;
 }
 export function usePreparation(cycle: Cycle | undefined) {
+  const { preparationRevision, refreshPreparation } = useWorkspace();
   const [entries, setEntries] = useState<Progress>({});
   const [ready, setReady] = useState(false);
   const [loadedCycle, setLoadedCycle] = useState<Cycle | undefined | null>(
@@ -176,7 +202,7 @@ export function usePreparation(cycle: Cycle | undefined) {
     setEntries(next);
     setLoadedCycle(cycle);
     setReady(true);
-  }, [cycle]);
+  }, [cycle, preparationRevision]);
   function update(id: string, status: Status) {
     if (!cycle) return;
     const requirement = cycle.requirements.find((r) => r.id === id);
@@ -185,6 +211,7 @@ export function usePreparation(cycle: Cycle | undefined) {
     setEntries((e) => ({ ...e, [id]: entry }));
     try {
       localStorage.setItem(storageKey(cycle.id, id), JSON.stringify(entry));
+      refreshPreparation();
     } catch {
       setWarning("This status could not be saved. It may reset after refresh.");
     }
@@ -201,9 +228,23 @@ export function usePreparation(cycle: Cycle | undefined) {
     changed,
   };
 }
-import { GabayBrand as Brand } from "@/components/shared/gabay-brand";
-export { Brand };
-
+export function Brand({ inverse = false }: { inverse?: boolean }) {
+  return (
+    <Link
+      href="/"
+      className={`brand${inverse ? " inverse" : ""}`}
+      aria-label="GabayIskolar home"
+    >
+      <span className="brand-mark">
+        <BookOpen size={23} />
+        <Waves size={14} />
+      </span>
+      <span>
+        GabayIskolar<span className="brand-dot">.</span>
+      </span>
+    </Link>
+  );
+}
 export function OfficialLink({
   children = "Official scholarship portal",
   className = "",
@@ -289,8 +330,9 @@ const navigation = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/scholarships", label: "Scholarships", icon: BookOpen },
   { href: "/my-checklist", label: "My checklist", icon: ClipboardCheck },
+  { href: "/document-review", label: "Check a document", icon: ScanText },
   { href: "/assistant", label: "Ask Gabay", icon: MessageCircle },
-  { href: "/document-review", label: "Document review", icon: ScanText },
+  { href: "/summary", label: "Official step", icon: ArrowUpRight },
 ];
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();

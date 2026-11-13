@@ -5,6 +5,8 @@
 **Primary files:** `src/app/(applicant)/`, `src/components/applicant/`, UI primitives coordinated with M2  
 **Unblockers:** M3 (read APIs), M4 (AI contracts), M2 (verified content)
 
+**Current checkpoint, 13 November 2026:** applicant routes are merged from staging. Follow [STATUS.md](../STATUS.md) and [the applicant handoff](../APPLICANT-HANDOFF.md) to align AI limits, timing, responses and consent with Member 4. The checklist below is the original execution plan; complete the current integration gaps before rebuilding existing screens.
+
 ## Deliverable and acceptance
 
 An applicant can discover a published scholarship cycle, understand requirements through a step-by-step journey, mark items prepared, review extracted OCR fields, ask a grounded question and navigate to the official application portal. This is **preparation**, not official submission or approval.

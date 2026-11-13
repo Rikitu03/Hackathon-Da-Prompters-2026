@@ -12,6 +12,8 @@ import {
 import { fetchGuide, fetchGuides } from "@/lib/applicant/api";
 import { demoGuide } from "@/lib/applicant/fixtures";
 import type { Guide } from "@/lib/applicant/model";
+import { closedCycleNotice, cycleWindow, formatCycleDate } from "@/lib/cycle-window";
+import { JourneyRail } from "./journey";
 import {
   DemoNotice,
   Loading,
@@ -127,6 +129,7 @@ export function Explorer() {
   );
   return (
     <>
+      <JourneyRail current="guide" />
       <div className="page-heading">
         <h1>Explore scholarship guides</h1>
         <p>A clearer starting point for your scholarship preparation.</p>
@@ -282,8 +285,11 @@ export function GuideDetail({ id }: { id: string }) {
     });
     router.push("/my-checklist");
   }
+  const window = cycleWindow(cycle.start, cycle.end);
+  const windowLabel = window === "open" ? "Open" : window === "closed" ? "Closed" : window === "upcoming" ? `Opens ${formatCycleDate(cycle.start!)}` : "Dates not published";
   return (
     <>
+      <JourneyRail current="guide" />
       <Link href="/scholarships" className="back-link">
         <ArrowLeft size={16} />
         All scholarship guides
@@ -297,6 +303,8 @@ export function GuideDetail({ id }: { id: string }) {
         <div>
           <section className="surface">
             <h2>Choose your application cycle</h2>
+            <span className="cycle-window">{windowLabel}</span>
+            {window === "closed" && <Notice>{closedCycleNotice(cycle.end!)}</Notice>}
             <label className="field">
               Published cycle
               <select
@@ -325,7 +333,7 @@ export function GuideDetail({ id }: { id: string }) {
                 <dt>Application period</dt>
                 <dd>
                   {cycle.start || cycle.end
-                    ? `${cycle.start ?? "Start not published"} — ${cycle.end ?? "End not published"}`
+                    ? `${cycle.start ? formatCycleDate(cycle.start) : "Start not published"} – ${cycle.end ? formatCycleDate(cycle.end) : "End not published"}`
                     : "No current dates verified here"}
                 </dd>
               </div>
@@ -437,7 +445,7 @@ export function Onboarding() {
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
   const [sample, setSample] = useState(false),
-    [level, setLevel] = useState("College"),
+    [level, setLevel] = useState(""),
     [type, setType] = useState("New applicant"),
     [id, setId] = useState(""),
     [cycleId, setCycleId] = useState("");
@@ -461,6 +469,7 @@ export function Onboarding() {
   const cycle = guide?.cycles.find((c) => c.id === cycleId) ?? guide?.cycles[0];
   return (
     <div className="onboarding-wrap">
+      <JourneyRail current="guide" />
       <div className="page-heading">
         <h1>Let’s find your starting point.</h1>
         <p>
@@ -486,17 +495,19 @@ export function Onboarding() {
         <div className="form-pair">
           <label className="field">
             Education level
-            <select value={level} onChange={(e) => setLevel(e.target.value)}>
-              <option>Senior high school</option>
-              <option>College</option>
-              <option>Graduate studies</option>
+            <select required value={level} onChange={(e) => setLevel(e.target.value)}>
+              <option value="">Choose your level</option>
+              <option>Elementary (Grades 4–6)</option>
+              <option>Junior high school (Grades 7–10)</option>
+              <option>Senior high school (Grades 11–12)</option>
+              <option>College / university</option>
             </select>
           </label>
           <label className="field">
             I’m preparing as a
             <select value={type} onChange={(e) => setType(e.target.value)}>
               <option>New applicant</option>
-              <option>Renewing student</option>
+              <option>Renewing scholar</option>
             </select>
           </label>
         </div>
@@ -573,7 +584,7 @@ export function Onboarding() {
           </>
         )}
         <button
-          disabled={!guide || !cycle}
+          disabled={!guide || !cycle || !level}
           className="btn primary"
           type="submit"
         >

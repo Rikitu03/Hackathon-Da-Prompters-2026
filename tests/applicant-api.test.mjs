@@ -5,6 +5,7 @@ import {
   fetchGuides,
   request,
   reviewDocument,
+  NO_EVIDENCE_NOTICE,
 } from "../src/lib/applicant/api.ts";
 
 test("chat sends only the documented app-level contract and retains citations", async (t) => {
@@ -34,24 +35,23 @@ test("chat sends only the documented app-level contract and retains citations", 
     "s1",
   );
 });
-test("uncited or ungrounded provider claims are replaced by the no-evidence fallback", async (t) => {
-  for (const response of [
-    {
-      answer: "You are eligible",
-      grounded: false,
-      sources: [{ sourceId: "s", title: "Untrusted" }],
-    },
-    { answer: "You are eligible", grounded: true, sources: [] },
-  ]) {
-    const mock = t.mock.method(globalThis, "fetch", async () =>
-      Response.json(response),
-    );
-    const answer = await askGabay("cycle", "Question");
-    assert.equal(answer.grounded, false);
-    assert.match(answer.answer, /cannot confirm/);
-    assert.deepEqual(answer.sources, []);
-    mock.mock.restore();
-  }
+test("server notices retain their text and safe official destination", async (t) => {
+  t.mock.method(globalThis, "fetch", async () => Response.json({
+    answer: "This cycle ended on 2026-06-30.", grounded: false, sources: [], officialUrl: "https://example.org/apply",
+  }));
+  assert.deepEqual(await askGabay("cycle", "Question"), { kind: "notice", answer: "This cycle ended on 2026-06-30.", officialUrl: "https://example.org/apply" });
+});
+test("uncited grounded text becomes the fixed no-evidence notice", async (t) => {
+  t.mock.method(globalThis, "fetch", async () => Response.json({ answer: "Unsupported claim", grounded: true, sources: [] }));
+  assert.deepEqual(await askGabay("cycle", "Question"), { kind: "notice", answer: NO_EVIDENCE_NOTICE, officialUrl: null });
+});
+test("unsafe notice links are dropped", async (t) => {
+  t.mock.method(globalThis, "fetch", async () => Response.json({ answer: "No evidence", grounded: false, sources: [], officialUrl: "javascript:alert(1)" }));
+  assert.equal((await askGabay("cycle", "Question")).officialUrl, null);
+});
+test("a non-JSON platform timeout explains recovery", async (t) => {
+  t.mock.method(globalThis, "fetch", async () => new Response("<html>504</html>", { status: 504 }));
+  await assert.rejects(askGabay("cycle", "Question"), /didn't respond in time/);
 });
 test("HTTP failures keep their status and never return fabricated data", async (t) => {
   for (const status of [400, 413, 429, 500, 501, 503]) {
@@ -87,9 +87,10 @@ test("OCR uses multipart consent and returns editable normalized fields", async 
     return Response.json({
       rawText: "Example text",
       fields: [
-        { key: "year", label: "Year", value: "2026", needsReview: true },
+        { key: "year", label: "Year", value: "2026", needsReview: true, originalText: "Year: 2026", warnings: ["Check the year"] },
       ],
       warnings: ["Check your original"],
+      disclaimer: "Automatically read text may contain errors.",
     });
   });
   const result = await reviewDocument(
@@ -97,6 +98,9 @@ test("OCR uses multipart consent and returns editable normalized fields", async 
   );
   assert.equal(result.fields[0].value, "2026");
   assert.equal(result.warnings.length, 1);
+  assert.equal(result.fields[0].originalText, "Year: 2026");
+  assert.deepEqual(result.fields[0].warnings, ["Check the year"]);
+  assert.match(result.disclaimer, /may contain errors/);
 });
 test("discovery loads subsequent pages and excludes unpublished cycles", async (t) => {
   const cycle = {
