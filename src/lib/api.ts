@@ -52,23 +52,28 @@ export function sameOrigin(request: Request) {
   const host = request.headers.get("host");
   if (host) url.host = host;
 
-  // Codespaces forwards HTTPS browser requests to a localhost Next.js server.
-  // Only recognize its verified *.app.github.dev browser host when the request
-  // came through a local proxy and the forwarded host exactly matches Origin.
-  // Never treat an arbitrary X-Forwarded-Host as sufficient authorization.
+  // A Codespaces browser uses an HTTPS public host, but Next may see
+  // HTTP/localhost after forwarding. Sec-Fetch-Site is set by the browser;
+  // a cross-origin web page cannot forge a "same-origin" value.
   let verifiedCodespacesProxy = false;
-  if (origin && request.headers.get("sec-fetch-site") === "same-origin") {
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if (origin && fetchSite === "same-origin") {
     try {
       const browser = new URL(origin);
-      const forwarded = request.headers.get("x-forwarded-host");
-      const internalHost = (host || new URL(request.url).host).split(":")[0].toLowerCase();
-      const isLocal = internalHost === "localhost" || internalHost === "127.0.0.1" || internalHost === "[::1]";
-      const isCodespaces = /^[a-z0-9-]+\.app\.github\.dev$/.test(browser.hostname);
-      verifiedCodespacesProxy = browser.protocol === "https:" && isCodespaces &&
-        isLocal && forwarded?.toLowerCase() === browser.host;
-    } catch { /* An invalid Origin never qualifies for the proxy exception. */ }
+      const rawHost = (host || new URL(request.url).host).toLowerCase();
+      const internalHost = rawHost.split(":")[0];
+      const local = ["localhost", "127.0.0.1", "[::1]"].includes(internalHost);
+      const codespaces = browser.protocol === "https:" &&
+        /^[a-z0-9-]+\.app\.github\.dev$/.test(browser.hostname);
+      const forwarded = request.headers.get("x-forwarded-host")?.toLowerCase();
+      // An absent or internally rewritten forwarded host is not evidence of
+      // a foreign origin; a different external host is rejected.
+      const forwardedMatches = !forwarded || forwarded === browser.host ||
+        forwarded === rawHost;
+      verifiedCodespacesProxy = codespaces && (local || rawHost === browser.host) && forwardedMatches;
+    } catch { /* Invalid Origin cannot qualify for the proxy exception. */ }
   }
-  if (request.headers.get("sec-fetch-site") === "cross-site" ||
+  if (fetchSite === "cross-site" || fetchSite === "same-site" ||
     (origin && origin !== url.origin && !verifiedCodespacesProxy)) {
     throw new ApiError(403, "Cross-site writes are not allowed");
   }
