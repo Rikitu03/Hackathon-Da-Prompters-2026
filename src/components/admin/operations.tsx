@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle, ArrowRight, BookOpen, CheckCircle2, ClipboardList, FilePenLine, LibraryBig, Plus, ShieldCheck } from "lucide-react";
+import { AlertCircle, ArrowRight, BookOpen, CheckCircle2, ClipboardList, LibraryBig, ShieldCheck } from "lucide-react";
 import type { AdminData, Cycle, Program } from "./data";
 import { formatDate, isHttpsLink } from "./data";
 import type { Section } from "./console";
