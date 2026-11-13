@@ -1,8 +1,42 @@
 # Current integration status and next steps
 
-Verified **13 November 2026, Asia/Manila**, after merging `origin/staging` at `fa5059a` into `feat/lumen-rag` with merge commit `b016bf6`.
+Updated **13 November 2026, Asia/Manila**, in `feat/backend-db`, after the latest staging integration.
 
-This page describes the combined local checkout, including existing **uncommitted Member 4 chat/RAG work**. Remote staging alone does not contain all of that work. The sprint checklists and implementation plan describe the delivery plan; unchecked boxes are not a reliable inventory of current code.
+Staging PR #9 (`d0b1f7b`) is integrated locally. Admin V3 charts, conditional
+pagination, shared branding, source import, and applicant preview are preserved
+alongside the backend cookie session, atomic saves, source review, and server
+publication checks. The admin console conflict is resolved. This branch is ready
+for a pull request; merging into staging requires explicit user confirmation.
+
+The current local changes connect the final admin screens to the backend and add
+account-free applicant references and local private drafts. The database migration
+is applied; code changes still need review, merge, and deployment. Lumen
+implementation was left unchanged. Earlier provider audit notes below are historical.
+
+## Current backend verification
+
+- Admin UI login establishes the API cookie session; role checks and logout work.
+- Program/cycle/requirement/FAQ/source saves use protected APIs and atomic database
+  updates. Source text review and real readiness checks drive publish/unpublish.
+- Anonymous readers cannot access draft guides. Published catalogue pagination
+  excludes parents without a visible cycle.
+- Applicants need no account. Signed browser references expire in seven days;
+  private drafts save to IndexedDB with export/delete controls. See
+  [Applicant privacy](APPLICANT_PRIVACY.md) for setup and remaining scope.
+- Live Chrome verification passed admin creation, source review, publish/unpublish,
+  logout, local draft persistence, separate browser isolation, export, reset, and
+  deletion. Network requests contained no draft personal fields; synthetic guide
+  fixtures were removed afterward.
+- `npm test`: 134 passed; `npm run test:applicant`: 24 passed. Typecheck and
+  production build passed. Lint passes without warnings; staging fixed the
+  earlier `auto-textarea.tsx` warning.
+- All three rollback SQL suites passed against the shared development database:
+  role permissions, guide workflow, and atomic admin edits/guest privacy.
+- Production-build desktop/mobile browser suites: **78 passed, 2 intentionally
+  skipped** (viewport-specific cases), including draft privacy and a new import
+  regression test covering program save plus preservation of staged cycle fields.
+- Existing Supabase Auth leaked-password protection remains disabled; see
+  [Supabase's setting](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
 
 ## Proceed in this order
 
@@ -39,14 +73,14 @@ Provider integration evidence recorded earlier is in [LUMEN_CONTRACT.md](LUMEN_C
 | Resolved locally | OCR evidence and uncertainty were stripped | `originalText`, field warnings and the disclaimer are retained and displayed beside editable values. |
 | Resolved locally | Provider storage/visibility consent was missing | Consent names Lumen's retained, organization-visible copy and sample-only use. Chat warns against names, addresses and IDs and explains stored transcripts. |
 | P0 | Public DB inspection found **one synthetic guide, one approved source, one public chunk**, with no residency keyword content | M2/M3: publish a separate reviewed PSCS guide; source URLs alone do not supply retrieval text. Do not rewrite shared examples without coordinating. |
-| P0 | Final admin UI saves source links as unapproved, has no source-text editor, and hardcodes readiness to false | M2/M3: connect to the atomic guide API and real server readiness checks. `/backend-lab` already exposes the complete source-text/review/save/publish flow. Do not just remove the gate. |
-| P0 | Admin browser uses its Supabase session/Bearer publish request; backend API verifies an HTTP-only cookie session | M2/M3: align sign-in/session handling before using final-screen publication. A browser Supabase sign-in alone does not establish the API cookie session. |
+| Resolved locally | Final admin UI source review and publication gate | Source text, explicit publisher approval, atomic saves, server readiness, publish and unpublish are integrated and passed live browser verification. |
+| Resolved locally | Admin browser/API session mismatch | Admin login now establishes the HTTP-only API cookie; workspace reads and all writes use protected backend endpoints. |
 | P1 | Level, new/renewal and semester are absent from the guide save schema | M2/M3/M1: use separately named guides and explicit content scope for the first demonstration, or agree a schema/API change. Do not send unsupported JSON fields. Metadata filters cannot be fully populated by the current API. |
 | P1 | `save_guide` generates chunks without `requirement_id`; retrieval only prioritizes it when present | M3/M4: do not describe retrieval as strictly requirement-scoped. Current isolation is by cycle; full-text relevance is not ranked with SQL `ts_rank`. Evaluate bilingual search and add a reviewed mapping/ranking strategy if needed. |
 | P1 | Chat accepts an optional UUID but does not separately verify that requirement belongs to the selected cycle | M3/M4: validate context ownership; cycle filtering already limits the retrieved source set. |
 | P1 | Rate limits are per server instance; `/api/health` does not test Lumen grants, instance, balance, or paid output | M3/M4: distinguish configuration/readiness from provider verification. A health 200 is not end-to-end AI evidence. |
 | P1 | Merged branch and local work are not proof of an updated deployment | M3: review/commit Member 4 work, merge through the team's normal process, deploy the intended environment and record the resulting URL/commit. |
-| P1 | Isolated development-server browser run had two navigation timeouts | M2/M3: verify the mobile multi-page layout case and desktop authenticated-navigation case against the test-only production build used in CI. A timeout does not establish a layout or session regression, but browser acceptance is not fully green. |
+| Resolved locally | Earlier development-server navigation timeouts | Production-build browser checks passed 78 cases with two intentional viewport skips, including both earlier navigation cases. |
 | P2 | OCR still extracts six general fields; profile JSON is a design reference | M4: add document-specific extraction only after the basic shared flow is accepted. No school-year/income/eligibility comparison is currently promised. |
 
 Code evidence: [applicant adapter](../src/lib/applicant/api.ts), [file validator](../src/lib/applicant/model.ts), [assistant](../src/components/applicant/assistant.tsx), [document review](../src/components/applicant/document-review.tsx), [admin console](../src/components/admin/console.tsx), [chat route](../src/app/api/ai/chat/route.ts), [OCR route](../src/app/api/ai/ocr/route.ts), [retrieval](../src/lib/rag/retrieve.ts), [guide save/publication SQL](../supabase/migrations/20261112163314_guide_workflow.sql).
@@ -59,7 +93,7 @@ The earlier chat-route check in the Lumen contract retrieved a synthetic disclai
 
 No Lumen calls or shared-database mutations were made during this staging/doc audit. The read-only database checks verified public-table access and denial of anonymous administrator-profile access; they did not rerun the full authenticated RLS matrix.
 
-## Verification for this merge
+## Historical staging-merge verification
 
 - Staging merge completed; both `test` and `test:applicant` scripts retained after the sole conflict in `package.json`.
 - All 13 pre-existing modified/untracked files matched their pre-merge hashes immediately after the merge. A temporary backup was retained outside the repo; later documentation corrections intentionally update some of those documents.

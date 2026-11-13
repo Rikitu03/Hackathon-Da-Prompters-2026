@@ -19,7 +19,7 @@ export type ProgramSummary = Omit<PublicProgram, "application_cycles"> & { appli
 
 export async function publicPrograms(client: SupabaseClient, page = 1) {
   const { data, error } = await client.from("scholarship_programs")
-    .select("id,title,description,status,application_cycles(id,academic_year,application_start,application_end,status)")
+    .select("id,title,description,status,application_cycles!inner(id,academic_year,application_start,application_end,status)")
     .eq("status", "published").order("created_at", { ascending: false }).range((page-1)*20, page*20-1);
   databaseError(error);
   return (data as unknown as ProgramSummary[]).filter((program) => program.application_cycles.length);
@@ -31,7 +31,7 @@ export async function publicProgram(client: SupabaseClient, id: string) {
       requirements(id,title,description,is_required,position,requirement_steps(id,position,instruction),faqs(id,question,answer)),
       knowledge_sources(id,title,source_url,reviewed_at))`).eq("id", id).eq("status", "published").maybeSingle();
   databaseError(error);
-  if (!data) throw new ApiError(404, "Published scholarship not found");
+  if (!data || !(data as unknown as PublicProgram).application_cycles.length) throw new ApiError(404, "Published scholarship not found");
   return data as unknown as PublicProgram;
 }
 export async function adminGuide(client: SupabaseClient, id: string): Promise<GuideDocument> {

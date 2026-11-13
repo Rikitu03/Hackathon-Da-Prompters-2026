@@ -1,17 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import {
-  ArrowRight, Check, ChevronRight, ClipboardCheck, ExternalLink, FileCheck2, FileText, GraduationCap,
+  ArrowRight, Check, ChevronRight, ClipboardCheck, FileCheck2, FileText, GraduationCap,
   LayoutDashboard, LibraryBig, LoaderCircle, LockKeyhole, LogOut, Plus, RefreshCw,
   ShieldCheck, X
 } from "lucide-react";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { createPublicSupabaseClient } from "@/lib/supabase/client";
+import { api, HttpError } from "@/lib/http-client";
 import { Button, Card, Empty, Field, Heading, Notice, Pill, StepLink, inputClass, areaClass } from "./ui";
-import { emptyData, formatDate, isHttpsLink, loadAdminData, type AdminData, type Cycle, type Program, type Requirement, type Role } from "./data";
+import { demoPublicationChecks, emptyData, formatDate, isHttpsLink, loadAdminData, type AdminData, type Cycle, type Program, type Requirement, type Role } from "./data";
 import { demoData } from "./demo-data";
 import { AdminSelect } from "./select";
 import { StepBuilder } from "./step-builder";
@@ -63,7 +62,7 @@ function SelectScope({ data, programId, cycleId, onProgram, onCycle }: { data: A
 }
 
 export function AdminConsole({ section = "overview", programId: initialProgramId = "", startCreateProgram = false, demoMode = false }: { section?: Section; programId?: string; startCreateProgram?: boolean; demoMode?: boolean }) {
-  const client = useMemo(() => { if (demoMode) return null; try {return createPublicSupabaseClient();} catch {return null;} }, [demoMode]);
+  const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   const [gate, setGate] = useState<"loading"|"setup"|"login"|"denied"|"ready"|"error">(demoMode ? "ready" : "loading");
   const [role, setRole] = useState<Role | null>(demoMode ? "editor" : null);
   const [email, setEmail] = useState("");
@@ -90,26 +89,31 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
   const [requirementForm, setRequirementForm] = useState<RequirementDraft>(initRequirement);
   const [sourceTitle, setSourceTitle] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
+  const [sourceContent, setSourceContent] = useState("");
+  const [sourceApproved, setSourceApproved] = useState(false);
+  const [sourceId, setSourceId] = useState<string | null>(null);
+  const [readiness, setReadiness] = useState<{ checks: { name: string; ok: boolean }[]; ready: boolean } | null>(null);
+  const [checkingReadiness, setCheckingReadiness] = useState(false);
 
-  const reload = useCallback(async (sb: SupabaseClient) => {
-    const rows = await loadAdminData(sb);
+  const reload = useCallback(async () => {
+    const rows = await loadAdminData();
     setData(rows);
   }, []);
   const authenticate = useCallback(async () => {
-    if (!client) { setGate("setup"); return; }
+    if (!configured) { setGate("setup"); return; }
     setGate("loading");
     try {
-      const {data: {user}, error: authError} = await client.auth.getUser();
-      if (authError || !user) { setRole(null); setGate("login"); return; }
-      const {data: profile, error: profileError} = await client.from("admin_profiles").select("role").eq("user_id", user.id).maybeSingle();
-      if (profileError) throw profileError;
-      if (profile?.role !== "editor" && profile?.role !== "publisher") { setRole(null); setGate("denied"); return; }
-      setRole(profile.role as Role);
-      await reload(client);
+      const response = await fetch("/api/auth/session", { cache: "no-store" });
+      if (response.status === 401) { setData(emptyData); setRole(null); setGate("login"); return; }
+      if (response.status === 403) { setData(emptyData); setRole(null); setGate("denied"); return; }
+      const session = await response.json();
+      if (!response.ok) throw new Error(session.error ?? "Could not verify your session");
+      setRole(session.role as Role);
+      await reload();
       setGate("ready");
       setError("");
     } catch (err) { setError(errorText(err)); setGate("error"); }
-  }, [client, reload]);
+  }, [configured, reload]);
   useEffect(() => { if (!demoMode) void authenticate(); }, [authenticate, demoMode]);
 
   // Keep one authenticated console mounted across /admin routes.
@@ -140,21 +144,22 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
 
   // Sign-out in another tab must immediately remove protected admin content.
   useEffect(() => {
-    if (!client || demoMode) return;
-    const { data: { subscription } } = client.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") {
+    if (demoMode || typeof BroadcastChannel === "undefined") return;
+    const channel = new BroadcastChannel("gabayiskolar-admin-auth");
+    channel.onmessage = (event) => {
+      if (event.data === "signed-out") {
         setData(emptyData);
         setRole(null);
         setGate("login");
         setError("");
         setMessage("");
       }
-    });
-    return () => subscription.unsubscribe();
-  }, [client, demoMode]);
+    };
+    return () => channel.close();
+  }, [demoMode]);
   // Keep the existing content visible while fetching updates; never blank the dashboard.
   useEffect(() => {
-    if (!client || demoMode || gate !== "ready") return;
+    if (demoMode || gate !== "ready") return;
     let stopped = false;
     let running = false;
     const staleMessage = "Background sync failed. Showing the last loaded data. Changes from other admins may not be visible yet.";
@@ -162,10 +167,12 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
       if (stopped || running || document.visibilityState === "hidden") return;
       running = true;
       try {
-        await reload(client);
+        await reload();
         if (!stopped) setError(previous => previous === staleMessage ? "" : previous);
-      } catch {
-        if (!stopped) setError(staleMessage);
+      } catch (err) {
+        if (!stopped && err instanceof HttpError && (err.status === 401 || err.status === 403)) {
+          setData(emptyData); setRole(null); setGate("login");
+        } else if (!stopped) setError(staleMessage);
       } finally { running = false; }
     };
     const onVisible = () => { if (document.visibilityState === "visible") void refresh(); };
@@ -178,29 +185,35 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
-  }, [client, demoMode, gate, reload]);
+  }, [demoMode, gate, reload]);
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!client) return;
+    if (!configured) return;
     setBusy(true); setError("");
-    const {error: authError} = await client.auth.signInWithPassword({ email: email.trim(), password });
-    setPassword("");
-    if (authError) { setError("Sign-in failed. Check your credentials and try again."); setBusy(false); return; }
-    await authenticate(); setBusy(false);
+    try {
+      await api("/api/auth/login", { method: "POST", body: JSON.stringify({ email: email.trim(), password }) });
+      setPassword(""); await authenticate();
+    } catch (err) { setPassword(""); setError(errorText(err)); }
+    finally { setBusy(false); }
   }
   async function signOut() {
-    if (demoMode || !client) return;
-    await client.auth.signOut();
+    if (demoMode) return;
+    try { await api("/api/auth/logout", { method: "POST" }); }
+    catch (err) { setError(errorText(err)); return; }
+    if (typeof BroadcastChannel !== "undefined") { const channel = new BroadcastChannel("gabayiskolar-admin-auth"); channel.postMessage("signed-out"); channel.close(); }
     try { sessionStorage.removeItem("gabayiskolar-admin-recent-searches-v1"); } catch { /* session storage unavailable */ }
     setData(emptyData); setRole(null); setGate("login"); setError(""); setMessage("");
   }
-  async function act(action: (sb: SupabaseClient) => Promise<void>, success: string) {
+  async function act(action: () => Promise<void>, success: string) {
     if (demoMode) { setError("Preview mode: changes are not saved. Sign in to the real admin workspace to make edits."); return; }
-    if (!client) return;
+    if (role !== "publisher") { setError("Editors have read-only access. Ask a publisher to save changes."); return; }
     setBusy(true); setError(""); setMessage("");
-    try { await action(client); await reload(client); setMessage(success); }
-    catch (err) { setError(errorText(err)); }
+    try { await action(); await reload(); setMessage(success); }
+    catch (err) {
+      if (err instanceof HttpError && err.status === 401) { setData(emptyData); setRole(null); setGate("login"); }
+      setError(errorText(err));
+    }
     finally { setBusy(false); }
   }
 
@@ -209,6 +222,10 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
   const programCycles = data.cycles.filter((c) => c.program_id === activeProgramId);
   const activeCycleId = cycleId || programCycles[0]?.id || "";
   const activeCycle = programCycles.find((c) => c.id === activeCycleId);
+  useEffect(() => {
+    setSourceId(null); setSourceTitle(""); setSourceUrl(""); setSourceContent(""); setSourceApproved(false);
+    setRequirementId(null);
+  }, [activeCycleId]);
   const cycleRequirements = data.requirements.filter((r) => r.cycle_id === activeCycleId);
   const cycleSources = data.sources.filter((s) => s.cycle_id === activeCycleId);
   const isDraft = activeCycle?.status === "draft";
@@ -217,15 +234,19 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
   const visibleCycles = programCycles.slice((safeAdminPage(cyclePage,programCycles.length)-1)*ADMIN_PAGE_SIZE,safeAdminPage(cyclePage,programCycles.length)*ADMIN_PAGE_SIZE);
   const visibleRequirements = cycleRequirements.slice((safeAdminPage(requirementPage,cycleRequirements.length)-1)*ADMIN_PAGE_SIZE,safeAdminPage(requirementPage,cycleRequirements.length)*ADMIN_PAGE_SIZE);
   const visibleSources = cycleSources.slice((safeAdminPage(sourcePage,cycleSources.length)-1)*ADMIN_PAGE_SIZE,safeAdminPage(sourcePage,cycleSources.length)*ADMIN_PAGE_SIZE);
-  const checks = activeCycle ? [
-    {name: "A draft cycle is selected", ok: isDraft},
-    {name: "Official portal uses HTTPS", ok: Boolean(activeCycle.official_url && isHttpsLink(activeCycle.official_url))},
-    {name: "At least one requirement exists", ok: cycleRequirements.length > 0},
-    {name: "Every requirement has acquisition steps", ok: cycleRequirements.length > 0 && cycleRequirements.every((r) => data.steps.some((s) => s.requirement_id === r.id && s.instruction.trim()))},
-    {name: "At least one approved, dated source", ok: cycleSources.some((s) => s.is_approved && Boolean(s.reviewed_at))},
-    {name: "RAG source indexing & server authorization", ok: false}
-  ] : [];
-  const preflightReady = checks.length > 0 && checks.every((c) => c.ok);
+  const canEdit = demoMode || role === "publisher";
+  const checks = demoMode && activeProgram && activeCycle ? demoPublicationChecks(data, activeProgram, activeCycle) : readiness?.checks ?? [];
+  const preflightReady = !demoMode && !checkingReadiness && Boolean(readiness?.ready);
+  useEffect(() => {
+    setReadiness(null);
+    if (demoMode || !activeCycleId || gate !== "ready") return;
+    const controller = new AbortController();
+    setCheckingReadiness(true);
+    api<{ checks: { name: string; ok: boolean }[]; ready: boolean }>("/api/admin/guides/" + activeCycleId + "/readiness", { signal: controller.signal })
+      .then(setReadiness).catch((err) => { if (!controller.signal.aborted) setError(errorText(err)); })
+      .finally(() => { if (!controller.signal.aborted) setCheckingReadiness(false); });
+    return () => controller.abort();
+  }, [activeCycleId, data, demoMode, gate]);
 
   function applyContextDraft(draft: ContextDraft) {
     setProgramMode("new");
@@ -248,22 +269,15 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     const title = programForm.title.trim(), description = programForm.description.trim();
     if (title.length < 3 || description.length < 10) { setError("Enter a program name (at least 3 characters) and description (at least 10 characters)."); return; }
     const editingId = programMode === "edit" ? activeProgram?.id : null;
-    await act(async (sb) => {
-      if (editingId) {
-        const {error: saveError} = await sb.from("scholarship_programs").update({title, description}).eq("id", editingId);
-        if (saveError) throw saveError;
-      } else {
-        const {data: saved, error: saveError} = await sb.from("scholarship_programs").insert({title,description,status:"draft"}).select("id").single();
-        if (saveError) throw saveError;
-        if (saved) setProgramId(saved.id as string);
-      }
-      setProgramMode("none"); setProgramForm(initProgram);
+    await act(async () => {
+      const result = await api<{ program: Program }>(editingId ? "/api/admin/programs/" + editingId : "/api/admin/programs", {
+        method: editingId ? "PATCH" : "POST", body: JSON.stringify({ title, description }),
+      });
+      setProgramId(result.program.id); setProgramMode("none"); setProgramForm(initProgram);
       if (!editingId && importedCycle) {
-        setCycleForm(importedCycle);
-        setCycleMode("new");
-        setImportedCycle(null);
+        setCycleForm(importedCycle); setCycleMode("new"); setImportedCycle(null);
       }
-    }, editingId ? "Program changes saved." : "Draft program created. Add an application cycle next.");
+    }, editingId ? "Program changes saved as draft." : "Draft program created. Add an application cycle next.");
   }
   function editCycle(c: Cycle) {
     setCycleId(c.id); setCycleForm({academic_year:c.academic_year,application_start:c.application_start || "",application_end:c.application_end || "",official_url:c.official_url || ""}); setCycleMode("edit");
@@ -275,18 +289,14 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     if (cycleForm.official_url && !isHttpsLink(cycleForm.official_url)) {setError("The official portal link must be an HTTPS URL.");return;}
     if (cycleForm.application_start && cycleForm.application_end && cycleForm.application_end < cycleForm.application_start) {setError("The end date cannot be earlier than the start date.");return;}
     const editingId = cycleMode === "edit" ? activeCycle?.id : null;
-    const values = {academic_year:cycleForm.academic_year.trim(), application_start:cycleForm.application_start || null, application_end:cycleForm.application_end || null, official_url:cycleForm.official_url.trim() || null};
-    await act(async (sb) => {
-      if (editingId) {
-        const {error: saveError} = await sb.from("application_cycles").update(values).eq("id", editingId);
-        if (saveError) throw saveError;
-      } else {
-        const {data: saved, error: saveError} = await sb.from("application_cycles").insert({...values,program_id:activeProgram.id,status:"draft"}).select("id").single();
-        if (saveError) throw saveError;
-        if (saved) setCycleId(saved.id as string);
-      }
-      setCycleMode("none"); setCycleForm(initCycle);
-    }, editingId ? "Cycle changes saved." : "New draft cycle created.");
+    await act(async () => {
+      const result = await api<{ guide: { cycleId: string } }>("/api/admin/content", { method: "POST", body: JSON.stringify({
+        action: "save_cycle", programId: activeProgram.id, ...(editingId ? { cycleId: editingId } : {}),
+        academicYear: cycleForm.academic_year.trim(), applicationStart: cycleForm.application_start,
+        applicationEnd: cycleForm.application_end, officialUrl: cycleForm.official_url.trim(),
+      }) });
+      setCycleId(result.guide.cycleId); setCycleMode("none"); setCycleForm(initCycle);
+    }, editingId ? "Cycle changes saved as draft." : "New draft cycle created.");
   }
   function editRequirement(r?: Requirement) {
     setError("");
@@ -304,54 +314,32 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     if (!requirementForm.title.trim() || !requirementForm.steps.some((s)=>s.trim())) {setError("Every requirement needs a title and at least one actionable step.");return;}
     if (requirementForm.faqs.some((f) => !f.question.trim() || !f.answer.trim())) {setError("Complete both fields in every FAQ, or remove empty entries.");return;}
     const editingId = requirementId !== "new" ? requirementId : null;
-    await act(async (sb) => {
-      let id = editingId;
-      if (id) {
-        const {error: saveError} = await sb.from("requirements").update({title:requirementForm.title.trim(),description:requirementForm.description.trim(),is_required:requirementForm.is_required}).eq("id",id);
-        if (saveError) throw saveError;
-      } else {
-        const {data: saved,error: saveError} = await sb.from("requirements").insert({cycle_id:activeCycle.id,title:requirementForm.title.trim(),description:requirementForm.description.trim(),is_required:requirementForm.is_required,position:cycleRequirements.length}).select("id").single();
-        if (saveError) throw saveError;
-        id = saved.id as string;
-      }
-      if (!id) throw new Error("Cannot save requirement without an ID.");
-      // Draft-only rewrite. Member 3 should replace this with a transaction before production publishing.
-      if (editingId) {
-        const s = await sb.from("requirement_steps").delete().eq("requirement_id",id);
-        if (s.error) throw s.error;
-        const f = await sb.from("faqs").delete().eq("requirement_id",id);
-        if (f.error) throw f.error;
-      }
-      const steps = requirementForm.steps.map((instruction,position) => ({requirement_id:id,position,instruction:instruction.trim()})).filter((x)=>x.instruction);
-      const faqs = requirementForm.faqs.map((f) => ({requirement_id:id,question:f.question.trim(),answer:f.answer.trim()}));
-      const s = await sb.from("requirement_steps").insert(steps);
-      if (s.error) throw s.error;
-      if (faqs.length) { const f = await sb.from("faqs").insert(faqs); if (f.error) throw f.error; }
+    await act(async () => {
+      await api("/api/admin/content", { method: "POST", body: JSON.stringify({
+        action: "save_requirement", cycleId: activeCycle.id, ...(editingId ? { requirementId: editingId } : {}),
+        title: requirementForm.title.trim(), description: requirementForm.description.trim(), required: requirementForm.is_required,
+        steps: requirementForm.steps.map((step) => step.trim()).filter(Boolean), faqs: requirementForm.faqs,
+      }) });
       setRequirementId(null);
-    }, editingId ? "Requirement journey updated." : "Requirement journey saved as draft.");
+    }, editingId ? "Requirement journey updated atomically." : "Requirement journey saved as draft.");
   }
   async function saveSource(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!activeCycle || !isDraft) return;
     if (sourceTitle.trim().length < 3 || !isHttpsLink(sourceUrl.trim())) {setError("Enter a source title and a valid HTTPS reference URL.");return;}
-    await act(async(sb)=>{
-      const {error: saveError} = await sb.from("knowledge_sources").insert({cycle_id:activeCycle.id,title:sourceTitle.trim(),source_url:sourceUrl.trim(),is_approved:false});
-      if(saveError) throw saveError;
-      setSourceTitle(""); setSourceUrl("");
-    },"Reference saved as unapproved. A designated reviewer must verify it before indexing.");
+    await act(async () => {
+      await api("/api/admin/content", { method: "POST", body: JSON.stringify({
+        action: "save_source", cycleId: activeCycle.id, ...(sourceId ? { sourceId } : {}),
+        title: sourceTitle.trim(), url: sourceUrl.trim(), content: sourceContent.trim(), approved: sourceApproved,
+      }) });
+      setSourceTitle(""); setSourceUrl(""); setSourceContent(""); setSourceApproved(false); setSourceId(null);
+    }, "Source and reference text saved. Publication remains a separate action.");
   }
-  async function requestPublish() {
-    if (!activeCycle || !preflightReady || role !== "publisher" || !client) return;
-    setBusy(true); setError(""); setMessage("");
-    try {
-      const {data: session} = await client.auth.getSession();
-      const token = session.session?.access_token;
-      if (!token) throw new Error("Session expired. Sign in again.");
-      const response = await fetch("/api/admin/publish", {method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer " + token},body:JSON.stringify({cycleId:activeCycle.id})});
-      const result: unknown = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(typeof result === "object" && result !== null && "error" in result && typeof result.error === "string" ? result.error : "Publishing API is unavailable ("+response.status+"). Contact the backend team.");
-      await reload(client); setMessage("Publication completed by the server. Verify the applicant view.");
-    } catch (err) {setError(errorText(err));} finally {setBusy(false);}
+  async function requestPublish(publish = true) {
+    if (!activeCycle || (publish && !preflightReady) || role !== "publisher" || demoMode) return;
+    await act(async () => {
+      await api("/api/admin/publish", { method: "POST", body: JSON.stringify({ cycleId: activeCycle.id, publish }) });
+    }, publish ? "Guide published. Verify the applicant view." : "Cycle returned to draft for review.");
   }
 
   if (gate !== "ready") return <MotionConfig reducedMotion="user"><div className="admin-portal flex min-h-screen items-center justify-center bg-[#f3f5f8] px-4 py-10">
@@ -392,7 +380,8 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
         <div className="overflow-x-auto border-t border-[#d7e3ef] lg:hidden"><LinkNav section={section} mobile demoMode={demoMode}/></div>
       </div>
       <main className="admin-content mx-auto min-w-0 w-full max-w-[1340px] px-4 py-7 sm:px-7 sm:py-9 lg:px-10 lg:py-10">
-        {demoMode ? <div className="mb-5"><Notice>This <strong>interactive UI preview</strong> uses fictional records. Changes here are not saved.</Notice></div> : null}
+        {!demoMode && role === "editor" && <div className="mb-5"><Notice>Read-only editor access. A publisher must save, review, and publish changes.</Notice></div>}
+        {demoMode ? <div className="mb-5"><Notice>This is an <strong>interactive UI preview</strong> using fictional data. You can try controls and step ordering, but no changes are saved or published. No live records are loaded.</Notice></div> : null}
         <AnimatePresence initial={false} mode="wait">
           {error ? <motion.div key="admin-error" initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:0.16}} className="mb-5"><Notice tone="error">{error}</Notice></motion.div>
            : message ? <motion.div key="admin-success" initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:0.16}} className="mb-5"><Notice tone="success">{message}</Notice></motion.div>
@@ -422,30 +411,30 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
           </> : null}
 
           {section === "programs" ? <>
-            <Heading title="Scholarship guides" description="Create, edit, and prepare scholarship guides for publication."
-              action={<div className="flex flex-wrap items-center gap-2"><Button variant="outline" onClick={()=>setShowImport(value=>!value)} aria-expanded={showImport}>{showImport?"Hide import":"Import file"}</Button><Button onClick={()=>{setProgramForm(initProgram);setImportedCycle(null);setProgramMode("new");setError("");}}><Plus size={17}/> New program</Button></div>}/>
+            <Heading eyebrow="Content library" title="Scholarship guides" description="Step 1: Enter verified scholarship details and academic year. Then prepare the student checklist."
+              action={<div className="flex flex-wrap items-center gap-2"><Button variant="outline" disabled={!canEdit} onClick={()=>setShowImport(value=>!value)} aria-expanded={showImport}>{showImport?"Hide import":"Import file"}</Button><Button disabled={!canEdit} onClick={()=>{setProgramForm(initProgram);setImportedCycle(null);setProgramMode("new");setError("");}}><Plus size={17}/> New program</Button></div>}/>
             {showImport ? <div className="mb-5"><ContextImport demoMode={demoMode} onApply={applyContextDraft}/></div> : null}
              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,1fr)]">
               <div className="space-y-5">
                 <Card><div className="grid gap-3 sm:grid-cols-[1fr_160px]"><ProgramSearch value={search} onChange={value=>{setSearch(value);setProgramPage(1);}} programNames={data.programs.map(p=>p.title)} scope={demoMode?"demo":"admin"}/><div><label htmlFor="program-filter" className="sr-only">Filter publication status</label><AdminSelect id="program-filter" value={filter} onChange={value=>{setFilter(value);setProgramPage(1);}} placeholder="All statuses" options={[{value:"all",label:"All statuses"},{value:"draft",label:"Draft"},{value:"published",label:"Published"},{value:"archived",label:"Archived"}]}/></div></div></Card>
-                <Card className="!p-0"><div className="border-b border-[#d7e3ef] px-5 py-4 text-sm font-semibold">{filteredPrograms.length} program(s)</div>{!filteredPrograms.length ? <div className="p-5"><Empty title="No matching programs" message="Try a different search or create a draft program."/></div> : <ul className="divide-y divide-[#d7e3ef]">{visiblePrograms.map(p=><li key={p.id} className={"p-5 transition-colors hover:bg-[#f7fbff] "+(activeProgramId===p.id?"bg-[#eef6ff]":"")}><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><h2 className="font-semibold text-[#102a51]">{p.title}</h2><p className="mt-2 line-clamp-2 text-sm leading-6 text-[#53657b]">{p.description}</p><p className="mt-2 text-xs text-[#53657b]">{data.cycles.filter(c=>c.program_id===p.id).length} cycle(s)</p></div><Pill status={p.status}/></div><div className="mt-4 flex flex-wrap gap-2"><Button onClick={()=>{setProgramId(p.id);setCycleId("");setCycleMode("none");setProgramMode("none");}}>View cycles</Button><Button variant="outline" onClick={()=>editProgram(p)}>Edit <ChevronRight size={15}/></Button></div></li>)}</ul>}{filteredPrograms.length>ADMIN_PAGE_SIZE?<AdminPagination page={safeAdminPage(programPage,filteredPrograms.length)} totalItems={filteredPrograms.length} label="scholarship guides" onPageChange={setProgramPage}/>:null}</Card>
+                <Card className="!p-0"><div className="border-b border-[#d7e3ef] px-5 py-4 text-sm font-semibold">{filteredPrograms.length} program(s)</div>{!filteredPrograms.length ? <div className="p-5"><Empty title="No matching programs" message="Try a different search or create a draft program."/></div> : <ul className="divide-y divide-[#d7e3ef]">{visiblePrograms.map(p=><li key={p.id} className={"p-5 transition-colors hover:bg-[#f7fbff] "+(activeProgramId===p.id?"bg-[#eef6ff]":"")}><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><h2 className="font-semibold text-[#102a51]">{p.title}</h2><p className="mt-2 line-clamp-2 text-sm leading-6 text-[#53657b]">{p.description}</p><p className="mt-2 text-xs text-[#53657b]">{data.cycles.filter(c=>c.program_id===p.id).length} cycle(s)</p></div><Pill status={p.status}/></div><div className="mt-4 flex flex-wrap gap-2"><Button onClick={()=>{setProgramId(p.id);setCycleId("");setCycleMode("none");setProgramMode("none");}}>View cycles</Button><Button variant="outline" disabled={!canEdit} onClick={()=>editProgram(p)}>Edit <ChevronRight size={15}/></Button></div></li>)}</ul>}{filteredPrograms.length>ADMIN_PAGE_SIZE?<AdminPagination page={safeAdminPage(programPage,filteredPrograms.length)} totalItems={filteredPrograms.length} label="scholarship guides" onPageChange={setProgramPage}/>:null}</Card>
               </div>
               <div className="space-y-5">
                 <Card><div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">{programMode==="new"?"Create program":programMode==="edit"?"Edit program":"Program details"}</h2>{programMode!=="none" ? <button className="rounded-lg p-2 hover:bg-[#eef6ff]" onClick={()=>setProgramMode("none")} aria-label="Cancel editing program"><X size={18}/></button> : null}</div>
                   {programMode!=="none" ? <form className="space-y-4" onSubmit={e=>void saveProgram(e)}>
                     <Field htmlFor="program-title" label="Program name" required><input id="program-title" required maxLength={140} className={inputClass} value={programForm.title} onChange={e=>setProgramForm({...programForm,title:e.target.value})} placeholder="As shown in the official source"/></Field>
                     <Field htmlFor="program-desc" label="Program description" required><AutoTextarea id="program-desc" required minLength={10} className={areaClass} value={programForm.description} onChange={e=>setProgramForm({...programForm,description:e.target.value})} placeholder="Explain who the verified guide is for."/></Field>
-                    <Button busy={busy} type="submit">{programMode==="new"?"Create draft":"Save changes"}</Button>
-                  </form> : activeProgram ? <><p className="text-sm leading-6 text-[#53657b]">{activeProgram.description}</p><div className="mt-4"><Pill status={activeProgram.status}/></div><Button variant="outline" className="mt-3" onClick={()=>editProgram(activeProgram)}>Edit program <ArrowRight size={16}/></Button></> : <Empty title="Select a program" message="Choose a program to view its cycles."/>}
+                    <Button busy={busy} type="submit" disabled={!canEdit}>{programMode==="new"?"Create draft":"Save changes"}</Button>
+                  </form> : activeProgram ? <><p className="text-sm leading-6 text-[#53657b]">{activeProgram.description}</p><div className="mt-4"><Pill status={activeProgram.status}/></div><Button variant="outline" className="mt-3" disabled={!canEdit} onClick={()=>editProgram(activeProgram)}>Edit program <ArrowRight size={16}/></Button></> : <Empty title="Select a program" message="Choose a program to view its cycles."/>}
                 </Card>
-                {activeProgram && programMode==="none" ? <Card><div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Application cycles</h2><Button variant="outline" onClick={()=>{setCycleMode("new");setCycleForm(initCycle);}}> <Plus size={16}/> Add cycle</Button></div>
-                  <div className="space-y-2">{programCycles.length ? visibleCycles.map(c=><div key={c.id} className={"rounded-xl border p-3 "+(activeCycleId===c.id?"border-[#9cbde0] bg-[#eef6ff]":"border-[#d7e3ef]")}><div className="flex flex-wrap items-center justify-between gap-2"><span className="text-sm font-semibold">{c.academic_year}</span><Pill status={c.status}/></div><p className="mt-1 text-xs text-[#53657b]">{c.application_start && c.application_end ? formatDate(c.application_start)+" – "+formatDate(c.application_end) : "Application dates unverified"}</p><div className="mt-2 flex gap-2"><Button onClick={()=>{setCycleId(c.id);setCycleMode("none");}}>Select</Button><Button variant="outline" onClick={()=>editCycle(c)} disabled={c.status!=="draft"}>Edit</Button></div></div>) : <p className="text-sm text-[#53657b]">No cycles yet. Add a draft academic-year guide.</p>}</div><AdminPagination page={safeAdminPage(cyclePage,programCycles.length)} totalItems={programCycles.length} label="application cycles" onPageChange={setCyclePage}/>
+                {activeProgram && programMode==="none" ? <Card><div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Application cycles</h2><Button variant="outline" disabled={!canEdit} onClick={()=>{setCycleMode("new");setCycleForm(initCycle);}}> <Plus size={16}/> Add cycle</Button></div>
+                  <div className="space-y-2">{programCycles.length ? visibleCycles.map(c=><div key={c.id} className={"rounded-xl border p-3 "+(activeCycleId===c.id?"border-[#9cbde0] bg-[#eef6ff]":"border-[#d7e3ef]")}><div className="flex flex-wrap items-center justify-between gap-2"><span className="text-sm font-semibold">{c.academic_year}</span><Pill status={c.status}/></div><p className="mt-1 text-xs text-[#53657b]">{c.application_start && c.application_end ? formatDate(c.application_start)+" – "+formatDate(c.application_end) : "Application dates unverified"}</p><div className="mt-2 flex gap-2"><Button onClick={()=>{setCycleId(c.id);setCycleMode("none");}}>Select</Button><Button variant="outline" onClick={()=>editCycle(c)} disabled={c.status!=="draft" || !canEdit}>Edit</Button></div></div>) : <p className="text-sm text-[#53657b]">No cycles yet. Add a draft academic-year guide.</p>}</div><AdminPagination page={safeAdminPage(cyclePage,programCycles.length)} totalItems={programCycles.length} label="application cycles" onPageChange={setCyclePage}/>
                   {cycleMode!=="none" ? <form className="mt-5 space-y-4 border-t border-[#d7e3ef] pt-5" onSubmit={e=>void saveCycle(e)}>
                     <h3 className="font-semibold">{cycleMode==="new"?"New cycle":"Edit draft cycle"}</h3>
                     <Field htmlFor="cycle-year" label="Academic year / cycle" required><input id="cycle-year" className={inputClass} value={cycleForm.academic_year} onChange={e=>setCycleForm({...cycleForm,academic_year:e.target.value})} placeholder="Only use a verified cycle" required/></Field>
                     <div className="grid gap-3 sm:grid-cols-2"><Field htmlFor="cycle-start" label="Verified start date"><input id="cycle-start" type="date" className={inputClass} value={cycleForm.application_start} onChange={e=>setCycleForm({...cycleForm,application_start:e.target.value})}/></Field><Field htmlFor="cycle-end" label="Verified end date"><input id="cycle-end" type="date" className={inputClass} value={cycleForm.application_end} onChange={e=>setCycleForm({...cycleForm,application_end:e.target.value})}/></Field></div>
                     <Field htmlFor="cycle-url" label="Official portal URL" hint="HTTPS only; confirm the destination from an authoritative source."><input id="cycle-url" type="url" className={inputClass} value={cycleForm.official_url} onChange={e=>setCycleForm({...cycleForm,official_url:e.target.value})} placeholder="https://…"/></Field>
-                    <div className="flex flex-wrap gap-2"><Button type="submit" busy={busy}>Save draft cycle</Button><Button type="button" variant="quiet" onClick={()=>setCycleMode("none")}>Cancel</Button></div>
+                    <div className="flex flex-wrap gap-2"><Button type="submit" busy={busy} disabled={!canEdit}>Save draft cycle</Button><Button type="button" variant="quiet" onClick={()=>setCycleMode("none")}>Cancel</Button></div>
                   </form> : null}
                 </Card> : null}
               </div>
@@ -456,38 +445,47 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
             <Heading title="Requirements & FAQs" description="Add documents, preparation steps, and FAQs for the selected guide."/>
             <SelectScope data={data} programId={activeProgramId} cycleId={activeCycleId} onProgram={id=>{setProgramId(id);setCyclePage(1);setRequirementPage(1);setSourcePage(1);}} onCycle={id=>{setCycleId(id);setRequirementPage(1);setSourcePage(1);}}/>
             {!activeCycle ? <Empty title="No application cycle selected" message="Create or choose an application cycle before adding requirements."><Link href="/admin/programs"><StepLink>Manage scholarship programs</StepLink></Link></Empty> : <div className="grid gap-5 xl:grid-cols-[minmax(260px,.8fr)_minmax(0,1.3fr)]">
-              <Card className="self-start"><div className="mb-4 flex items-center justify-between gap-2"><h2 className="font-semibold">Checklist items</h2><Pill status={activeCycle.status}/></div><div className="space-y-2">{visibleRequirements.map((r,index)=><button key={r.id} className={"flex min-h-14 w-full items-center gap-3 rounded-xl border p-3 text-left text-sm transition-colors "+(requirementId===r.id?"border-[#9cbde0] bg-[#eef6ff]":"border-[#d7e3ef] hover:bg-[#eef6ff]")} onClick={()=>editRequirement(r)}><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#eef6ff] text-xs font-bold text-[#155bb0]">{(safeAdminPage(requirementPage,cycleRequirements.length)-1)*ADMIN_PAGE_SIZE+index+1}</span><span className="flex-1 font-semibold">{r.title}</span><ChevronRight size={15} className="shrink-0"/></button>)}{!cycleRequirements.length ? <p className="py-4 text-sm leading-6 text-[#53657b]">No requirements yet. Add the first item for this cycle.</p> : null}</div><AdminPagination page={safeAdminPage(requirementPage,cycleRequirements.length)} totalItems={cycleRequirements.length} label="requirements" onPageChange={setRequirementPage}/>{isDraft ? <Button className="mt-5 w-full" variant="outline" onClick={()=>editRequirement()}><Plus size={16}/> Add requirement</Button> : <p className="mt-4 text-xs leading-5 text-[#7b6d4e]">Published cycles are read-only here. Use a versioned update workflow.</p>}</Card>
+              <Card className="self-start"><div className="mb-4 flex items-center justify-between gap-2"><h2 className="font-semibold">Checklist items</h2><Pill status={activeCycle.status}/></div><div className="space-y-2">{visibleRequirements.map((r,index)=><button key={r.id} className={"flex min-h-14 w-full items-center gap-3 rounded-xl border p-3 text-left text-sm transition-colors "+(requirementId===r.id?"border-[#9cbde0] bg-[#eef6ff]":"border-[#d7e3ef] hover:bg-[#eef6ff]")} onClick={()=>editRequirement(r)}><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#eef6ff] text-xs font-bold text-[#155bb0]">{(safeAdminPage(requirementPage,cycleRequirements.length)-1)*ADMIN_PAGE_SIZE+index+1}</span><span className="flex-1 font-semibold">{r.title}</span><ChevronRight size={15} className="shrink-0"/></button>)}{!cycleRequirements.length ? <p className="py-4 text-sm leading-6 text-[#53657b]">No requirements yet. Add the first item for this cycle.</p> : null}</div><AdminPagination page={safeAdminPage(requirementPage,cycleRequirements.length)} totalItems={cycleRequirements.length} label="requirements" onPageChange={setRequirementPage}/>{isDraft ? <Button className="mt-5 w-full" variant="outline" disabled={!canEdit} onClick={()=>editRequirement()}><Plus size={16}/> Add requirement</Button> : <p className="mt-4 text-xs leading-5 text-[#7b6d4e]">Published cycles are read-only here. Use a versioned update workflow.</p>}</Card>
               <Card>{!requirementId ? <Empty title="Select a requirement" message="Choose a checklist item or create a new one. Each item needs actionable steps and approved source backing."/> : <form onSubmit={e=>void saveRequirement(e)} className="space-y-5">
                 <div className="flex items-center justify-between"><h2 className="text-lg font-semibold">{requirementId==="new"?"New requirement":"Edit requirement"}</h2><button type="button" onClick={()=>setRequirementId(null)} className="rounded-lg p-2 hover:bg-[#eef6ff]" aria-label="Close requirement editor"><X size={18}/></button></div>
                 {!isDraft ? <Notice>Published requirements are read-only. Create a new version with the backend publishing workflow.</Notice> : null}
-                <Field htmlFor="req-title" label="Requirement title" required><input id="req-title" className={inputClass} value={requirementForm.title} onChange={e=>setRequirementForm({...requirementForm,title:e.target.value})} required disabled={!isDraft}/></Field>
-                <Field htmlFor="req-desc" label="Why this document is needed" hint="Only include claims supported by an approved reference."><AutoTextarea id="req-desc" className={areaClass} value={requirementForm.description} onChange={e=>setRequirementForm({...requirementForm,description:e.target.value})} disabled={!isDraft}/></Field>
-                <label className="flex min-h-11 items-center gap-3 text-sm font-medium"><input type="checkbox" checked={requirementForm.is_required} onChange={e=>setRequirementForm({...requirementForm,is_required:e.target.checked})} className="h-5 w-5 accent-[#155bb0]" disabled={!isDraft}/> Required for this cycle (uncheck if conditional)</label>
+                <Field htmlFor="req-title" label="Requirement title" required><input id="req-title" className={inputClass} value={requirementForm.title} onChange={e=>setRequirementForm({...requirementForm,title:e.target.value})} required disabled={!isDraft || !canEdit}/></Field>
+                <Field htmlFor="req-desc" label="Why this document is needed" hint="Only include claims supported by an approved reference."><AutoTextarea id="req-desc" className={areaClass} value={requirementForm.description} onChange={e=>setRequirementForm({...requirementForm,description:e.target.value})} disabled={!isDraft || !canEdit}/></Field>
+                <label className="flex min-h-11 items-center gap-3 text-sm font-medium"><input type="checkbox" checked={requirementForm.is_required} onChange={e=>setRequirementForm({...requirementForm,is_required:e.target.checked})} className="h-5 w-5 accent-[#155bb0]" disabled={!isDraft || !canEdit}/> Required for this cycle (uncheck if conditional)</label>
                 <div className="border-t border-[#d7e3ef] pt-6">
                   <StepBuilder
                     key={activeCycleId+":"+requirementId}
                     steps={requirementForm.steps}
-                    disabled={!isDraft}
+                    disabled={!isDraft || !canEdit}
                     onChange={steps=>setRequirementForm(prev=>({...prev,steps}))}
                   />
                 </div>
                 <fieldset className="space-y-3 border-t border-[#d7e3ef] pt-5"><legend className="text-base font-semibold">Frequently asked questions</legend>
-                  {requirementForm.faqs.map((f,index)=><div className="rounded-xl border border-[#d7e3ef] bg-[#f7fbff] p-3" key={index}><div className="mb-2 flex items-center justify-between"><span className="text-sm font-semibold">FAQ {index+1}</span>{isDraft?<button type="button" aria-label={"Remove FAQ "+(index+1)} onClick={()=>setRequirementForm(prev=>({...prev,faqs:prev.faqs.filter((_,i)=>i!==index)}))} className="rounded-lg p-2 hover:bg-[#f4eae8]"><X size={16}/></button>:null}</div><label htmlFor={"faq-q-"+index} className="block text-xs font-medium">Question</label><input id={"faq-q-"+index} className={inputClass} value={f.question} disabled={!isDraft} onChange={e=>setRequirementForm(prev=>({...prev,faqs:prev.faqs.map((a,i)=>i===index?{...a,question:e.target.value}:a)}))}/><label htmlFor={"faq-a-"+index} className="mt-3 block text-xs font-medium">Answer</label><AutoTextarea id={"faq-a-"+index} className={areaClass} value={f.answer} disabled={!isDraft} onChange={e=>setRequirementForm(prev=>({...prev,faqs:prev.faqs.map((a,i)=>i===index?{...a,answer:e.target.value}:a)}))}/></div>)}
+                  {requirementForm.faqs.map((f,index)=><div className="rounded-xl border border-[#d7e3ef] bg-[#f7fbff] p-3" key={index}><div className="mb-2 flex items-center justify-between"><span className="text-sm font-semibold">FAQ {index+1}</span>{isDraft?<button type="button" aria-label={"Remove FAQ "+(index+1)} onClick={()=>setRequirementForm(prev=>({...prev,faqs:prev.faqs.filter((_,i)=>i!==index)}))} className="rounded-lg p-2 hover:bg-[#f4eae8]"><X size={16}/></button>:null}</div><label htmlFor={"faq-q-"+index} className="block text-xs font-medium">Question</label><input id={"faq-q-"+index} className={inputClass} value={f.question} disabled={!isDraft || !canEdit} onChange={e=>setRequirementForm(prev=>({...prev,faqs:prev.faqs.map((a,i)=>i===index?{...a,question:e.target.value}:a)}))}/><label htmlFor={"faq-a-"+index} className="mt-3 block text-xs font-medium">Answer</label><AutoTextarea id={"faq-a-"+index} className={areaClass} value={f.answer} disabled={!isDraft || !canEdit} onChange={e=>setRequirementForm(prev=>({...prev,faqs:prev.faqs.map((a,i)=>i===index?{...a,answer:e.target.value}:a)}))}/></div>)}
                   {isDraft ? <Button type="button" variant="outline" onClick={()=>setRequirementForm({...requirementForm,faqs:[...requirementForm.faqs,{question:"",answer:""}]})}><Plus size={16}/> Add FAQ</Button> : null}
                 </fieldset>
-                {isDraft ? <div className="flex flex-wrap gap-2 border-t border-[#d7e3ef] pt-5"><Button type="submit" busy={busy}>Save requirement draft</Button><Button type="button" variant="quiet" onClick={()=>setRequirementId(null)}>Cancel</Button></div>:null}
+                {isDraft ? <div className="flex flex-wrap gap-2 border-t border-[#d7e3ef] pt-5"><Button type="submit" busy={busy} disabled={!canEdit}>Save requirement draft</Button><Button type="button" variant="quiet" onClick={()=>setRequirementId(null)}>Cancel</Button></div>:null}
               </form>}</Card>
             </div>}
           </> : null}
 
           {section === "knowledge" ? <>
-            <Heading title="Knowledge & sources" description="Attach official references for the selected guide."/>
+            <Heading eyebrow="Reference governance" title="Knowledge & sources" description="Store reference text, verify its source, and approve it before publication."/>
             <SelectScope data={data} programId={activeProgramId} cycleId={activeCycleId} onProgram={id=>{setProgramId(id);setCyclePage(1);setRequirementPage(1);setSourcePage(1);}} onCycle={id=>{setCycleId(id);setRequirementPage(1);setSourcePage(1);}}/>
             {!activeCycle ? <Empty title="Choose an application cycle" message="Create a cycle before managing its reference sources."/> : <div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(280px,.8fr)]">
               <Card><h2 className="mb-4 text-lg font-semibold">Reference register</h2>
-                {!cycleSources.length ? <Empty title="No sources attached" message="Add an official reference link. The source starts unapproved until a reviewer verifies it."/> : <div className="divide-y divide-[#d7e3ef]">{visibleSources.map(s=><article key={s.id} className="py-5"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{s.title}</h3><Pill status={s.is_approved?"approved":"in review"}/></div><p className="mt-2 text-xs leading-5 text-[#53657b]">Version {s.content_version} · Reviewed {formatDate(s.reviewed_at?s.reviewed_at.slice(0,10):null)}</p>{s.source_url && isHttpsLink(s.source_url) ? <a className="mt-3 inline-flex min-h-11 items-center gap-2 break-all text-sm font-semibold text-[#155bb0] underline underline-offset-4" href={s.source_url} target="_blank" rel="noopener noreferrer">Open reference <ExternalLink size={15}/></a> : <p className="mt-2 text-xs text-[#994e44]">No verified HTTPS source URL.</p>}</article>)}</div>}<AdminPagination page={safeAdminPage(sourcePage,cycleSources.length)} totalItems={cycleSources.length} label="sources" onPageChange={setSourcePage}/>
+                {!cycleSources.length ? <Empty title="No sources attached" message="Add official reference text for human review."/> : <div className="divide-y divide-[#e5ede5]">{visibleSources.map(s=><article key={s.id} className="py-5"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{s.title}</h3><Pill status={s.is_approved?"approved":"in review"}/></div><p className="mt-2 text-xs leading-5">Version {s.content_version} ? Reviewed {formatDate(s.reviewed_at?s.reviewed_at.slice(0,10):null)}</p>{s.source_url && isHttpsLink(s.source_url) && <a className="mt-3 inline-block text-sm underline" href={s.source_url} target="_blank" rel="noopener noreferrer">Open reference</a>}<p className="mt-3 line-clamp-4 whitespace-pre-wrap text-sm text-[#53657b]">{s.content || "No reference text saved yet."}</p><Button className="mt-3" variant="outline" disabled={!isDraft || !canEdit} onClick={()=>{setSourceId(s.id);setSourceTitle(s.title);setSourceUrl(s.source_url || "");setSourceContent(s.content || "");setSourceApproved(s.is_approved);}}>Edit source and review</Button></article>)}</div>}
+                <AdminPagination page={safeAdminPage(sourcePage,cycleSources.length)} totalItems={cycleSources.length} label="sources" onPageChange={setSourcePage}/>
               </Card>
-              <Card className="self-start"><h2 className="text-lg font-semibold">Attach a reference</h2><p className="mt-2 text-sm leading-6 text-[#53657b]">Use a credible publication from the responsible office. Adding a link does not approve or index it.</p><form className="mt-5 space-y-4" onSubmit={e=>void saveSource(e)}><Field htmlFor="source-title" label="Source title" required><input id="source-title" className={inputClass} required value={sourceTitle} onChange={e=>setSourceTitle(e.target.value)} disabled={!isDraft}/></Field><Field htmlFor="source-url" label="Official HTTPS link" required><input id="source-url" className={inputClass} type="url" required placeholder="https://…" value={sourceUrl} onChange={e=>setSourceUrl(e.target.value)} disabled={!isDraft}/></Field><Button type="submit" busy={busy} disabled={!isDraft}>Save unapproved source</Button></form><div className="mt-4"><Notice>Source approval and RAG indexing must be confirmed through the backend reviewer workflow. This frontend never marks a new source approved.</Notice></div></Card>
+              <Card className="self-start"><h2 className="text-lg font-semibold">{sourceId ? "Review reference" : "Attach a reference"}</h2><p className="mt-2 text-sm leading-6 text-[#53657b]">Adding a link alone does not supply evidence. Save the reference text and confirm your review.</p>
+                <form className="mt-5 space-y-4" onSubmit={e=>void saveSource(e)}><fieldset disabled={!isDraft || !canEdit || busy} className="space-y-4">
+                  <Field htmlFor="source-title" label="Source title" required><input id="source-title" className={inputClass} required value={sourceTitle} onChange={e=>{setSourceTitle(e.target.value);setSourceApproved(false);}}/></Field>
+                  <Field htmlFor="source-url" label="Official HTTPS link" required><input id="source-url" className={inputClass} type="url" required value={sourceUrl} onChange={e=>{setSourceUrl(e.target.value);setSourceApproved(false);}}/></Field>
+                  <Field htmlFor="source-content" label="Reference text"><AutoTextarea id="source-content" className={areaClass} rows={6} maxLength={30000} value={sourceContent} onChange={e=>{setSourceContent(e.target.value);setSourceApproved(false);}}/></Field>
+                  <label className="flex items-start gap-3 text-sm leading-6"><input className="mt-1" type="checkbox" checked={sourceApproved} onChange={e=>setSourceApproved(e.target.checked)}/>I have reviewed this source and verified that it supports the guidance.</label>
+                  <Button type="submit" busy={busy} disabled={!canEdit}>Save source and review</Button>
+                </fieldset></form><div className="mt-4"><Notice>Changing reference text clears the approval checkbox. Saving a source does not publish the guide.</Notice></div>
+              </Card>
             </div>}
           </> : null}
 
@@ -503,7 +501,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
                 <ApplicantContentPreview data={data} program={activeProgram} cycle={activeCycle}/>
                 <p className="mt-4 text-xs leading-5 text-[#53657b]">Preview limitation: Education-level and applicant-classification metadata are not yet supplied by the public scholarship API. Confirm the live published page after publication.</p>
               </Card>
-              <Card className="self-start"><h2 className="text-lg font-semibold">Publication checklist</h2><p className="mt-2 text-xs leading-5 text-[#53657b]">Incomplete checks prevent the publish action.</p><ul className="mt-5 space-y-4">{checks.map((c,index)=><li key={c.name} className="flex items-start gap-3 text-sm"><span className={"mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full "+(c.ok?"bg-[#e3f3e5] text-[#25734a]":"bg-[#fff0dd] text-[#8c5f22]")}>{c.ok?<Check size={13}/>:<X size={12}/>}</span><span className="leading-6">{c.name}{!c.ok && index < 5 ? <Link className="mt-1 block text-xs font-semibold text-[#155bb0] underline underline-offset-4" href={demoMode ? "/admin/demo?view=" + (index===0 || index===1 ? "programs" : index===4 ? "knowledge" : "requirements") : index===0 || index===1 ? "/admin/programs" : index===4 ? "/admin/knowledge" : "/admin/requirements"}>Open editor to fix <ArrowRight size={13} className="inline" aria-hidden="true"/></Link> : !c.ok && index===5 ? <span className="mt-1 block text-xs text-[#53657b]">Requires backend reviewer/indexing integration.</span> : null}</span></li>)}</ul><div className="mt-6 border-t border-[#d7e3ef] pt-5"><Button className="w-full" disabled={!preflightReady || role!=="publisher" || busy} busy={busy} onClick={()=>void requestPublish()}><ShieldCheck size={17}/> Publish verified guide</Button><p className="mt-3 text-xs leading-5 text-[#53657b]">{demoMode ? "Demo preview cannot publish. The real workflow requires a verified publisher account." : role!=="publisher" ? "A publisher role is required." : "Final approval requires server-side verification, including RAG source indexing and version checks."}</p></div><div className="mt-4"><Notice>RAG indexing and publisher authorization are not yet verifiable from this frontend. Publication is intentionally blocked until the backend implements and verifies them.</Notice></div></Card>
+              <Card className="self-start"><h2 className="text-lg font-semibold">Publication checklist</h2><p className="mt-2 text-xs leading-5 text-[#53657b]">{demoMode ? "Demo preview cannot publish." : checkingReadiness ? "Checking the saved guide on the server..." : "These checks use the current saved database records."}</p><ul className="mt-5 space-y-4">{checks.map(c=>{const fixSection = c.name.includes("Publisher authorization") ? null : c.name.toLowerCase().includes("source") ? "knowledge" : c.name.toLowerCase().includes("requirement") ? "requirements" : "programs"; return <li key={c.name} className="flex items-start gap-3 text-sm"><span className={"mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full "+(c.ok?"bg-[#e3f3e5] text-[#25734a]":"bg-[#fff0dd] text-[#8c5f22]")}>{c.ok?<Check size={13}/>:<X size={12}/>}</span><span className="leading-6">{c.name}{!c.ok && fixSection && <Link className="mt-1 block text-xs font-semibold text-[#155bb0] underline underline-offset-4" href={demoMode ? "/admin/demo?view="+fixSection : "/admin/"+fixSection}>Open editor to fix <ArrowRight size={13} className="inline" aria-hidden="true"/></Link>}</span></li>;})}</ul><div className="mt-6 border-t border-[#d7e3ef] pt-5"><Button className="w-full" disabled={!preflightReady || busy} busy={busy} onClick={()=>void requestPublish()}><ShieldCheck size={17}/> Publish verified guide</Button>{activeCycle.status === "published" && <Button variant="outline" className="mt-3 w-full" disabled={!canEdit || demoMode || busy} onClick={()=>void requestPublish(false)}>Return cycle to draft</Button>}<p className="mt-3 text-xs leading-5 text-[#53657b]">Only publishers can save and publish. The database validates publication again in one transaction.</p></div><div className="mt-4"><Notice>Review and save reference text in Knowledge sources before publishing. Return a published cycle to draft before editing its requirements.</Notice></div></Card>
             </div>}
           </> : null}
         </motion.div></AnimatePresence>

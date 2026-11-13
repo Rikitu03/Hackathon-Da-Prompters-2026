@@ -16,6 +16,12 @@
 
 ## Backend and data boundaries
 
+**Integration update, 13 November 2026 (`feat/backend-db`):** the Admin V3 UI from
+staging PR #9 is combined with cookie-authenticated API reads/writes, transactional
+requirement/step/FAQ saves, reviewed source text and validated publish/unpublish.
+The older transactional-save gap below is resolved on this branch. Merge only
+after explicit user confirmation; review [current status](STATUS.md) before release.
+
 - The Applicant `/scholarships` list endpoint currently omits `education_level` and `applicant_type`. Do not claim those filters match verified eligibility or invent schema fields. Member 3 must add and validate supported metadata before enabling such claims.
 - Checklist preparation progress and onboarding preferences stay in the student's own browser; they are not admin-visible.
 - GabayIskolar does not accept/submit official applications. Do not report fictional submission or applicant counts.

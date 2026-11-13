@@ -169,35 +169,19 @@ test("authenticated admin navigation reuses one verified session and loaded data
   let authReads = 0;
   let dataReads = 0;
 
-  await page.addInitScript(({savedUser}) => {
-    const now = Math.floor(Date.now()/1000);
-    localStorage.setItem("sb-mock-auth-token", JSON.stringify({
-      access_token:"mock-e2e-access", refresh_token:"mock-e2e-refresh",
-      token_type:"bearer", expires_in:3600, expires_at:now+3600,
-      user:savedUser
-    }));
-  }, {savedUser:user});
-
-  await page.route("https://mock.supabase.test/**", async route => {
-    const path = new URL(route.request().url()).pathname;
-    if (path === "/auth/v1/user") {
-      authReads++;
-      await route.fulfill({status:200, contentType:"application/json", body:JSON.stringify(user)});
-    } else if (path.startsWith("/rest/v1/admin_profiles")) {
-      dataReads++;
-      await route.fulfill({status:200, contentType:"application/json", body:JSON.stringify([{role:"editor"}])});
-    } else if (path.startsWith("/rest/v1/")) {
-      dataReads++;
-      await route.fulfill({status:200, contentType:"application/json", body:"[]"});
-    } else {
-      await route.fulfill({status:404, contentType:"application/json", body:"{}"});
-    }
+  await page.route("**/api/auth/session", async route => {
+    authReads++;
+    await route.fulfill({ json: { user, role: "editor" } });
+  });
+  await page.route("**/api/admin/workspace", async route => {
+    dataReads++;
+    await route.fulfill({ json: { data: { programs: [], cycles: [], requirements: [], steps: [], faqs: [], sources: [] } } });
   });
 
   await page.goto("/admin");
   await expect(page.getByRole("heading",{name:"Welcome to your workspace"})).toBeVisible();
   expect(authReads).toBeGreaterThan(0);
-  expect(dataReads).toBeGreaterThanOrEqual(6);
+  expect(dataReads).toBeGreaterThan(0);
 
   const authenticated = authReads;
   const dataLoaded = dataReads;
@@ -312,6 +296,38 @@ test("context importer explains rejected files and missing Lumen extraction", as
   await expect(page.getByRole("button",{name:/Apply to draft form/})).toHaveCount(0);
 });
 
+test("reviewed import keeps cycle fields after saving its program through the backend", async ({page}) => {
+  const programId = "10000000-0000-4000-8000-000000000009";
+  const cycleId = "20000000-0000-4000-8000-000000000009";
+  let program: Record<string, unknown> | null = null;
+  let cycle: Record<string, unknown> | null = null;
+  let savedCycle: Record<string, unknown> | null = null;
+  await page.route("**/api/auth/session", route => route.fulfill({ json: { user: { id: "publisher-test" }, role: "publisher" } }));
+  await page.route("**/api/admin/workspace", route => route.fulfill({ json: { data: { programs: program ? [program] : [], cycles: cycle ? [cycle] : [], requirements: [], steps: [], faqs: [], sources: [] } } }));
+  await page.route("**/api/admin/programs", async route => {
+    const payload = route.request().postDataJSON();
+    program = { ...payload, id: programId, status: "draft", created_at: "2026-11-01T00:00:00Z" };
+    await route.fulfill({ status: 201, json: { program } });
+  });
+  await page.route("**/api/admin/content", async route => {
+    savedCycle = route.request().postDataJSON();
+    cycle = { id: cycleId, program_id: programId, academic_year: savedCycle!.academicYear, application_start: savedCycle!.applicationStart, application_end: savedCycle!.applicationEnd, official_url: savedCycle!.officialUrl, status: "draft", published_at: null };
+    await route.fulfill({ json: { guide: { programId, cycleId, status: "draft" } } });
+  });
+  await page.route("**/api/admin/guides/*/readiness", route => route.fulfill({ json: { checks: [], ready: false, status: "draft" } }));
+  await page.goto("/admin/programs");
+  await page.getByLabel("Choose scholarship source file").setInputFiles({ name: "synthetic-import.md", mimeType: "text/markdown", buffer: Buffer.from("Scholarship Name: Synthetic Imported Guide\nDescription: Fictional import and backend integration test only.\nAcademic Year: 2026-2027\nApplication Opens: 2026-11-01\nApplication Closes: 2026-12-31\nOfficial Application URL: https://example.test/apply\n") });
+  await page.getByRole("button", { name: "Apply to draft form", exact: true }).click();
+  await page.getByRole("button", { name: "Create draft", exact: true }).click();
+  await expect(page.locator("#cycle-year")).toHaveValue("2026-2027");
+  await expect(page.locator("#cycle-start")).toHaveValue("2026-11-01");
+  await expect(page.locator("#cycle-end")).toHaveValue("2026-12-31");
+  await expect(page.locator("#cycle-url")).toHaveValue("https://example.test/apply");
+  await page.getByRole("button", { name: "Save draft cycle", exact: true }).click();
+  await expect(page.getByText("New draft cycle created.", { exact: true })).toBeVisible();
+  expect(savedCycle).toMatchObject({ action: "save_cycle", programId, academicYear: "2026-2027", applicationStart: "2026-11-01", applicationEnd: "2026-12-31", officialUrl: "https://example.test/apply" });
+});
+
 
 test("import progress is backed by completed device reading, not fictitious AI upload", async ({page}) => {
   await page.goto("/admin/demo?view=programs");
@@ -376,27 +392,14 @@ test("Admin V3 uses a real-dated gradient chart and hides pagers for short lists
 
 test("Admin V3 paginates more than 10 Supabase-visible guides and resets on search", async ({page}) => {
   const user={id:"00000000-0000-4000-8000-000000000001",aud:"authenticated",role:"authenticated",email:"admin@test.invalid"};
-  await page.addInitScript(({savedUser})=>{
-    const now=Math.floor(Date.now()/1000);
-    localStorage.setItem("sb-mock-auth-token",JSON.stringify({
-      access_token:"mock-e2e-access",refresh_token:"mock-e2e-refresh",
-      token_type:"bearer",expires_in:3600,expires_at:now+3600,user:savedUser
-    }));
-  },{savedUser:user});
   const guides=Array.from({length:13},(_,i)=>({
     id:"v3-guide-"+(i+1),
     title:"Test Scholarship "+String(i+1).padStart(2,"0"),
     description:"Fictional record for pagination regression testing only.",
     status:"draft",created_at:"2026-11-01T00:00:00Z"
   }));
-  await page.route("https://mock.supabase.test/**",async route=>{
-    const path=new URL(route.request().url()).pathname;
-    let body:unknown=[];
-    if(path==="/auth/v1/user")body=user;
-    else if(path.startsWith("/rest/v1/admin_profiles"))body=[{role:"editor"}];
-    else if(path.startsWith("/rest/v1/scholarship_programs"))body=guides;
-    await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(body)});
-  });
+  await page.route("**/api/auth/session", route => route.fulfill({ json: { user, role: "editor" } }));
+  await page.route("**/api/admin/workspace", route => route.fulfill({ json: { data: { programs: guides, cycles: [], requirements: [], steps: [], faqs: [], sources: [] } } }));
   await page.goto("/admin/programs");
   const pager=page.getByRole("navigation",{name:"scholarship guides pagination"});
   await expect(pager).toBeVisible();

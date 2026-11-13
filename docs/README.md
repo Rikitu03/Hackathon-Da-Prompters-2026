@@ -22,6 +22,7 @@ Read the [PSCS documentation index](scholarships/pscs/README.md) for the recomme
 | [Architecture](ARCHITECTURE.md) | Product journeys, boundaries, and ownership |
 | [API contracts](API_CONTRACTS.md) | Shared backend/frontend interfaces |
 | [Applicant frontend handoff](APPLICANT-HANDOFF.md) | Applicant routes, persistence and AI integration differences |
+| [Applicant privacy and local drafts](APPLICANT_PRIVACY.md) | Account-free browser references, private draft testing, server signing-key setup and remaining applicant scope |
 | [Backend handoff](BACKEND_HANDOFF.md) | Connect feature branches to the shared backend |
 | [Backend walkthrough](BACKEND_WALKTHROUGH.md) | Exercise draft, publish, and public-read workflows |
 | [Admin frontend UAT](ADMIN_FRONTEND_UAT.md) | Admin UI behavior and acceptance checks |
