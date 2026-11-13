@@ -205,6 +205,23 @@ export function ContextImport({onApply,demoMode}: {
   const hasValues=Object.values(draft).some(value=>value.trim().length>0);
   const isText=file?.ext===".txt"||file?.ext===".md";
   const canApply=Boolean(file && isText && hasValues && !pending);
+  const processed = Boolean(file && isText && !pending && !error && readPercent === 100);
+  const stages = [
+    {label:"Choose file",sub:"Source document",done:!!file},
+    {label:"Validate",sub:"Local format & size",done:!!file && !error},
+    {label:"Read content",sub:"Text extraction",done:processed},
+    {label:"Review",sub:"Apply fields to draft",done:applied}
+  ];
+  const completedStages=stages.filter(stage=>stage.done).length;
+  // This is a milestone percentage, NOT a simulated file transfer or AI completion metric.
+  const workflowPercent=completedStages*25;
+  const workflowStatus=error
+    ? "File rejected — see correction below"
+    : !file ? "Choose a document to start"
+    : !isText ? "PDF / Word extraction needs Lumen integration"
+    : pending ? "Reading document locally"
+    : applied ? "Fields applied to draft editor"
+    : "Review the extracted fields";
 
   function dragOver(e: DragEvent<HTMLElement>) {
     e.preventDefault(); e.dataTransfer.dropEffect="copy"; setDragging(true);
@@ -253,6 +270,60 @@ export function ContextImport({onApply,demoMode}: {
             <button type="button" onClick={downloadTemplate} className="inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-[#155bb0] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155bb0]"><Download size={16}/> Download template</button>
           </div>
         </div>
+      </div>
+      <div className="border-t border-[#d7e3ef] bg-[#f9fbfe] px-4 py-5 sm:px-7 sm:py-6" aria-label="Import preparation progress">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[.12em] text-[#155bb0]">Import preparation</p>
+            <p className="mt-1 text-base font-semibold text-[#102a51]">{workflowStatus}</p>
+            <p className="mt-1 text-xs leading-5 text-[#53657b]">{completedStages} of 4 milestones completed · Draft is not saved or published</p>
+          </div>
+          <div className="flex items-baseline gap-1 text-[#102a51]">
+            <span className="text-2xl font-bold tabular-nums tracking-tight">{workflowPercent}%</span>
+            <span className="text-xs text-[#53657b]">prepared</span>
+          </div>
+        </div>
+        <div
+          role="progressbar"
+          aria-label="Import preparation milestones"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={workflowPercent}
+          aria-valuetext={completedStages+" of 4 import preparation steps complete"}
+          className="relative mt-4 h-2.5 overflow-hidden rounded-full bg-[#d7e3ef]"
+        >
+          <div
+            className="h-full rounded-full bg-[#155bb0] transition-[width] duration-300 ease-out motion-reduce:transition-none"
+            style={{width:workflowPercent+"%"}}
+          />
+        </div>
+        <ol className="mt-4 grid grid-cols-2 gap-x-3 gap-y-4 md:grid-cols-4" aria-label="Import steps">
+          {stages.map((stage,index)=>{
+            const blocked=!error && !!file && !isText && index===2;
+            const failed=!!error && index===0;
+            const current=!error && !blocked && !stage.done && index===completedStages;
+            return (
+              <li key={stage.label} className="flex min-w-0 items-start gap-2.5">
+                <span aria-hidden="true" className={
+                  "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold "+
+                  (stage.done ? "border-[#155bb0] bg-[#155bb0] text-white" :
+                   failed ? "border-[#c87569] bg-[#fff3f0] text-[#933e32]" :
+                   blocked ? "border-[#d5b66d] bg-[#fff7e4] text-[#805e22]" :
+                   current ? "border-[#155bb0] bg-[#eaf3ff] text-[#155bb0]" :
+                   "border-[#d7e3ef] bg-white text-[#6e8097]")
+                }>
+                  {stage.done ? <CheckCircle2 size={16}/> : failed ? <X size={15}/> : index+1}
+                </span>
+                <div className="min-w-0">
+                  <p className={"text-sm font-semibold "+(stage.done || current ? "text-[#102a51]" : "text-[#53657b]")}>{stage.label}</p>
+                  <p className="mt-0.5 text-xs leading-4 text-[#53657b]">
+                    {failed?"Fix selected file":blocked?"Needs Lumen backend":stage.done?"Completed":current?"In progress":stage.sub}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
       </div>
       <AnimatePresence mode="wait" initial={false}>
         {(pending||error||file) &&
