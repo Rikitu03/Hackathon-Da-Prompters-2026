@@ -6,7 +6,7 @@ import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import {
   ArrowRight, Check, ChevronRight, ClipboardCheck, FileCheck2, FileText, GraduationCap,
   LayoutDashboard, LibraryBig, LoaderCircle, LockKeyhole, LogOut, Plus, RefreshCw,
-  ShieldCheck, X
+  ShieldCheck, MapPin, FileUp, X
 } from "lucide-react";
 import { api, HttpError } from "@/lib/http-client";
 import { Button, Card, Empty, Field, Heading, Notice, Pill, StepLink, inputClass, areaClass } from "./ui";
@@ -19,6 +19,8 @@ import { ProgramSearch } from "./program-search";
 import { GabayBrand } from "@/components/shared/gabay-brand";
 import { OperationsPanel, AdminWorkflow, ApplicantContentPreview } from "./operations";
 import { ContextImport, type ContextDraft } from "./context-import";
+import { RequirementImportDialog, type RequirementSuggestion } from "./requirement-import";
+import { mapPinUrl } from "@/lib/guides/schema";
 import { AdminPagination, ADMIN_PAGE_SIZE, safeAdminPage } from "./pagination";
 import "./admin.css";
 
@@ -40,8 +42,8 @@ const info: Record<Section, { label: string; description: string }> = {
 const initProgram = { title: "", description: "" };
 const initCycle = { academic_year: "", application_start: "", application_end: "", official_url: "" };
 type FAQDraft = { question: string; answer: string };
-type RequirementDraft = { title: string; description: string; is_required: boolean; steps: string[]; faqs: FAQDraft[] };
-const initRequirement = (): RequirementDraft => ({ title: "", description: "", is_required: true, steps: [""], faqs: [] });
+type RequirementDraft = { title: string; description: string; is_required: boolean; steps: string[]; faqs: FAQDraft[]; issuingOffice:string; officeAddress:string; officeHours:string; mapUrl:string };
+const initRequirement = (): RequirementDraft => ({ title: "", description: "", is_required: true, steps: [""], faqs: [], issuingOffice:"", officeAddress:"", officeHours:"", mapUrl:"" });
 const errorText = (err: unknown) => err instanceof Error ? err.message : "Something went wrong. Please retry.";
 const stat = (value: number, title: string, icon: ReactNode, subtitle: string, delay = 0) => <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{duration:0.26,delay,ease:[0.22,1,0.36,1]}} className="h-full"><Card className="h-full"><div className="flex items-center justify-between gap-3"><span className="text-sm font-medium text-[#53657b]">{title}</span><span className="rounded-xl bg-[#eef6ff] p-2 text-[#155bb0]">{icon}</span></div><p className="mt-3 text-3xl font-semibold tracking-tight text-[#102a51]" style={{ fontVariantNumeric: "tabular-nums" }}>{value}</p><p className="mt-1 text-xs leading-5 text-[#53657b]">{subtitle}</p></Card></motion.div>;
 
@@ -86,6 +88,8 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
   const [importedCycle, setImportedCycle] = useState<typeof initCycle | null>(null);
   const [requirementId, setRequirementId] = useState<string | null>(null);
   const [requirementForm, setRequirementForm] = useState<RequirementDraft>(initRequirement);
+  const [showRequirementImport,setShowRequirementImport] = useState(false);
+  const [requirementPrefilled,setRequirementPrefilled] = useState(false);
   const [sourceTitle, setSourceTitle] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [sourceContent, setSourceContent] = useState("");
@@ -299,27 +303,46 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
   }
   function editRequirement(r?: Requirement) {
     setError("");
+    setRequirementPrefilled(false);
+    setShowRequirementImport(false);
     setRequirementId(r?.id || "new");
     if (!r) { setRequirementForm(initRequirement()); return; }
     setRequirementForm({
       title:r.title,description:r.description,is_required:r.is_required,
+      issuingOffice:r.issuing_office ?? "",officeAddress:r.office_address ?? "",officeHours:r.office_hours ?? "",mapUrl:r.map_url ?? "",
       steps: data.steps.filter((s) => s.requirement_id === r.id).sort((a,b) => a.position-b.position).map((s) => s.instruction),
       faqs: data.faqs.filter((f) => f.requirement_id === r.id).map((f) => ({question:f.question,answer:f.answer}))
     });
+  }
+  function applyRequirementSuggestions(ready:RequirementSuggestion) {
+    setRequirementForm(current=>({
+      ...current,
+      title:ready.title || current.title,
+      description:ready.description || current.description,
+      steps:ready.steps.filter(Boolean).length?ready.steps.filter(Boolean):current.steps,
+      issuingOffice:ready.issuingOffice || current.issuingOffice,
+      officeAddress:ready.officeAddress || current.officeAddress,
+      officeHours:ready.officeHours || current.officeHours,
+      mapUrl:ready.mapUrl || current.mapUrl
+    }));
+    setRequirementPrefilled(true);
   }
   async function saveRequirement(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!activeCycle || !isDraft) return;
     if (!requirementForm.title.trim() || !requirementForm.steps.some((s)=>s.trim())) {setError("Every requirement needs a title and at least one actionable step.");return;}
     if (requirementForm.faqs.some((f) => !f.question.trim() || !f.answer.trim())) {setError("Complete both fields in every FAQ, or remove empty entries.");return;}
+    if (!mapPinUrl.safeParse(requirementForm.mapUrl.trim()).success) {setError("Use a direct HTTPS Google Maps, Apple Maps or OpenStreetMap link for the pinned location.");return;}
     const editingId = requirementId !== "new" ? requirementId : null;
     await act(async () => {
       await api("/api/admin/content", { method: "POST", body: JSON.stringify({
         action: "save_requirement", cycleId: activeCycle.id, ...(editingId ? { requirementId: editingId } : {}),
         title: requirementForm.title.trim(), description: requirementForm.description.trim(), required: requirementForm.is_required,
+        issuingOffice:requirementForm.issuingOffice.trim(),officeAddress:requirementForm.officeAddress.trim(),officeHours:requirementForm.officeHours.trim(),mapUrl:requirementForm.mapUrl.trim(),
         steps: requirementForm.steps.map((step) => step.trim()).filter(Boolean), faqs: requirementForm.faqs,
       }) });
       setRequirementId(null);
+      setRequirementPrefilled(false);
     }, editingId ? "Requirement journey updated atomically." : "Requirement journey saved as draft.");
   }
   async function saveSource(e: FormEvent<HTMLFormElement>) {
