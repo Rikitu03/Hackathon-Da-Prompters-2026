@@ -68,8 +68,10 @@ export function sameOrigin(request: Request) {
       const forwarded = request.headers.get("x-forwarded-host")?.toLowerCase();
       // An absent or internally rewritten forwarded host is not evidence of
       // a foreign origin; a different external host is rejected.
+      const internallyForwarded = new URL(request.url).host.toLowerCase();
       const forwardedMatches = !forwarded || forwarded === browser.host ||
-        forwarded === rawHost;
+        forwarded === rawHost ||
+        (rawHost === browser.host && forwarded === internallyForwarded);
       verifiedCodespacesProxy = codespaces && (local || rawHost === browser.host) && forwardedMatches;
     } catch { /* Invalid Origin cannot qualify for the proxy exception. */ }
   }
