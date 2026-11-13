@@ -74,12 +74,12 @@ test("overview program entries are fully clickable and Refresh is not required",
   await expect(page.getByRole("heading", {name:"Scholarship guides"})).toBeVisible();
 });
 
-test("selected sage cards keep readable action hierarchy", async ({page}) => {
+test("selected blue cards keep readable action hierarchy", async ({page}) => {
   await page.goto("/admin/demo?view=programs");
   const listRow = page.getByRole("listitem").filter({hasText:"Sample Scholarship Preparation Guide"});
   await expect(listRow.getByRole("button",{name:"Edit"})).toHaveCSS("background-color","rgb(255, 255, 255)");
-  await expect(listRow.getByRole("button",{name:"View cycles"})).toHaveCSS("color","rgb(255, 255, 255)");
-  await expect(page.getByRole("button",{name:"Select"}).first()).toHaveCSS("color","rgb(255, 255, 255)");
+  await expect(listRow.getByRole("button",{name:"View cycles"})).toHaveCSS("color","rgb(248, 251, 255)");
+  await expect(page.getByRole("button",{name:"Select"}).first()).toHaveCSS("color","rgb(248, 251, 255)");
 });
 
 test("step editor has a single label and constrains drag movement horizontally", async ({page}) => {
