@@ -3,6 +3,8 @@
 This is a tested development backend that the other feature branches can connect
 to. It is not the final admin/applicant interface or a deployed release.
 
+**Integration update, 13 November 2026:** `feat/backend-db` now connects the existing admin screens to cookie-authenticated, atomic backend saves and real publication checks. Account-free references and local private drafts are implemented; see [Applicant privacy](APPLICANT_PRIVACY.md) for setup, testing, and remaining applicant scope. These local changes still need review/deployment.
+
 ## What is ready
 
 | Area | Implemented behavior |
@@ -54,13 +56,15 @@ a separate organization invitation.
 - **M2:** use `/api/auth/*`, `/api/admin/guides*`, `/api/admin/programs*`, and
   `/api/admin/publish`. The guide save endpoint accepts the entire editable
   document; preserve loaded IDs and omit its read-only `status` field.
-- **M4:** use the approved source/chunk schema as the storage foundation. The
-  cycle-scoped ranked retrieval function and Lumen integration still need work;
-  there is no finished chatbot pipeline to consume yet.
+- **M4:** the local chat route now consumes approved, published cycle-scoped
+  FTS chunks and calls Lumen with mapped citations. Finish contract alignment
+  with the applicant frontend and verify a cited route answer using reviewed
+  scholarship content. SQL relevance ranking and requirement associations remain limited.
 
-The backend branch includes a temporary `/admin` redirect and simple public
-pages so it can be exercised independently. When integrating M2's admin UI, retain
-the final frontend at `/admin` and keep `/backend-lab` as the developer workbench.
+The merged build renders the persistent admin UI at `/admin` and Member 1's
+applicant workspace on public routes. Keep `/backend-lab` as the developer workbench:
+it supports the same cookie-authenticated source-text/review/save/publish flow
+now available through the admin screens.
 Combine package scripts/dependencies and regenerate the lockfile when adding
 frontend packages. Do not overwrite either feature's dependencies wholesale.
 
@@ -74,8 +78,10 @@ frontend packages. Do not overwrite either feature's dependencies wholesale.
   revisions are not retained.
 - Demo guides use invented content and example.com URLs. Replace them with M2's
   source-verified scholarship material before a real content demonstration.
-- Lumen chat/OCR routes intentionally return 501/503. Retrieval, rate limits,
-  upload validation/consent, and real provider tests remain separate work.
+- OCR and the local chat/RAG implementation call real Lumen adapters, with
+  validation, same-origin checks, rate limits and configuration kill switches.
+  Missing configuration returns 503; neither current route is a 501 stub.
+  Combined frontend success and deployment checks remain separate acceptance work.
 - There are no student accounts, application submissions, or applicant tables in
   this MVP. Per-user cloud checklist syncing would require additional design.
 - Vercel deployment, rollback instructions, merged frontend QA, and final release

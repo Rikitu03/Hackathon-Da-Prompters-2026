@@ -1,0 +1,74 @@
+name: Admin frontend quality
+on:
+  push:
+    branches: ["feat/admin-portal", "feat/admin-login-redesign"]
+    paths:
+      - "src/app/admin/**"
+      - "src/components/admin/**"
+      - "src/app/api/auth/**"
+      - "src/lib/api.ts"
+      - "src/lib/api-origin.test.ts"
+      - "src/components/shared/**"
+      - "src/components/applicant/workspace.tsx"
+      - "docs/ADMIN_FRONTEND_UAT.md"
+      - "docs/ADMIN_V2_QOL_HANDOFF.md"
+      - "tests/applicant-*.test.mjs"
+      - ".github/workflows/admin-frontend-quality.yml"
+      - "package.json"
+      - "playwright.config.ts"
+      - "tests/admin-ui.spec.ts"
+      - "tests/admin-login.spec.ts"
+  pull_request:
+    branches: ["staging"]
+    paths:
+      - "src/app/admin/**"
+      - "src/components/admin/**"
+      - "src/app/api/auth/**"
+      - "src/lib/api.ts"
+      - "src/lib/api-origin.test.ts"
+      - "src/components/shared/**"
+      - "src/components/applicant/workspace.tsx"
+      - "package.json"
+      - "playwright.config.ts"
+      - "tests/admin-ui.spec.ts"
+jobs:
+  admin-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    # Test-only reserved origin: Next.js embeds public environment variables at build.
+    # Browser tests mock these requests; no shared development database is contacted.
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://mock.supabase.test
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_e2e_mock_key
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: TypeScript
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint
+      - name: Applicant model and API regression tests
+        run: npm run test:applicant
+      - name: Origin security and login validation tests
+        run: npx vitest run src/lib/api-origin.test.ts src/components/admin/login-validation.test.ts
+      - name: Production build
+        run: npm run build
+      - name: Install browser for UI tests
+        run: npx playwright install --with-deps chromium
+      - name: Admin desktop and mobile browser tests
+        run: npm run test:e2e
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-ui-playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7

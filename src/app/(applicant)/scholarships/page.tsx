@@ -1,3 +1,4 @@
-import { PageShell } from "@/components/page-shell";
-import { ScholarshipList } from "@/components/scholarship-list";
-export default function ScholarshipsPage() { return <PageShell><ScholarshipList/></PageShell>; }
+import { Explorer } from "@/components/applicant/catalogue";
+export default function ScholarshipsPage() {
+  return <Explorer />;
+}

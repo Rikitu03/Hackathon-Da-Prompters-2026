@@ -5,6 +5,7 @@ import type { GuideDocument } from "./schema";
 
 export type RequirementRow = {
   id: string; title: string; description: string; is_required: boolean; position: number;
+  issuing_office?: string; office_address?: string; office_hours?: string; map_url?: string;
   requirement_steps: { id: string; position: number; instruction: string }[];
   faqs: { id: string; question: string; answer: string }[];
 };
@@ -19,7 +20,7 @@ export type ProgramSummary = Omit<PublicProgram, "application_cycles"> & { appli
 
 export async function publicPrograms(client: SupabaseClient, page = 1) {
   const { data, error } = await client.from("scholarship_programs")
-    .select("id,title,description,status,application_cycles(id,academic_year,application_start,application_end,status)")
+    .select("id,title,description,status,application_cycles!inner(id,academic_year,application_start,application_end,status)")
     .eq("status", "published").order("created_at", { ascending: false }).range((page-1)*20, page*20-1);
   databaseError(error);
   return (data as unknown as ProgramSummary[]).filter((program) => program.application_cycles.length);
@@ -28,16 +29,16 @@ export async function publicProgram(client: SupabaseClient, id: string) {
   const { data, error } = await client.from("scholarship_programs").select(`
     id,title,description,status,application_cycles(
       id,academic_year,application_start,application_end,official_url,published_at,status,
-      requirements(id,title,description,is_required,position,requirement_steps(id,position,instruction),faqs(id,question,answer)),
+      requirements(id,title,description,is_required,position,issuing_office,office_address,office_hours,map_url,requirement_steps(id,position,instruction),faqs(id,question,answer)),
       knowledge_sources(id,title,source_url,reviewed_at))`).eq("id", id).eq("status", "published").maybeSingle();
   databaseError(error);
-  if (!data) throw new ApiError(404, "Published scholarship not found");
+  if (!data || !(data as unknown as PublicProgram).application_cycles.length) throw new ApiError(404, "Published scholarship not found");
   return data as unknown as PublicProgram;
 }
 export async function adminGuide(client: SupabaseClient, id: string): Promise<GuideDocument> {
   const { data, error } = await client.from("application_cycles").select(`*,
     scholarship_programs(id,title,description,status),
-    requirements(id,title,description,is_required,position,requirement_steps(id,position,instruction),faqs(id,question,answer)),
+    requirements(id,title,description,is_required,position,issuing_office,office_address,office_hours,map_url,requirement_steps(id,position,instruction),faqs(id,question,answer)),
     knowledge_sources(id,title,source_url,is_approved,knowledge_chunks(id,content))`).eq("id", id).maybeSingle();
   databaseError(error);
   if (!data) throw new ApiError(404, "Guide not found");
@@ -56,6 +57,8 @@ export async function adminGuide(client: SupabaseClient, id: string): Promise<Gu
     applicationStart: cycle.application_start ?? "", applicationEnd: cycle.application_end ?? "", officialUrl: cycle.official_url ?? "", status: cycle.status === "published" && cycle.scholarship_programs.status === "published" ? "published" : "draft",
     requirements: cycle.requirements.sort((a,b) => a.position-b.position).map((requirement) => ({
       id: requirement.id, title: requirement.title, description: requirement.description, required: requirement.is_required,
+      issuingOffice: requirement.issuing_office ?? "", officeAddress: requirement.office_address ?? "",
+      officeHours: requirement.office_hours ?? "", mapUrl: requirement.map_url ?? "",
       steps: requirement.requirement_steps.sort((a,b) => a.position-b.position).map((step) => step.instruction),
       faqs: requirement.faqs.map(({ question, answer }) => ({ question, answer })),
     })),

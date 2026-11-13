@@ -1,2 +1,2 @@
-import { redirect } from "next/navigation";
-export default function AdminPage() { redirect("/backend-lab"); }
+/** The persistent /admin layout renders this route's workspace view. */
+export default function AdminPage() { return null; }
