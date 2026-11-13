@@ -42,10 +42,27 @@ test("onboarding offers all PSCS levels and creates the selected workspace", asy
   await onboard(page);
 });
 
-test("the landing page names the same five stages", async ({ page }) => {
+test("landing preserves its headline and introduces preparation clearly", async ({ page, isMobile }) => {
   await page.goto("/");
-  for (const name of ["Choose a guide", "Prepare your checklist", "Check a document", "Ask Gabay", "Take the official step"])
-    await expect(page.locator(".journey-grid").getByRole("heading", { name, exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Your guide to");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Pasig City");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("scholarships.");
+  await expect(page.getByRole("link", { name: "Start preparing", exact: true }).first()).toHaveAttribute("href", "/onboarding");
+  await page.getByRole("checkbox", { name: "Example: Record of grades" }).check();
+  await expect(page.getByText("2 of 3 prepared", { exact: true })).toBeVisible();
+  await page.locator("summary").filter({ hasText: "Is this the official scholarship portal?" }).click();
+  await expect(page.getByText(/No. GabayIskolar is an independent preparation companion/)).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  const helpText = await page.locator(".gm-together-copy").boundingBox();
+  expect(helpText!.width).toBeGreaterThan(120);
+  await page.getByRole("heading", { level: 1 }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: `test-results/landing-${isMobile ? "mobile" : "desktop"}.png`, fullPage: true });
+  if (isMobile) {
+    await page.getByRole("button", { name: "Open navigation", exact: true }).click();
+    await expect(page.getByRole("navigation", { name: "Mobile navigation" })).toBeVisible();
+    await page.getByRole("button", { name: "Close navigation", exact: true }).press("Escape");
+    await expect(page.getByRole("button", { name: "Open navigation", exact: true })).toBeFocused();
+  }
 });
 
 test("closed guides explain the date while keeping the written guide available", async ({ page }) => {
