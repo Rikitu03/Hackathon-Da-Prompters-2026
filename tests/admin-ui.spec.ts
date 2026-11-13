@@ -265,3 +265,46 @@ test("Admin V2 primary blue links and buttons have readable white text", async (
   await newProgram.hover();
   await expect(newProgram).toHaveCSS("color","rgb(255, 255, 255)");
 });
+
+
+test("context importer offers a real Markdown template and visible supported formats", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  await expect(page.getByRole("heading",{name:/Start with a document/})).toBeVisible();
+  await expect(page.getByRole("button",{name:"Browse files"})).toBeVisible();
+  const downloadEvent=page.waitForEvent("download");
+  await page.getByRole("button",{name:"Download template"}).click();
+  const download=await downloadEvent;
+  expect(download.suggestedFilename()).toBe("GabayIskolar-Scholarship-Guide-Template.md");
+});
+
+test("context text import stages reviewed fields but never claims to save in demo mode", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  await page.getByLabel("Choose scholarship source file").setInputFiles({
+    name:"sample-guide.md",mimeType:"text/markdown",
+    buffer:Buffer.from("# Official sample\nScholarship Name: Example Education Grant\nDescription: A fictional guide used for accessibility and usability tests.\nAcademic Year: 2026-2027\nOfficial Application URL: https://example.test/official\n")
+  });
+  await expect(page.getByRole("heading",{name:"Review suggested fields"})).toBeVisible();
+  await expect(page.getByLabel("Scholarship name")).toHaveValue("Example Education Grant");
+  await expect(page.getByLabel("Academic year")).toHaveValue("2026-2027");
+  await expect(page.getByText("LOCAL TEXT PREFILL · NOT AI")).toBeVisible();
+  await page.getByRole("button",{name:/Apply to draft form/}).click();
+  await expect(page.getByRole("textbox",{name:"Program name"})).toHaveValue("Example Education Grant");
+  await expect(page.getByRole("textbox",{name:"Program description"})).toHaveValue(/fictional guide/);
+  await expect(page.getByText("Fields copied to the editor")).toBeVisible();
+  await page.getByRole("button",{name:"Create draft"}).click();
+  await expect(page.getByText(/Preview mode: changes are not saved/)).toBeVisible();
+});
+
+test("context importer explains rejected files and missing Lumen extraction", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  const input=page.getByLabel("Choose scholarship source file");
+  await input.setInputFiles({name:"unsafe.exe",mimeType:"application/octet-stream",buffer:Buffer.from("not a document")});
+  await expect(page.getByRole("alert")).toContainText("This file type is not supported");
+  await expect(page.getByRole("alert")).toContainText("415");
+  await page.getByRole("button",{name:"Dismiss upload error"}).click();
+
+  await input.setInputFiles({name:"reference.pdf",mimeType:"application/pdf",buffer:Buffer.from("%PDF-1.7\nexample bytes")});
+  await expect(page.getByText("AI document extraction is not connected yet")).toBeVisible();
+  await expect(page.getByText(/No document was sent or saved/)).toBeVisible();
+  await expect(page.getByRole("button",{name:/Apply to draft form/})).toHaveCount(0);
+});
