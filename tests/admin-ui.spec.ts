@@ -269,6 +269,7 @@ test("Admin V2 primary blue links and buttons have readable white text", async (
 
 test("context importer offers a real Markdown template and visible supported formats", async ({page}) => {
   await page.goto("/admin/demo?view=programs");
+  await page.getByRole("button",{name:"Import file"}).click();
   await expect(page.getByRole("heading",{name:/Start with a document/})).toBeVisible();
   await expect(page.getByRole("button",{name:"Browse files"})).toBeVisible();
   const downloadEvent=page.waitForEvent("download");
@@ -279,6 +280,7 @@ test("context importer offers a real Markdown template and visible supported for
 
 test("context text import stages reviewed fields but never claims to save in demo mode", async ({page}) => {
   await page.goto("/admin/demo?view=programs");
+  await page.getByRole("button",{name:"Import file"}).click();
   await page.getByLabel("Choose scholarship source file").setInputFiles({
     name:"sample-guide.md",mimeType:"text/markdown",
     buffer:Buffer.from("# Official sample\nScholarship Name: Example Education Grant\nDescription: A fictional guide used for accessibility and usability tests.\nAcademic Year: 2026-2027\nOfficial Application URL: https://example.test/official\n")
@@ -297,6 +299,7 @@ test("context text import stages reviewed fields but never claims to save in dem
 
 test("context importer explains rejected files and missing Lumen extraction", async ({page}) => {
   await page.goto("/admin/demo?view=programs");
+  await page.getByRole("button",{name:"Import file"}).click();
   const input=page.getByLabel("Choose scholarship source file");
   await input.setInputFiles({name:"unsafe.exe",mimeType:"application/octet-stream",buffer:Buffer.from("not a document")});
   await expect(page.getByRole("region",{name:/Start with a document/}).getByRole("alert")).toContainText("This file type is not supported");
@@ -312,6 +315,7 @@ test("context importer explains rejected files and missing Lumen extraction", as
 
 test("import progress is backed by completed device reading, not fictitious AI upload", async ({page}) => {
   await page.goto("/admin/demo?view=programs");
+  await page.getByRole("button",{name:"Import file"}).click();
   await page.getByLabel("Choose scholarship source file").setInputFiles({
     name:"progress-check.md",mimeType:"text/markdown",
     buffer:Buffer.from("Scholarship Name: Mock Scholarship\nDescription: Fictional progress indicator sample for UI testing.\nAcademic Year: 2026-2027\n")
@@ -342,6 +346,7 @@ test("import progress is backed by completed device reading, not fictitious AI u
 
 test("import preparation tracker exposes errors without simulated completion", async ({page}) => {
   await page.goto("/admin/demo?view=programs");
+  await page.getByRole("button",{name:"Import file"}).click();
   const preparation=page.getByRole("progressbar",{name:"Import preparation milestones"});
   await expect(preparation).toHaveAttribute("aria-valuenow","0");
   await expect(page.getByText("Choose a document to start")).toBeVisible();
@@ -405,4 +410,33 @@ test("Admin V3 paginates more than 10 Supabase-visible guides and resets on sear
   await page.getByRole("combobox",{name:"Search scholarship programs"}).fill("Scholarship 03");
   await expect(page.getByRole("heading",{name:"Test Scholarship 03"})).toBeVisible();
   await expect(pager).toHaveCount(0);
+});
+
+
+test("Admin chart hover and month selection never expose a full-height focus rectangle",async ({page})=>{
+  await page.goto("/admin/demo");
+  const chart=page.getByRole("img",{name:/Monthly scholarship activity:/});
+  await expect(chart).toBeVisible();
+  const target=chart.locator('[data-chart-hit="month"]').last();
+  await expect(target).not.toHaveAttribute("tabindex","0");
+  await expect(target).not.toHaveAttribute("role","button");
+  await target.hover();
+  await expect(chart.locator('[data-chart-tooltip="true"]')).toBeVisible();
+  const selected=page.getByRole("group",{name:"Select activity month"});
+  const november=selected.getByRole("button",{name:/Nov 2026:/});
+  await november.focus();
+  await expect(november).toHaveAttribute("aria-pressed","true");
+  await expect(november).toHaveCSS("outline-width","2px");
+  await expect(chart.locator("rect[tabindex]")).toHaveCount(0);
+  await expect(page.getByText("Recommended workflow")).toHaveCount(0);
+});
+
+test("Admin importer remains hidden until requested to keep the guide list readable",async ({page})=>{
+  await page.goto("/admin/demo?view=programs");
+  await expect(page.getByRole("heading",{name:"Scholarship guides"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:/Start with a document/})).toHaveCount(0);
+  await page.getByRole("button",{name:"Import file"}).click();
+  await expect(page.getByRole("heading",{name:/Start with a document/})).toBeVisible();
+  await page.getByRole("button",{name:"Hide import"}).click();
+  await expect(page.getByRole("heading",{name:/Start with a document/})).toHaveCount(0);
 });
