@@ -21,6 +21,7 @@ import {
 } from "@/lib/applicant/model";
 import { closedCycleNotice, cycleWindow } from "@/lib/cycle-window";
 import { JourneyRail } from "./journey";
+import { useGabay } from "./gabay-context";
 import { request, requirementFrom } from "@/lib/applicant/api";
 import type { RequirementRow } from "@/lib/guides/data";
 import {
@@ -244,12 +245,6 @@ export function Dashboard() {
               copy: "Keep your preparation organized.",
             },
             {
-              href: "/assistant",
-              icon: MessageCircle,
-              title: "Ask Gabay",
-              copy: "Ask about your selected guide.",
-            },
-            {
               href: "/document-review",
               icon: ScanText,
               title: "Check a document",
@@ -383,6 +378,7 @@ export function RequirementDetail({
   programId?: string;
   cycleId?: string;
 }) {
+  const { openChat } = useGabay();
   const w = useWorkspace();
   const selectedProgram = programId ?? w.preferences?.programId ?? "";
   const data = useGuide(selectedProgram);
@@ -549,9 +545,9 @@ export function RequirementDetail({
             Check my document
             <ScanText size={17} />
           </Link>}
-          <Link
+          <button
+            type="button"
             className="btn secondary"
-            href={`/assistant?requirement=${encodeURIComponent(id)}`}
             onClick={() => {
               if (data.guide && cycle)
                 w.select({
@@ -562,11 +558,12 @@ export function RequirementDetail({
                   programId: data.guide.id,
                   cycleId: cycle.id,
                 });
+              openChat(id);
             }}
           >
             Ask Gabay about this item
             <MessageCircle size={17} />
-          </Link>
+          </button>
         </aside>
       </div>
     </>

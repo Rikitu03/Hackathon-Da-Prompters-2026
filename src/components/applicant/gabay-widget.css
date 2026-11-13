@@ -1,0 +1,133 @@
+.gabay-widget {
+  --gabay-navy: #102a51;
+  --gabay-blue: #155bb0;
+  --gabay-surface: #fff;
+  --gabay-soft: #eef6ff;
+  --gabay-ink: #102a51;
+  --gabay-muted: #53657b;
+  --gabay-line: #d7e3ef;
+  --gabay-bottom: max(16px, env(safe-area-inset-bottom));
+  position: fixed;
+  z-index: 60;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: calc(var(--gabay-bottom) + var(--gabay-keyboard-offset, 0px));
+  color: var(--gabay-ink);
+  font: 14px/1.5 "Gabay Sans", Arial, sans-serif;
+  color-scheme: light;
+}
+.gabay-widget * { box-sizing: border-box; }
+.gabay-widget button, .gabay-widget textarea, .gabay-widget select { font: inherit; }
+.gabay-widget button { cursor: pointer; }
+.gabay-widget button:disabled { cursor: not-allowed; opacity: .5; }
+.gabay-widget button, .gabay-widget a, .gabay-widget textarea, .gabay-widget select { -webkit-tap-highlight-color: transparent; }
+.gabay-widget :focus-visible { outline: 3px solid #f7c744; outline-offset: 3px; }
+.gabay-widget p, .gabay-widget h2, .gabay-widget h3 { margin: 0; }
+.gabay-widget svg { flex-shrink: 0; }
+.gabay-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.gabay-mascot { display: block; object-fit: contain; }
+.gabay-launcher { display: flex; align-items: center; gap: 9px; position: relative; min-height: 52px; padding: 10px 20px 10px 67px; border: 1px solid #75b9f4; border-radius: 32px; background: var(--gabay-blue); color: #fff; box-shadow: 0 5px 22px #102a5126; font-weight: 700 !important; font-size: 16px !important; transition: background .18s, box-shadow .18s; }
+.gabay-launcher:hover { background: #124b91; box-shadow: 0 7px 24px #102a5138; }
+.gabay-launcher-mascot { position: absolute; left: -5px; bottom: -2px; width: 64px; height: 64px; border: 2px solid #80bfff; border-radius: 50%; background: #d7ecff; overflow: hidden; }
+.gabay-launcher-mascot img { width: 64px; height: 64px; transform: scale(1.15); }
+.gabay-launcher-spark { color: #f7c744; }
+.gabay-panel { position: absolute; right: 0; bottom: 70px; width: 410px; height: min(650px, calc(var(--gabay-viewport-height, 100dvh) - var(--gabay-bottom) - 92px)); min-height: 0; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--gabay-line); border-radius: 24px; background: var(--gabay-surface); box-shadow: 0 16px 60px #102a512b, 0 2px 6px #102a5114; animation: gabay-enter .18s ease-out; }
+.gabay-header { flex: none; min-height: 112px; position: relative; padding: 25px 12px 28px 92px; display: flex; align-items: center; background: var(--gabay-blue); color: white; }
+.gabay-header-mascot { position: absolute; bottom: 10px; left: 4px; }
+.gabay-heading { position: relative; z-index: 1; }
+.gabay-heading h2 { display: flex; align-items: center; gap: 6px; font-size: 23px; line-height: 1.2; letter-spacing: -.6px; font-weight: 750; }
+.gabay-heading h2 svg { color: #f7c744; }
+.gabay-heading p { font-size: 11px; margin-top: 6px; }
+.gabay-window-actions { margin-left: auto; align-self: flex-start; display: flex; gap: 5px; }
+.gabay-window-actions button { width: 30px; height: 32px; padding: 0; display: grid; place-items: center; border: 1px solid #ffffff29; border-radius: 9px; background: #ffffff16; color: white; }
+.gabay-window-actions button:hover { background: #ffffff30; }
+.gabay-header-wave { position: absolute; left: 0; bottom: -1px; width: 100%; height: 23px; color: var(--gabay-surface); }
+.gabay-context { flex: none; display: flex; align-items: center; gap: 9px; padding: 8px 20px 12px; border-bottom: 1px solid var(--gabay-line); color: var(--gabay-muted); font-size: 11px; }
+.gabay-context label { flex: 1; min-width: 0; }
+.gabay-context-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 2px; }
+.gabay-context select { display: block; width: 100%; min-width: 0; border: 0; border-radius: 4px; color: var(--gabay-ink); background: var(--gabay-surface); font-size: 12px; font-weight: 600; }
+.gabay-log { flex: 1; min-height: 0; padding: 14px 19px 20px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scroll-padding: 16px; }
+.gabay-today { display: table; margin: 0 auto 18px; padding: 3px 12px; border-radius: 20px; background: var(--gabay-soft); color: var(--gabay-muted); font-size: 11px; }
+.gabay-greeting { display: flex; gap: 10px; align-items: flex-start; }
+.gabay-avatar { flex-shrink: 0; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: #dfedff; overflow: hidden; margin-top: 5px; }
+.gabay-avatar img { width: 100%; height: 100%; transform: scale(1.15); }
+.gabay-greeting > div { border-radius: 7px 18px 18px 18px; padding: 17px 16px; background: var(--gabay-soft); }
+.gabay-greeting h3 { font-size: 18px; font-weight: 750; letter-spacing: -.4px; margin-bottom: 7px; }
+.gabay-greeting p { line-height: 1.6; }
+.gabay-quick-label { margin: 23px 0 12px !important; font-size: 13px; font-weight: 700; }
+.gabay-quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gabay-quick-actions button { display: flex; align-items: center; text-align: left; gap: 10px; min-height: 65px; padding: 11px; border: 1px solid #cbdff5; border-radius: 16px; color: var(--gabay-ink); background: var(--gabay-surface); box-shadow: 0 2px 3px #155bb00b; font-size: 12px; line-height: 1.35; font-weight: 650; transition: background .15s; }
+.gabay-quick-actions button svg { color: #1675d6; }
+.gabay-quick-actions button:hover:not(:disabled) { background: var(--gabay-soft); border-color: #8db7e4; }
+.gabay-language { margin-top: 15px !important; text-align: center; font-size: 10px; color: var(--gabay-muted); }
+.gabay-message { display: flex; gap: 8px; margin-bottom: 16px; }
+.gabay-bubble { padding: 12px 14px; border-radius: 5px 17px 17px 17px; background: var(--gabay-soft); max-width: calc(100% - 44px); overflow-wrap: anywhere; }
+.gabay-speaker { display: block; margin-bottom: 4px; font-size: 10px; font-weight: 700; }
+.gabay-bubble p { white-space: pre-wrap; }
+.gabay-message-user { justify-content: flex-end; }
+.gabay-message-user .gabay-bubble { color: #fff; background: var(--gabay-blue); border-radius: 17px 5px 17px 17px; }
+.gabay-message-notice .gabay-bubble { background: var(--gabay-surface); border: 1px solid var(--gabay-line); }
+.gabay-notice-label { display: block; margin-bottom: 6px; font-size: 12px; }
+.gabay-citation { color: var(--gabay-blue); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.gabay-sources { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; border-top: 1px solid var(--gabay-line); padding-top: 10px; margin-top: 10px; font-size: 11px; }
+.gabay-sources a, .gabay-official { color: var(--gabay-blue); display: inline-flex; align-items: center; gap: 4px; text-decoration: underline; text-underline-offset: 3px; }
+.gabay-official { margin-top: 9px; font-size: 11px; }
+.gabay-pending { display: flex; align-items: center; gap: 8px; padding-bottom: 8px; font-size: 10px; color: var(--gabay-muted); }
+.gabay-dots { display: flex; gap: 3px; }
+.gabay-dots i { width: 4px; height: 4px; border-radius: 50%; background: #155bb0; animation: gabay-dot 1s infinite alternate; }
+.gabay-dots i:nth-child(2) { animation-delay: .2s; }
+.gabay-dots i:nth-child(3) { animation-delay: .4s; }
+.gabay-info, .gabay-error { padding: 12px; margin-top: 16px; border-radius: 12px; background: var(--gabay-soft); font-size: 12px; }
+.gabay-info a, .gabay-error button { display: inline-flex; align-items: center; gap: 5px; color: var(--gabay-blue); background: none; border: 0; padding: 0; margin-top: 7px; font-weight: 700; text-decoration: underline; }
+.gabay-error { border: 1px solid #dca9a9; }
+.gabay-followup { margin-top: 4px; padding: 8px 12px; border: 1px solid var(--gabay-line); border-radius: 18px; background: var(--gabay-surface); color: var(--gabay-blue); font-size: 11px !important; }
+.gabay-composer { flex: none; border-top: 1px solid var(--gabay-line); padding: 10px 16px 12px; background: var(--gabay-soft); }
+.gabay-privacy { font-size: 9px; color: var(--gabay-muted); margin-bottom: 7px !important; }
+.gabay-composer form { display: flex; align-items: center; gap: 8px; padding: 7px 7px 7px 12px; border: 1px solid #cbdff5; border-radius: 17px; background: var(--gabay-surface); box-shadow: 0 2px 6px #155bb00a; }
+.gabay-composer form > svg { color: var(--gabay-muted); }
+.gabay-composer textarea { resize: none; flex: 1; width: 0; min-width: 0; height: 38px; max-height: 84px; padding: 7px 0; border: 0; background: transparent; color: var(--gabay-ink); font-size: 12px; line-height: 1.5; }
+.gabay-composer textarea::placeholder { color: var(--gabay-muted); }
+.gabay-composer textarea:focus-visible { outline: 0; }
+.gabay-composer form:focus-within { outline: 2px solid var(--gabay-blue); outline-offset: 2px; }
+.gabay-composer form button { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border: 0; border-radius: 12px; background: var(--gabay-blue); color: white; }
+.gabay-input-help { display: flex; justify-content: space-between; gap: 8px; margin-top: 7px; font-size: 9px; color: var(--gabay-muted); }
+.gabay-session-note { margin-top: 4px !important; font-size: 9px; color: var(--gabay-muted); }
+/* Leave space to scroll final form actions above the collapsed launcher. */
+.applicant-ui .workspace-footer, .applicant-ui .footer-bottom { padding-bottom: max(96px, calc(env(safe-area-inset-bottom) + 80px)); }
+@keyframes gabay-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes gabay-dot { to { opacity: .3; } }
+@media (max-width: 540px) {
+  .gabay-widget { right: max(12px, env(safe-area-inset-right)); --gabay-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .gabay-launcher { min-height: 48px; padding: 8px 15px 8px 55px; font-size: 14px !important; gap: 7px; }
+  .gabay-launcher-mascot, .gabay-launcher-mascot img { width: 54px; height: 54px; }
+  .gabay-panel { width: min(410px, calc(100vw - max(24px, env(safe-area-inset-right) + env(safe-area-inset-left) + 24px))); bottom: 62px; height: min(650px, calc(var(--gabay-viewport-height, 100dvh) - var(--gabay-bottom) - 76px)); border-radius: 20px; }
+  .gabay-header { min-height: 100px; padding: 21px 10px 25px 73px; }
+  .gabay-header-mascot img { width: 71px; height: 71px; }
+  .gabay-heading h2 { font-size: 20px; }
+  .gabay-heading p { font-size: 9px; }
+  .gabay-window-actions { gap: 3px; }
+  .gabay-window-actions button { width: 29px; height: 32px; }
+  .gabay-context { padding: 6px 14px 9px; }
+  .gabay-log { padding: 12px 13px 16px; }
+  .gabay-greeting { gap: 7px; }
+  .gabay-greeting > div { padding: 13px 11px; }
+  .gabay-greeting h3 { font-size: 16px; }
+  .gabay-greeting p { font-size: 13px; }
+  .gabay-quick-actions { gap: 8px; }
+  .gabay-quick-actions button { padding: 10px 8px; gap: 7px; font-size: 11px; min-height: 60px; }
+  .gabay-quick-actions svg { width: 20px; }
+  .gabay-composer { padding: 9px 11px; }
+  .gabay-composer form { gap: 6px; padding-left: 8px; }
+  .gabay-composer form > svg { display: none; }
+  .gabay-composer textarea { font-size: 16px; }
+  .gabay-session-note { font-size: 8px; }
+}
+@media (prefers-color-scheme: dark) {
+  .gabay-widget { --gabay-surface: #151d2b; --gabay-soft: #212d40; --gabay-ink: #f1f6ff; --gabay-muted: #b2c2da; --gabay-line: #35445a; color-scheme: dark; }
+  .gabay-header { background: #0c254a; }
+  .gabay-quick-actions button, .gabay-composer form { border-color: #405473; }
+  .gabay-citation, .gabay-sources a, .gabay-official, .gabay-info a, .gabay-error button, .gabay-followup { color: #8ac5ff; }
+  .gabay-quick-actions button svg { color: #6db6ff; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gabay-widget *, .gabay-widget *::before, .gabay-widget *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
