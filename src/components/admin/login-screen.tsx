@@ -90,12 +90,6 @@ export function AdminLoginScreen({
               style={{ objectFit: "contain", objectPosition: "center bottom" }}
             />
           </div>
-          <svg className="admin-login-waves" viewBox="0 0 980 128" preserveAspectRatio="none" aria-hidden="true">
-            <path fill="#ffffff" d="M0 36C132 2 208 114 347 81S546 25 662 49s202-36 318-19v98H0z"/>
-            <path fill="#1264bd" d="M0 64C170 10 245 111 384 87s186-80 318-50 178 45 278 22v69H0z"/>
-            <path fill="#5ba9ef" d="M0 117c165-36 267-15 370-2 109 14 186-68 330-63s187 8 280 39v37H0z"/>
-            <path fill="#f9d456" d="M530 92c128-39 254-58 450-43v8c-157-6-315 5-450 35z"/>
-          </svg>
         </section>
 
         <main className="admin-login-card" id="admin-signin">
@@ -215,6 +209,12 @@ export function AdminLoginScreen({
           <Skyline/>
         </main>
       </div>
+      <svg className="admin-login-waves" viewBox="0 0 980 128" preserveAspectRatio="none" aria-hidden="true">
+        <path fill="#ffffff" d="M0 36C132 2 208 114 347 81S546 25 662 49s202-36 318-19v98H0z"/>
+        <path fill="#1264bd" d="M0 64C170 10 245 111 384 87s186-80 318-50 178 45 278 22v69H0z"/>
+        <path fill="#5ba9ef" d="M0 117c165-36 267-15 370-2 109 14 186-68 330-63s187 8 280 39v37H0z"/>
+        <path fill="#f9d456" d="M530 92c128-39 254-58 450-43v8c-157-6-315 5-450 35z"/>
+      </svg>
     </div>
   );
 }
