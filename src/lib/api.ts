@@ -48,10 +48,35 @@ export function sameOrigin(request: Request) {
   const origin = request.headers.get("origin");
   const url = new URL(request.url);
   // Next may reconstruct request.url with its internal hostname (localhost).
-  // Host is the browser's actual destination; do not trust forwarded-host.
+  // Prefer the actual Host header rather than general-purpose forwarded headers.
   const host = request.headers.get("host");
   if (host) url.host = host;
-  if (request.headers.get("sec-fetch-site") === "cross-site" || (origin && origin !== url.origin)) {
+
+  // A Codespaces browser uses an HTTPS public host, but Next may see
+  // HTTP/localhost after forwarding. Sec-Fetch-Site is set by the browser;
+  // a cross-origin web page cannot forge a "same-origin" value.
+  let verifiedCodespacesProxy = false;
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if (origin && fetchSite === "same-origin") {
+    try {
+      const browser = new URL(origin);
+      const rawHost = (host || new URL(request.url).host).toLowerCase();
+      const internalHost = rawHost.split(":")[0];
+      const local = ["localhost", "127.0.0.1", "[::1]"].includes(internalHost);
+      const codespaces = browser.protocol === "https:" &&
+        /^[a-z0-9-]+\.app\.github\.dev$/.test(browser.hostname);
+      const forwarded = request.headers.get("x-forwarded-host")?.toLowerCase();
+      // An absent or internally rewritten forwarded host is not evidence of
+      // a foreign origin; a different external host is rejected.
+      const internallyForwarded = new URL(request.url).host.toLowerCase();
+      const forwardedMatches = !forwarded || forwarded === browser.host ||
+        forwarded === rawHost ||
+        (rawHost === browser.host && forwarded === internallyForwarded);
+      verifiedCodespacesProxy = codespaces && (local || rawHost === browser.host) && forwardedMatches;
+    } catch { /* Invalid Origin cannot qualify for the proxy exception. */ }
+  }
+  if (fetchSite === "cross-site" || fetchSite === "same-site" ||
+    (origin && origin !== url.origin && !verifiedCodespacesProxy)) {
     throw new ApiError(403, "Cross-site writes are not allowed");
   }
 }

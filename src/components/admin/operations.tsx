@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle, ArrowRight, BookOpen, CheckCircle2, ClipboardList, FilePenLine, LibraryBig, Plus, ShieldCheck } from "lucide-react";
+import { AlertCircle, ArrowRight, BookOpen, CheckCircle2, ClipboardList, LibraryBig, ShieldCheck } from "lucide-react";
 import type { AdminData, Cycle, Program } from "./data";
 import { formatDate, isHttpsLink } from "./data";
 import type { Section } from "./console";
@@ -22,31 +22,19 @@ const authoringSteps = [
   { section: "preview", title: "Review & publish", description: "Student preview and safety checks" },
 ] as const;
 
-export function AdminWorkflow({ section, demoMode }: { section: Section; demoMode: boolean }) {
-  if (section === "overview") return null;
+export function AdminWorkflow({section,demoMode}:{section:Section;demoMode:boolean}) {
+  if(section==="overview")return null;
   return (
-    <nav className="mb-6" aria-label="Guide authoring workflow">
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-[.08em] text-[#53657b]">Create a scholarship guide · 4 steps</p>
-        <p className="text-xs text-[#53657b]">Choose a step to continue editing your draft</p>
-      </div>
-      <ol className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-        {authoringSteps.map((step, index) => (
-          <li key={step.section}>
-            <Link
-              href={route(demoMode, step.section)}
-              aria-current={section === step.section ? "step" : undefined}
-              className="admin-workflow-step flex min-h-20 items-center gap-3 rounded-xl border border-[#d7e3ef] bg-white p-3 text-[#102a51] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155bb0]"
-            >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#eef6ff] text-sm font-bold text-[#155bb0]">{index + 1}</span>
-              <span className="min-w-0">
-                <span className="block text-sm font-semibold">{step.title}</span>
-                <span className="mt-0.5 block text-xs text-[#53657b]">{step.description}</span>
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ol>
+    <nav aria-label="Guide authoring workflow" className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-[#dce5ef] pb-3">
+      <span className="mr-1 text-xs font-semibold text-[#53657b]">Guide setup</span>
+      {authoringSteps.map((step,index)=>(
+        <Link key={step.section} href={route(demoMode,step.section)}
+          aria-current={section===step.section?"step":undefined}
+          className={"inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155bb0] "+
+            (section===step.section?"bg-[#e9f1fa] text-[#102a51]":"text-[#53657b] hover:bg-[#f2f6fb] hover:text-[#102a51]")}>
+          <span className="text-xs font-semibold text-[#4779b2]">{index+1}.</span>{step.title}
+        </Link>
+      ))}
     </nav>
   );
 }
@@ -97,17 +85,6 @@ export function OperationsPanel({ data, demoMode }: { data: AdminData; demoMode:
   const firstDraft = data.programs.find(p => p.status === "draft");
   return (
     <div className="mt-6 space-y-5">
-      <section className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-[#d3dce8] bg-[#f8fafc] p-5 sm:p-6">
-        <div className="max-w-2xl">
-          <p className="text-xs font-bold uppercase tracking-[.12em] text-[#155bb0]">Start here</p>
-          <h2 className="mt-1 text-xl font-bold text-[#102a51]">Manage the scholarship guides students will see</h2>
-          <p className="mt-1 text-sm leading-6 text-[#53657b]">Create a guide, add its required documents, verify official sources, then review it before publishing.</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link href={demoMode ? route(true,"programs") : "/admin/programs/new"} className="admin-primary-action inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#155bb0] px-4 py-2.5 text-sm font-semibold text-[#f8fbff] hover:bg-[#104a92]"><Plus size={17}/>Create guide</Link>
-          {firstDraft && <Link href={route(demoMode,"programs",firstDraft.id)} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#b5c9e0] bg-white px-4 py-2.5 text-sm font-semibold text-[#102a51] hover:bg-[#eaf4ff]"><FilePenLine size={17}/>Continue draft</Link>}
-        </div>
-      </section>
       <ScholarshipActivityChart data={data}/>
       <div className="grid gap-4 xl:grid-cols-2" aria-label="Content operation charts">
         <Distribution title="Scholarship guide status" description="Current guide records in the content library" values={guideCounts}/>

@@ -547,3 +547,32 @@ test("requirement importer never accepts arbitrary map links as verified pins",a
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
 });
+
+test("Admin chart hover and month selection never expose a full-height focus rectangle",async ({page})=>{
+  await page.goto("/admin/demo");
+  const chart=page.getByRole("img",{name:/Monthly scholarship activity:/});
+  await expect(chart).toBeVisible();
+  const target=chart.locator('[data-chart-hit="month"]').last();
+  await expect(target).not.toHaveAttribute("tabindex","0");
+  await expect(target).not.toHaveAttribute("role","button");
+  await target.hover();
+  await expect(chart.locator('[data-chart-tooltip="true"]')).toBeVisible();
+  const selected=page.getByRole("group",{name:"Select activity month"});
+  const november=selected.getByRole("button",{name:/Nov 2026:/});
+  await november.focus();
+  await expect(november).toHaveAttribute("aria-pressed","true");
+  await expect(november).toHaveCSS("outline-width","2px");
+  await expect(chart.locator("rect[tabindex]")).toHaveCount(0);
+  await expect(page.getByText("Recommended workflow")).toHaveCount(0);
+});
+
+test("Admin importer remains hidden until requested to keep the guide list readable",async ({page})=>{
+  await page.goto("/admin/demo?view=programs");
+  await expect(page.getByRole("heading",{name:"Scholarship guides"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:/Start with a document/})).toHaveCount(0);
+  await page.getByRole("button",{name:"Import file"}).click();
+  const dialog=page.getByRole("dialog",{name:"Import scholarship source"});
+  await expect(dialog.getByRole("heading",{name:/Start with a document/})).toBeVisible();
+  await dialog.getByRole("button",{name:"Close import dialog"}).click();
+  await expect(dialog).toHaveCount(0);
+});

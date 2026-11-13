@@ -23,6 +23,7 @@ import { AdminImportDialog } from "./import-dialog";
 import { RequirementImportDialog, type RequirementSuggestion } from "./requirement-import";
 import { mapPinUrl } from "@/lib/guides/schema";
 import { AdminPagination, ADMIN_PAGE_SIZE, safeAdminPage } from "./pagination";
+import { AdminLoginScreen } from "./login-screen";
 import "./admin.css";
 
 export type Section = "overview" | "programs" | "requirements" | "knowledge" | "preview";
@@ -366,21 +367,20 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     }, publish ? "Guide published. Verify the applicant view." : "Cycle returned to draft for review.");
   }
 
-  if (gate !== "ready") return <MotionConfig reducedMotion="user"><div className="admin-portal flex min-h-screen items-center justify-center bg-[#f3f5f8] px-4 py-10">
-    <div className="w-full max-w-md">
-      <GabayBrand className="mb-7 text-[#102a51]"/>
-      <Card className="!p-7 sm:!p-9"><div className="mb-6 inline-flex rounded-2xl bg-[#eef6ff] p-3 text-[#155bb0]"><LockKeyhole size={25} aria-hidden="true"/></div><h1 className="text-2xl font-semibold tracking-tight text-[#102a51]">Admin workspace</h1><p className="mt-2 text-sm leading-6 text-[#53657b]">Sign in with your pre-provisioned administrator account. Applicant accounts cannot edit scholarship guidance.</p>
-      {error ? <div className="mt-4"><Notice tone="error">{error}</Notice></div> : null}
-      {gate === "loading" ? <p role="status" className="mt-6 flex items-center gap-2 text-sm text-[#53657b]"><LoaderCircle size={18} className="animate-spin"/> Checking access securely…</p> : null}
-      {gate === "setup" ? <div className="mt-6"><Notice>Supabase configuration is missing. Ask the backend team to configure public environment variables. Admin actions are disabled.</Notice></div> : null}
-      {gate === "denied" ? <div className="mt-6 space-y-4"><Notice tone="error">Access denied. This account is not assigned an editor or publisher role.</Notice><Button variant="outline" onClick={() => void signOut()}>Sign out and use another account</Button></div> : null}
-      {gate === "error" ? <div className="mt-6"><Button variant="outline" onClick={() => void authenticate()}><RefreshCw size={16}/> Retry connection</Button></div> : null}
-      {gate === "login" ? <form onSubmit={(e)=>void signIn(e)} className="mt-7 space-y-5">
-        <Field label="Email address" htmlFor="admin-email" required><input id="admin-email" className={inputClass} autoComplete="username" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} required/></Field>
-        <Field label="Password" htmlFor="admin-password" required><input id="admin-password" className={inputClass} autoComplete="current-password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} required/></Field>
-        <Button className="w-full" type="submit" busy={busy}>Sign in securely <ArrowRight size={16}/></Button>
-      </form> : null}</Card><p className="mt-5 text-center text-xs leading-5 text-[#53657b]">Independent project. Not a government administration portal.</p>
-    <div className="mt-5 border-t border-[#d7e3ef] pt-5 text-center"><Link href="/admin/demo" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#155bb0] underline underline-offset-4">Explore read-only UI demo <ArrowRight size={16}/></Link></div></div></div></MotionConfig>;
+  if (gate !== "ready") return (
+    <AdminLoginScreen
+      gate={gate}
+      email={email}
+      password={password}
+      busy={busy}
+      error={error}
+      onEmailChange={setEmail}
+      onPasswordChange={setPassword}
+      onSubmit={(event) => void signIn(event)}
+      onRetry={() => void authenticate()}
+      onSignOut={() => void signOut()}
+    />
+  );
 
   return <MotionConfig reducedMotion="user"><div className="admin-portal min-h-screen bg-[#f3f5f8] text-[#102a51] lg:grid lg:grid-cols-[268px_minmax(0,1fr)]">
     <aside className="admin-sidebar hidden min-h-screen overflow-y-auto border-r border-[#d7e3ef] bg-white px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
@@ -393,13 +393,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
           ? <Link href="/admin" className="admin-account group flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium text-[#cddff4] transition-colors hover:bg-[#eef6ff]"><LockKeyhole size={18} aria-hidden="true"/> Admin sign-in</Link>
           : <button onClick={() => void signOut()} className="admin-account flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-[#cddff4] transition-colors hover:bg-[#eef6ff]"><LogOut size={18} aria-hidden="true"/> Sign out</button>}
       </div>
-      <div className="mt-auto pt-6">
-        <div className="admin-help rounded-xl border border-[#d7e3ef] bg-[#eaf4ff] p-4">
-          <div className="mb-2 flex items-center gap-2 text-[#bed2ed]"><ShieldCheck aria-hidden="true" className="h-5 w-5"/><span className="text-sm font-semibold text-[#e1eaf7]">Source-first publishing</span></div>
-          <p className="text-sm leading-6 text-[#53657b]">Verify the source before applicants see guidance.</p>
-        </div>
-        <div className="admin-bottom-clearance" aria-hidden="true"/>
-      </div>
+      <div className="mt-auto pt-6"><div className="admin-bottom-clearance" aria-hidden="true"/></div>
     </aside>
     <div className="min-w-0">
       <div className="admin-topbar sticky top-0 z-20 border-b border-[#d7e3ef] bg-white/95 backdrop-blur-xl">
@@ -420,7 +414,8 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
         <AdminWorkflow section={section} demoMode={demoMode}/>
         <AnimatePresence mode="wait"><motion.div key={section} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-4}} transition={{duration:0.18,ease:"easeOut"}}>
           {section === "overview" ? <>
-            <Heading eyebrow="Content management" title="Welcome to your workspace" description="A clear view of the scholarship guidance your team is preparing."/>
+            <Heading eyebrow="Content management" title="Welcome to your workspace" description="Manage the scholarship guides your team is preparing."
+              action={<Link href={demoMode?"/admin/demo?view=programs":"/admin/programs/new"} className="admin-primary-action inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#155bb0] px-4 py-2.5 text-sm font-semibold text-[#f8fbff] hover:bg-[#104a92]"><Plus size={17}/>Create guide</Link>}/>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {stat(data.programs.length,"Programs",<GraduationCap size={19}/>, "All managed programs",0)}
               {stat(data.cycles.filter(c=>c.status==="draft").length,"Draft cycles",<FileText size={19}/>, "Not visible to applicants",0.055)}
@@ -428,17 +423,15 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
               {stat(data.sources.filter(s=>!s.is_approved).length,"Sources to review",<LibraryBig size={19}/>, "Not approved for retrieval",0.165)}
             </div>
             <OperationsPanel data={data} demoMode={demoMode}/>
-            <div className="mt-6 grid items-start gap-5 xl:grid-cols-[1.6fr_1fr]">
-              <Card><div className="mb-5 flex items-center justify-between"><h2 className="text-lg font-semibold">Scholarship programs</h2><Link href="/admin/programs"><StepLink>Manage all</StepLink></Link></div>
+            <div className="mt-5">
+              <Card><div className="mb-5 flex items-center justify-between"><h2 className="text-lg font-semibold">Scholarship programs</h2><Link href={demoMode?"/admin/demo?view=programs":"/admin/programs"}><StepLink>Manage all</StepLink></Link></div>
                 {data.programs.length ? <div className="divide-y divide-[#d7e3ef]">{data.programs.slice(0,5).map((p)=><Link key={p.id}
   href={demoMode ? "/admin/demo?view=programs&program=" + encodeURIComponent(p.id) : "/admin/programs/" + encodeURIComponent(p.id)}
   aria-label={"Open " + p.title + " program details"}
   className="group flex min-h-20 items-center justify-between gap-3 rounded-lg px-3 py-4 transition-[background-color,transform] duration-150 hover:bg-[#eef6ff] active:scale-[.997] focus-visible:outline-2 focus-visible:outline-[#155bb0]"
 ><div className="min-w-0"><p className="font-semibold text-[#102a51]">{p.title}</p><p className="mt-1 text-xs text-[#53657b]">{data.cycles.filter(c=>c.program_id===p.id).length} application cycle(s)</p></div><div className="flex shrink-0 items-center gap-2"><Pill status={p.status}/><ChevronRight size={18} aria-hidden="true" className="text-[#155bb0] transition-transform duration-150 group-hover:translate-x-0.5"/></div></Link>)}</div> : <Empty title="No scholarship programs" message="Create your first draft. It will remain private until publication."/>}
               </Card>
-              <Card><h2 className="text-lg font-semibold">Recommended workflow</h2><ol className="mt-6 space-y-6">{[["Create a program","Add a program and application cycle."],["Add requirements","Write actionable document steps and FAQs."],["Verify source material","Review trusted official references."],["Preview before publishing","Confirm readiness with your publisher."]].map(([title,detail],index)=><li key={title} className="flex items-start gap-3"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eef6ff] text-xs font-bold text-[#155bb0]">{index+1}</span><div><p className="text-sm font-semibold">{title}</p><p className="mt-1 text-xs leading-5 text-[#53657b]">{detail}</p></div></li>)}</ol></Card>
             </div>
-            <div className="mt-5"><Notice>Only verified, published scholarship guidance should appear to applicants. This console does not make scholarship eligibility decisions.</Notice></div>
           </> : null}
 
           {section === "programs" ? <>
