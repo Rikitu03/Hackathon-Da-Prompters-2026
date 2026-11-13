@@ -3,7 +3,7 @@
 This is a tested development backend that the other feature branches can connect
 to. It is not the final admin/applicant interface or a deployed release.
 
-**Integration update, 13 November 2026:** applicant UI and persistent admin navigation are merged into this Member 4 checkout. Read [STATUS.md](STATUS.md) for current code, local uncommitted chat work, and remaining frontend/backend gaps. The sections below retain the original backend handoff context.
+**Integration update, 13 November 2026:** `feat/backend-db` now connects the existing admin screens to cookie-authenticated, atomic backend saves and real publication checks. Account-free references and local private drafts are implemented; see [Applicant privacy](APPLICANT_PRIVACY.md) for setup, testing, and remaining applicant scope. These local changes still need review/deployment.
 
 ## What is ready
 
@@ -63,8 +63,8 @@ a separate organization invitation.
 
 The merged build renders the persistent admin UI at `/admin` and Member 1's
 applicant workspace on public routes. Keep `/backend-lab` as the developer workbench:
-it already supports the cookie-authenticated source-text/review/save/publish flow
-that the final admin screens still need to adopt.
+it supports the same cookie-authenticated source-text/review/save/publish flow
+now available through the admin screens.
 Combine package scripts/dependencies and regenerate the lockfile when adding
 frontend packages. Do not overwrite either feature's dependencies wholesale.
 

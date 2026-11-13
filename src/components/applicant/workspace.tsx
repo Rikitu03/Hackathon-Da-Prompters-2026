@@ -330,6 +330,7 @@ const navigation = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/scholarships", label: "Scholarships", icon: BookOpen },
   { href: "/my-checklist", label: "My checklist", icon: ClipboardCheck },
+  { href: "/application-draft", label: "Private draft", icon: ClipboardCheck },
   { href: "/document-review", label: "Check a document", icon: ScanText },
   { href: "/assistant", label: "Ask Gabay", icon: MessageCircle },
   { href: "/summary", label: "Official step", icon: ArrowUpRight },

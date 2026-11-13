@@ -2,6 +2,7 @@ import {
   ApplicantProvider,
   WorkspaceShell,
 } from "@/components/applicant/workspace";
+import { BrowserSessionProvider } from "@/components/applicant/browser-session";
 export default function ApplicantLayout({
   children,
 }: {
@@ -9,7 +10,7 @@ export default function ApplicantLayout({
 }) {
   return (
     <ApplicantProvider>
-      <WorkspaceShell>{children}</WorkspaceShell>
+      <BrowserSessionProvider><WorkspaceShell>{children}</WorkspaceShell></BrowserSessionProvider>
     </ApplicantProvider>
   );
 }

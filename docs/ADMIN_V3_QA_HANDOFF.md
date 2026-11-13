@@ -28,6 +28,13 @@
 
 ## Release boundaries
 
+**Backend integration, 13 November 2026:** `feat/backend-db` preserves this V3 UI
+and uses protected cookie APIs for admin sessions, reads, atomic saves, reference
+review, and publication checks. The import-to-program save regression verifies
+that staged cycle fields survive saving. Production browser checks passed 78
+cases, with two intentional viewport skips; see [current status](STATUS.md).
+These changes await pull request review and explicit approval to merge into staging.
+
 - The history chart uses timestamps already present on loaded content, not a publication audit log. It is the aggregate of currently visible rows; deleting/archiving records can alter past counts.
 - Client-side pagination is appropriate for current content size. Before >1000 Supabase-visible records, implement proper server-side pagination and count queries to avoid the default API row cap.
 - Admin-uploaded PDF/DOC/DOCX AI extraction, acquisition map/hours metadata, private applicant OCR and telemetry require their backend contracts. V3 does **not** imply these systems are operational.

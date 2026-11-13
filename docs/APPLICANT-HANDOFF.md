@@ -16,6 +16,12 @@ The typed browser adapter in `src/lib/applicant/api.ts` consumes the existing pu
 
 ## Guest persistence
 
+**Backend integration update:** account-free signed browser references and a
+`/application-draft` page are implemented. Personal fields are explicitly saved
+to IndexedDB on the applicant's device; Supabase stores only expiring reference
+and security metadata. See [Applicant privacy](APPLICANT_PRIVACY.md). The paragraph
+below describes the existing checklist/preference storage, which remains local.
+
 No applicant authentication exists. Preferences use `gabayiskolar:preferences:v1`; preparation uses `gabayiskolar:preparation:v1:<cycleId>:<requirementId>`. Only preferences and self-managed statuses are stored. A signature of each requirement and its sources detects changed guidance and moves the item to Needs review until the student explicitly updates it. Removed requirements do not count in progress. Storage failures show a warning. There is no cross-device sync.
 
 ## Member 4 integration

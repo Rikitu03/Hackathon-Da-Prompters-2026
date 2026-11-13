@@ -3,7 +3,7 @@
 Before deploying the newly merged frontend, close the P0 integration gaps in [STATUS.md](STATUS.md). A successful local build, `/api/health` response, or environment-variable check does not establish a cited chat answer or an OCR review through the deployed applicant UI. Chat route/retrieval work is currently part of the local uncommitted Member 4 changes and must be included in the reviewed deployment commit.
 
 1. For team development, use the existing shared `gabayiskolar-dev` project described in [Shared team environment](TEAM_ENVIRONMENT.md); its migrations are already applied. For a separate deployment database, apply all files in `supabase/migrations/` in filename order and record their versions in migration history.
-2. Add the public Supabase project URL and anon/publishable key to local `.env.local`.
+2. Add the public Supabase project URL and anon/publishable key to local `.env.local`. Privately configure `APPLICANT_SESSION_SECRET` on each server and hosting environment to match the provisioned database key; see [Applicant privacy](APPLICANT_PRIVACY.md). Do not expose it as a public variable.
 3. Invite and provision administrator accounts via Supabase dashboard/admin tooling, not open signup.
 4. Check the organizer-provided Lumen API docs and add **verified** endpoint URLs and credentials as server-only environment variables. Keep secrets out of client-side variables and Git.
 5. Import GitHub repository into Vercel as Next.js framework; root directory `/`.

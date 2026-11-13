@@ -35,12 +35,29 @@ Public reads always use an anonymous client, including when an administrator is
 signed in. Both the program and cycle must be published. Knowledge must also
 be approved. There is no applicant signup requirement for public reads.
 
+## Account-free browser references
+
+| Method and path | Body / result |
+|---|---|
+| `POST /api/applicant/session` | No body allowed → `{sessionId,expiresAt}` and signed HttpOnly cookie; reuses a valid reference, replaces an expired one |
+| `DELETE /api/applicant/session` | No body needed → `{forgotten:true}`; deletes only the caller's signed reference and clears its cookie |
+
+No applicant Auth session is required. The server sends only random identity,
+token hash, optional trusted daily IP hash, and a short-lived proof to Supabase.
+Personal fields and draft JSON are rejected. References expire after seven days.
+Returns 429 for the best-effort bootstrap limit, or 503 for missing private server
+configuration/database failure; neither gates local drafts or public guides.
+See [Applicant privacy](APPLICANT_PRIVACY.md) for persistence and private setup.
+
 ## Administrative content
 
 Editors and publishers can read; only publishers can mutate content.
 
 | Method and path | Body / result |
 |---|---|
+| `GET /api/admin/workspace` | `{data:{programs,cycles,requirements,steps,faqs,sources}}`; protected flat data for the final admin UI; sources include saved reference text |
+| `GET /api/admin/guides/:cycleId/readiness` | `{checks:[{name,ok}],ready,status}`; read-only preflight using stored content and caller role |
+| `POST /api/admin/content` | Typed `save_cycle`, `save_requirement`, or `save_source` action; applies the requested edit atomically and returns `{guide}`; publisher-only |
 | `GET /api/admin/guides` | `{guides}` with up to 100 cycle/program summaries, including drafts |
 | `GET /api/admin/guides/:cycleId` | `{guide}` as an editable document including its current status |
 | `POST /api/admin/guides` | Guide document below → `{guide:{programId,cycleId,status:"draft"}}`; 201 for a new cycle, 200 for an existing one |
@@ -53,6 +70,19 @@ Use `publish:false` to unpublish a cycle. Publication is atomic with the program
 status update. It requires valid dates, description, HTTPS application URL,
 requirements with acquisition steps, and a reviewed approved source with HTTPS
 URL and reference text. Source support is confirmed by the human publisher.
+
+The `/api/admin/content` action bodies are strictly validated:
+
+- `save_cycle`: `{action,programId,cycleId?,academicYear,applicationStart,applicationEnd,officialUrl}`.
+- `save_requirement`: `{action,cycleId,requirementId?,title,description,required,steps,faqs}`.
+- `save_source`: `{action,cycleId,sourceId?,title,url,content,approved}`. Approval
+  requires reference text and an HTTPS URL. Human verification remains required.
+
+Related IDs must belong to the selected cycle. Each action locks and loads the
+current document inside its transaction, preserves unrelated content, then saves
+as draft. Unchanged sources retain their version/review timestamp; changed source
+text, title, or URL increments its version. A publisher must explicitly reapprove
+changed sources. Existing full-document guide saves remain supported.
 
 ### Guide document
 

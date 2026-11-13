@@ -9,6 +9,7 @@ export const OFFICIAL_URL = "https://example.org/apply";
 export const SOURCE_URL = "https://example.org/reference";
 
 export async function mockPublishedGuide(page: Page, cycle: Partial<PublicCycle> = {}) {
+  await page.route("**/api/applicant/session", route => route.fulfill({ json: { sessionId: "40000000-0000-4000-8000-000000000001", expiresAt: new Date(Date.now() + 86400000).toISOString() } }));
   const program: PublicProgram = {
     id: PROGRAM_ID, title: "Test scholarship preparation", description: "Fictional content for browser acceptance tests only.", status: "published",
     application_cycles: [{
