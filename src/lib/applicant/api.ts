@@ -202,6 +202,18 @@ export async function askGabay(
     return { kind: "notice", answer: NO_EVIDENCE_NOTICE, officialUrl: null };
   return { kind: "answer", answer: parsed.data.answer, sources: parsed.data.sources };
 }
+export const PRODUCT_NO_EVIDENCE_NOTICE = "I couldn't find that in GabayIskolar's product guide. Switch to Scholarship guide for published cycle information.";
+export async function askProductHelp(message: string, signal?: AbortSignal): Promise<ChatReply> {
+  const data = await request<unknown>("/api/ai/help", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message }), signal,
+  }, "Product help");
+  const parsed = chatSchema.safeParse(data);
+  if (!parsed.success) throw new Error("Product help returned an unexpected response. Please retry.");
+  if (!parsed.data.grounded) return { kind: "notice", answer: parsed.data.answer, officialUrl: null };
+  if (!parsed.data.sources.length) return { kind: "notice", answer: PRODUCT_NO_EVIDENCE_NOTICE, officialUrl: null };
+  return { kind: "answer", answer: parsed.data.answer, sources: parsed.data.sources };
+}
 const ocrSchema = z.object({
   rawText: z.string(),
   fields: z.array(

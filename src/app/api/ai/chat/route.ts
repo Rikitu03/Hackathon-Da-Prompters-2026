@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { json, sameOrigin } from "@/lib/api"; // NextResponse.json + "Cache-Control: private, no-store"
+import { ApiError, json, sameOrigin } from "@/lib/api";
 import { openSession, sendMessage } from "@/lib/lumen/chat";
 import { LumenError, lumenErrorToHttp } from "@/lib/lumen/errors";
 import { renumberCitations } from "@/lib/rag/citations";
@@ -7,14 +7,11 @@ import { closedCycleAnswer, isCycleClosed, noEvidenceAnswer } from "@/lib/rag/fa
 import { MAX_QUESTION_CHARS, buildPrompt } from "@/lib/rag/prompt";
 import { buildTsQuery } from "@/lib/rag/query";
 import { RetrievalError, loadPublishedCycle, retrieveSources } from "@/lib/rag/retrieve";
-import { clientKey, createRateLimiter } from "@/lib/rate-limit";
+import { takeChatLimit } from "@/lib/chat-limit";
 import type { ChatResponse } from "@/types/domain";
 
 export const runtime = "nodejs";
 export const maxDuration = 45; // open session (≤10 s) + message (≤28 s; Lumen gives up at 25 s)
-
-// Best-effort, per server instance only. Counts only questions that reach Lumen (7 credits each).
-const chatLimiter = createRateLimiter({ limit: 10, windowMs: 10 * 60_000 });
 
 const Schema = z.object({
   cycleId: z.string().uuid(),
@@ -60,8 +57,8 @@ export async function POST(request: Request) {
     }
 
     // 3. Generate. Only this path spends credits, so only it is rate limited.
-    const limit = chatLimiter.take(clientKey(request));
-    if (!limit.ok) {
+    const limit = await takeChatLimit(request);
+    if (!limit.allowed) {
       const res = json({ error: "Too many questions. Please wait a few minutes and try again." }, 429);
       res.headers.set("Retry-After", String(limit.retryAfterSec));
       return res;
@@ -77,6 +74,7 @@ export async function POST(request: Request) {
     const body: ChatResponse = { answer: cited.answer, sources: cited.sources, grounded: true };
     return json(body);
   } catch (err) {
+    if (err instanceof ApiError) return json({ error: err.message }, err.status);
     if (err instanceof LumenError) {
       console.warn("[chat] lumen error", { ...log, kind: err.kind, status: err.status, code: err.code });
       const { status, message: text } = lumenErrorToHttp(err);

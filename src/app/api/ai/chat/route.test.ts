@@ -10,6 +10,8 @@ vi.mock("@/lib/rag/retrieve", () => ({
   loadPublishedCycle: vi.fn(),
   retrieveSources: vi.fn(),
 }));
+vi.mock("@/lib/chat-limit", () => ({ takeChatLimit: vi.fn() }));
+import { takeChatLimit } from "@/lib/chat-limit";
 
 import { openSession, sendMessage } from "@/lib/lumen/chat";
 import { LumenError } from "@/lib/lumen/errors";
@@ -38,6 +40,7 @@ const ask = (message = "Where do I get the certificate of indigency?", extra: Re
   chat({ cycleId: CYCLE, message, ...extra });
 
 beforeEach(() => {
+  vi.mocked(takeChatLimit).mockResolvedValue({ allowed: true, retryAfterSec: 0 });
   vi.stubEnv("LUMEN_API_KEY", "test-key");
   vi.stubEnv("LUMEN_API_SECRET", "test-secret");
   vi.stubEnv("LUMEN_CHAT_URL", "https://lumen.test/ai_chat");
@@ -196,6 +199,7 @@ describe("POST /api/ai/chat — provider failures and limits", () => {
   it("rate limits Lumen-bound questions per IP (10 per window) with Retry-After", async () => {
     const headers = { "x-forwarded-for": "203.0.113.7" };
     for (let i = 0; i < 10; i++) expect((await POST(chat({ cycleId: CYCLE, message: "indigency?" }, headers))).status).toBe(200);
+    vi.mocked(takeChatLimit).mockResolvedValue({ allowed: false, retryAfterSec: 60 });
     const res = await POST(chat({ cycleId: CYCLE, message: "indigency?" }, headers));
     expect(res.status).toBe(429);
     expect(Number(res.headers.get("retry-after"))).toBeGreaterThan(0);
@@ -206,5 +210,6 @@ describe("POST /api/ai/chat — provider failures and limits", () => {
     vi.mocked(retrieveSources).mockResolvedValue([]);
     const headers = { "x-forwarded-for": "203.0.113.8" };
     for (let i = 0; i < 12; i++) expect((await POST(chat({ cycleId: CYCLE, message: "indigency?" }, headers))).status).toBe(200);
+    expect(takeChatLimit).not.toHaveBeenCalled();
   });
 });

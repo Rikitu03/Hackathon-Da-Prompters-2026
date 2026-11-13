@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   askGabay,
+  askProductHelp,
+  PRODUCT_NO_EVIDENCE_NOTICE,
   fetchGuides,
   request,
   reviewDocument,
@@ -9,6 +11,20 @@ import {
   NO_EVIDENCE_NOTICE,
 } from "../src/lib/applicant/api.ts";
 
+test("product help sends no cycle/history and keeps document-section citations", async (t) => {
+  t.mock.method(globalThis, "fetch", async (url, options) => {
+    assert.equal(url, "/api/ai/help");
+    assert.deepEqual(JSON.parse(options.body), { message: "How do I use my checklist?" });
+    return Response.json({ answer: "Use My checklist [1].", grounded: true, sources: [{ sourceId: "product-help:checklist:1", title: "Saving checklist progress" }] });
+  });
+  assert.equal((await askProductHelp("How do I use my checklist?")).sources[0].sourceId, "product-help:checklist:1");
+});
+test("product help preserves notices and replaces unsupported grounded claims", async (t) => {
+  t.mock.method(globalThis, "fetch", async () => Response.json({ answer: "No evidence.", grounded: false, sources: [] }));
+  assert.deepEqual(await askProductHelp("Question"), { kind: "notice", answer: "No evidence.", officialUrl: null });
+  t.mock.method(globalThis, "fetch", async () => Response.json({ answer: "Claim.", grounded: true, sources: [] }));
+  assert.equal((await askProductHelp("Question")).answer, PRODUCT_NO_EVIDENCE_NOTICE);
+});
 test("chat sends only the documented app-level contract and retains citations", async (t) => {
   t.mock.method(globalThis, "fetch", async (url, options) => {
     assert.equal(url, "/api/ai/chat");
