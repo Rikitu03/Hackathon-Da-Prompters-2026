@@ -31,7 +31,7 @@ test("dashboard marks the next stage and offers consistent navigation", async ({
   await expect(rail.locator('[aria-current="step"]')).toHaveAccessibleName("Prepare your checklist");
   if (isMobile) await page.getByRole("button", { name: "Open navigation", exact: true }).click();
   await expect(page.getByRole("navigation", { name: "Student workspace" }).getByRole("link"))
-    .toHaveText(["Dashboard", "Scholarships", "My checklist", "Check a document", "Ask Gabay", "Official step"]);
+    .toHaveText(["Dashboard", "Scholarships", "My checklist", "Private draft", "Check a document", "Ask Gabay", "Official step"]);
 });
 
 test("onboarding offers all PSCS levels and creates the selected workspace", async ({ page }) => {

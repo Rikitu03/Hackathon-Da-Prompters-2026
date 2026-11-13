@@ -3,17 +3,17 @@
 Branch: `feat/admin-portal`
 Owner: Member 2 (Admin UI/UX). Backend authorization, versioned publication and source indexing belong to Members 3 and 4.
 
-**Merged-checkout update, 13 November 2026:** the protected `POST /api/admin/publish`, atomic `save_guide` RPC and source chunk creation already exist. Remaining work is connecting these to the final admin UI, aligning browser/API authentication, and exposing real source-text review/readiness. See [STATUS.md](STATUS.md); `/backend-lab` exercises the API workflow today.
+**Backend update, 13 November 2026:** the existing admin screens now use cookie-backed authentication and protected API reads/writes. Source text review, atomic saves, real readiness checks, publish and unpublish are integrated. Live Chrome verification passed using a synthetic guide, deleted afterward. See [STATUS.md](STATUS.md).
 
-The latest local mocked browser audit passed 23 cases, skipped one desktop-only-inapplicable case, and timed out on mobile multi-page layout navigation and desktop authenticated navigation. It used a development server; the production-server CI configuration still needs to verify those two cases. This does not establish a visual/layout failure, and the suite is not fully passing locally.
+The older development-server audit below is superseded by the current production-build acceptance run recorded in [STATUS.md](STATUS.md).
 
 ## Delivered frontend routes
 - `/admin` — protected-data-gated dashboard (roles checked with Supabase)
 - `/admin/login` — pre-provisioned account sign-in
 - `/admin/programs`, `/admin/programs/new`, `/admin/programs/[id]` — program/cycle editor
 - `/admin/requirements`, `/admin/programs/[id]/requirements` — requirement steps and FAQ editor
-- `/admin/knowledge` — create unapproved source links and inspect approval metadata
-- `/admin/preview` — applicant preview, publication preflight, future backend publish action
+- `/admin/knowledge` — save reference text and links, explicitly review sources, inspect approval metadata
+- `/admin/preview` — applicant preview, real server preflight, publisher-only publish/unpublish
 
 ## Security and data behavior
 - No fabricated scholarship programs, dates, statuses or system health. Every dashboard count comes from Supabase.
@@ -21,10 +21,10 @@ The latest local mocked browser audit passed 23 cases, skipped one desktop-only-
 - Anonymous and non-admin sessions cannot see protected content in the UI; actual authorization MUST also be enforced by PostgreSQL RLS and backend routes.
 - Admin sign-up is not provided. Only pre-provisioned editor and publisher profiles are accepted.
 - Program and cycle editing, requirement steps/FAQs, and source registration use existing Supabase tables and RLS. Successful saves are acknowledged after a database response and a fresh read.
-- Source registration always inserts `is_approved: false`. The frontend does not pretend to verify or index an uploaded reference.
+- A source remains unapproved unless a publisher explicitly confirms review. Editing source text/link/title clears the approval checkbox. Saved reference text is chunked transactionally; no document upload is implied.
 - Editing a *published* cycle's requirements is intentionally disabled in this UI until a versioned update flow exists.
-- Publishing remains blocked by the UI's hardcoded false readiness check. Connect the existing publication API and real server readiness results, retaining publisher enforcement. Do not simply remove the gate.
-- Steps/FAQ editing currently uses sequential delete+insert on a draft. Member 3 should replace this with an atomic RPC/transaction before production deployment.
+- Publication readiness comes from the saved database records. The protected publication transaction validates the guide again before changing visibility.
+- Requirement, step, and FAQ changes save atomically through the backend; failure rolls back all of them. Editors are read-only; publisher controls perform mutations.
 
 ## UI/UX refinement — Member 2 review items
 - [x] Replace browser-native selects with accessible Radix Select (custom popper, sufficient chevron inset, consistent option styles and one focused outline).
@@ -76,7 +76,7 @@ Browser tests cover overview/navigation, Radix Select opening and keyboard dismi
 | ADMIN-07 | Create cycle with HTTP portal URL | Rejected; HTTPS-only |
 | ADMIN-08 | Create a requirement and two steps | Checklist order and data survive refresh |
 | ADMIN-09 | Reorder step, add FAQ, save draft | Preview reflects saved sequence and FAQ |
-| ADMIN-10 | Create a knowledge source | Source remains unapproved |
+| ADMIN-10 | Save source text/link without confirming review, then explicitly review as publisher | Initially unapproved; approved only after explicit review with reference text |
 | ADMIN-11 | Select a published cycle | Requirement editor is read-only |
 | ADMIN-12 | Check preview without indexed sources | Publish unavailable |
 | ADMIN-13 | Simulate Supabase query failure | Alert displayed; no fake success |
@@ -108,7 +108,7 @@ From GabayIskolar UI/UX specification:
 ## Integration blockers before claiming production readiness
 1. Member 3: working Supabase configuration, seeded pre-provisioned admin role, RLS verification including negative tests.
 2. Members 2/3: connect final editors to the existing transactional guide save/publish APIs and cookie-authenticated session. Historical published revisions/audit history remain separate work.
-3. Members 2/3/4: source-text review, approved chunk presence and server readiness so the publish gate can reflect real results.
+3. Members 2/3: review actual scholarship references using the integrated source-text and publication checks; backend wiring has passed synthetic live verification.
 4. Member 1: validate published content appears correctly in public scholarship guide.
 5. Whole team: run `npm run typecheck`, `npm run lint`, `npm run build` and full device/browser UAT in a runnable environment.
 

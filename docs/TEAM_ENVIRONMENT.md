@@ -2,7 +2,7 @@
 
 All four members use one Supabase development project. Each computer runs its own
 Next.js app connected to that same database. Drafts, published guides, sources,
-and test admin accounts are shared; applicant checklist progress remains local
+and test admin accounts are shared; applicant personal drafts and checklist progress remain local
 to each browser.
 
 ## Shared development project
@@ -30,6 +30,8 @@ M3 has applied these migrations once to the shared database:
   separate publisher insert, update, and delete policies.
 - `20261112163314_guide_workflow.sql`: ordered text chunks, date constraints,
   atomic draft saving, validated publishing/unpublishing, and source reconstruction.
+- `20261113014838_admin_integration_and_guest_privacy.sql`: atomic admin-screen
+  saves, source review/version preservation, and private expiring browser references.
 
 The filenames match the hosted migration versions. The original unapplied
 `0001_initial.sql` was corrected and renamed to the recorded initial version.
@@ -44,8 +46,10 @@ database, apply every migration in filename order using migration tooling.
 
 Every public child record requires its cycle and program to be published.
 `admin_profiles` permits authenticated users to read only their own profile;
-client roles cannot assign or change roles. Internal helpers use caller
-permissions in a non-exposed `private` schema, with no security-definer bypass.
+client roles cannot assign or change roles. Content helpers use caller permissions.
+The separate private applicant metadata function verifies a server-generated HMAC
+proof and browser token hash before security-definer access; clients have no direct
+table access. See [Applicant privacy](APPLICANT_PRIVACY.md).
 
 Provision each teammate's application Auth identity through trusted admin tooling
 when needed, then assign their role in `admin_profiles` through the dashboard or
@@ -82,6 +86,7 @@ Restart the development server after changing environment variables.
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Same project URL for all four members; may be committed in `.env.example` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Same public publishable/anon key; may be committed in `.env.example` |
+| `APPLICANT_SESSION_SECRET` | Same private server signing key for all four local apps and hosting; obtain privately and match the provisioned database key; never commit or expose to the browser |
 | `LUMEN_API_KEY`, `LUMEN_API_SECRET` | Share privately using a team password manager or another private channel; put only in `.env.local` and server hosting settings |
 | `LUMEN_OCR_URL`, `LUMEN_CHAT_URL` | M4 supplies verified endpoints; set them in `.env.local` |
 

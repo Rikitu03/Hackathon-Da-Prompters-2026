@@ -46,7 +46,12 @@ export async function body<T extends z.ZodTypeAny>(request: Request, schema: T):
 }
 export function sameOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  if (request.headers.get("sec-fetch-site") === "cross-site" || (origin && origin !== new URL(request.url).origin)) {
+  const url = new URL(request.url);
+  // Next may reconstruct request.url with its internal hostname (localhost).
+  // Host is the browser's actual destination; do not trust forwarded-host.
+  const host = request.headers.get("host");
+  if (host) url.host = host;
+  if (request.headers.get("sec-fetch-site") === "cross-site" || (origin && origin !== url.origin)) {
     throw new ApiError(403, "Cross-site writes are not allowed");
   }
 }
