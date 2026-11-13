@@ -67,7 +67,7 @@ test("admin login avoids horizontal overflow at 320px", async ({ page, isMobile 
   expect(size.actual).toBeLessThanOrEqual(size.viewport + 1);
 });
 
-test("desktop login fits 1366x768 and 1920x1080 without vertical scrolling or clipped decorations", async ({ page, isMobile }) => {
+test("compact desktop card is centered while the background wave reaches the viewport bottom", async ({ page, isMobile }) => {
   test.skip(isMobile, "desktop viewport acceptance test");
   await page.setViewportSize({ width: 1366, height: 768 });
   await showSignedOutAdmin(page);
@@ -98,19 +98,45 @@ test("desktop login fits 1366x768 and 1920x1080 without vertical scrolling or cl
     expect(measures.height).toBe(height);
     expect(measures.docWidth, width + "px horizontal overflow").toBeLessThanOrEqual(width + 1);
     expect(measures.docHeight, width + "x" + height + " vertical overflow").toBeLessThanOrEqual(height + 1);
-    expect(measures.card.top).toBeGreaterThanOrEqual(0);
-    expect(Math.abs(measures.card.bottom - height), "right login card must reach the viewport bottom").toBeLessThanOrEqual(2);
-    expect(measures.submit.bottom, "submit must be visible").toBeLessThan(measures.skyline.top);
+    const cardHeight = measures.card.bottom - measures.card.top;
+    const emptySpace = measures.skyline.top - measures.submit.bottom;
+    expect(measures.card.top, "compact card must be visible").toBeGreaterThan(0);
+    expect(measures.card.bottom, "compact card must fit above the viewport bottom").toBeLessThan(height - 10);
+    expect(cardHeight, "card must follow content rather than stretching to screen height").toBeLessThan(700);
+    expect(Math.abs(measures.card.top - (height - measures.card.bottom)), "card must be vertically centered").toBeLessThanOrEqual(3);
+    expect(emptySpace, "no large empty area between sign-in and skyline").toBeGreaterThanOrEqual(0);
+    expect(emptySpace, "no large empty area between sign-in and skyline").toBeLessThanOrEqual(48);
     expect(Math.abs(measures.skyline.bottom - measures.card.bottom), "skyline anchored to card bottom").toBeLessThanOrEqual(2);
-    expect(Math.abs(measures.skyline.bottom - height), "right skyline must reach the viewport bottom").toBeLessThanOrEqual(2);
-    expect(Math.abs(measures.waves.bottom - height), "waves anchored to viewport bottom").toBeLessThanOrEqual(2);
-    expect(Math.abs(measures.waves.left), "waves should start at viewport left edge").toBeLessThanOrEqual(2);
+    expect(Math.abs(measures.waves.bottom - height), "background waves anchored to viewport bottom").toBeLessThanOrEqual(2);
+    expect(Math.abs(measures.waves.left), "background waves should start at viewport left").toBeLessThanOrEqual(2);
+    expect(Math.abs(measures.waves.right - width), "background waves should reach viewport right").toBeLessThanOrEqual(2);
 
     await page.screenshot({
       path: test.info().outputPath("admin-login-" + width + "x" + height + ".png"),
       fullPage: true,
     });
   }
+});
+
+test("loading screen is compact without the former full-height white card", async ({ page, isMobile }) => {
+  test.skip(isMobile, "desktop-only loading-state geometry check");
+  await page.route("**/api/auth/session", async route => {
+    await new Promise(resolve => setTimeout(resolve, 2200));
+    await route.fulfill({ status: 401, json: { error: "Authentication required" } });
+  });
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.goto("/admin/login", { waitUntil: "domcontentloaded" });
+  await expect(page.getByText("Checking your administrator session…")).toBeVisible();
+  const geometry = await page.evaluate(() => {
+    const card = document.querySelector(".admin-login-card")?.getBoundingClientRect();
+    const skyline = document.querySelector(".admin-login-skyline")?.getBoundingClientRect();
+    const status = document.querySelector(".admin-login-status")?.getBoundingClientRect();
+    if (!card || !skyline || !status) throw new Error("Loading state layout missing");
+    return { cardHeight: card.height, cardTop: card.top, cardBottom: card.bottom, skylineTop: skyline.top, statusBottom: status.bottom };
+  });
+  expect(geometry.cardHeight).toBeLessThan(450);
+  expect(geometry.skylineTop - geometry.statusBottom).toBeLessThan(65);
+  expect(Math.abs(geometry.cardTop - (768 - geometry.cardBottom))).toBeLessThanOrEqual(3);
 });
 
 test("login copy is concise and the small labels use legible font styling", async ({ page }) => {
