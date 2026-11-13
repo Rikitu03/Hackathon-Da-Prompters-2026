@@ -130,9 +130,13 @@ export function ContextImport({onApply,demoMode}: {
   demoMode: boolean;
 }) {
   const input = useRef<HTMLInputElement>(null);
+  const activeReader = useRef<FileReader | null>(null);
+  const readVersion = useRef(0);
   const reducedMotion = useReducedMotion();
   const [dragging,setDragging] = useState(false);
   const [pending,setPending] = useState(false);
+  // This number reports actual local bytes read, never fictional network/AI progress.
+  const [readPercent,setReadPercent] = useState(0);
   const [file,setFile] = useState<{name:string;size:number;ext:string}|null>(null);
   const [draft,setDraft] = useState<ContextDraft>(blank);
   const [recognized,setRecognized] = useState(0);
@@ -140,8 +144,11 @@ export function ContextImport({onApply,demoMode}: {
   const [applied,setApplied] = useState(false);
 
   function clear() {
+    readVersion.current += 1;
+    activeReader.current?.abort();
+    activeReader.current = null;
     setFile(null); setError(null); setDraft({...blank}); setRecognized(0);
-    setApplied(false); setPending(false);
+    setApplied(false); setPending(false); setReadPercent(0);
     if(input.current) input.current.value="";
   }
   async function accept(fileToRead?: File) {
@@ -158,8 +165,22 @@ export function ContextImport({onApply,demoMode}: {
       return;
     }
     setPending(true);
+    const version = readVersion.current;
     try {
-      const raw=await fileToRead.text();
+      const raw = await new Promise<string>((resolve,reject) => {
+        const reader = new FileReader();
+        activeReader.current = reader;
+        reader.onprogress = (event) => {
+          if(version === readVersion.current && event.lengthComputable && event.total > 0) {
+            setReadPercent(Math.min(99,Math.round(event.loaded / event.total * 100)));
+          }
+        };
+        reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+        reader.onerror = () => reject(new Error("Unable to read file"));
+        reader.onabort = () => reject(new Error("File read cancelled"));
+        reader.readAsText(fileToRead,"UTF-8");
+      });
+      if(version !== readVersion.current) return;
       if(raw.includes("\u0000") || !raw.trim()) {
         setError({code:"422",title:"The text could not be read",advice:"Save the document as a plain UTF-8 .txt or .md file and retry."});
         setFile(null);
@@ -167,11 +188,18 @@ export function ContextImport({onApply,demoMode}: {
         const parsed=parseStructuredText(raw);
         setDraft(parsed.draft);
         setRecognized(parsed.recognized);
+        setReadPercent(100);
       }
     } catch {
+      if(version !== readVersion.current) return;
       setError({code:"422",title:"Unable to open the document",advice:"Verify the file is readable and select it again."});
       setFile(null);
-    } finally {setPending(false);}
+    } finally {
+      if(version === readVersion.current) {
+        activeReader.current = null;
+        setPending(false);
+      }
+    }
   }
 
   const hasValues=Object.values(draft).some(value=>value.trim().length>0);
@@ -239,7 +267,20 @@ export function ContextImport({onApply,demoMode}: {
                 </div>
                 <button type="button" onClick={clear} aria-label="Dismiss upload error" className="rounded-md p-1 hover:bg-[#ffe9e3]"><X size={18}/></button>
               </div> : null}
-              {pending ? <div role="status" className="flex items-center gap-3 text-sm text-[#53657b]"><LoaderCircle size={18} className="animate-spin text-[#155bb0]"/> Checking document format and reading text…</div> : null}
+              {file && isText && !error ? <div className="mb-4 space-y-2 rounded-xl border border-[#d7e3ef] bg-[#f8fbff] px-4 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="inline-flex items-center gap-2 text-sm font-semibold text-[#102a51]">
+                    {pending ? <LoaderCircle size={16} className="animate-spin text-[#155bb0]"/> : <CheckCircle2 size={16} className="text-[#155bb0]"/>}
+                    {pending ? "Reading file on this device" : "Local file reading complete"}
+                  </p>
+                  <span className="text-sm font-semibold tabular-nums text-[#155bb0]">{readPercent}%</span>
+                </div>
+                <div role="progressbar" aria-label="Local source file reading progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={readPercent} className="h-2.5 overflow-hidden rounded-full bg-[#d7e3ef]">
+                  <div className="h-full rounded-full bg-[#155bb0] transition-[width] duration-150 motion-reduce:transition-none" style={{width:readPercent+"%"}}/>
+                </div>
+                <p className="text-xs leading-5 text-[#53657b]">Real device-read progress only. No network upload or AI processing is taking place.</p>
+              </div> : null}
+              {pending && !isText ? <div role="status" className="flex items-center gap-3 text-sm text-[#53657b]"><LoaderCircle size={18} className="animate-spin text-[#155bb0]"/> Checking document…</div> : null}
               {file && !pending && !error ? <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#d7e3ef] bg-[#f7fbff] p-3">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white text-[#155bb0]"><FileCheck2 size={22}/></span>
