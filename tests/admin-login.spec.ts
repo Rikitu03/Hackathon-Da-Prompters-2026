@@ -179,3 +179,12 @@ test("the mobile form scrolls naturally and keeps all controls reachable", async
   expect(await page.evaluate(() => document.documentElement.scrollWidth))
     .toBeLessThanOrEqual(await page.evaluate(() => document.documentElement.clientWidth + 1));
 });
+
+test("demo link opens the read-only preview without creating an admin session", async ({ page }) => {
+  await showSignedOutAdmin(page);
+  await page.getByRole("link", { name: "Open read-only admin demo" }).click();
+  await expect(page).toHaveURL(/\/admin\/demo(?:\?|$)/);
+  await expect(page.getByText(/interactive UI preview/)).toBeVisible();
+  await expect(page.getByText(/no changes are saved or published/)).toBeVisible();
+  await expect(page.getByText("Demo preview")).toBeVisible();
+});
