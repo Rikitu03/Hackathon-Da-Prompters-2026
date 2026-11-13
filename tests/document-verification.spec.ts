@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { mockOcr } from "./support/applicant-mocks";
 import { localIsoDate, mockVerify, requirementUrl, useDemoGuide } from "./support/verification-mocks";
 
 test.beforeEach(async ({ page }) => {
@@ -109,4 +110,50 @@ test("the results dialog fits 320px without sideways scroll", async ({ page, isM
   await page.getByRole("button", { name: "Try a sample with issues" }).click();
   await expect(dialogFor(page)).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+const ID_FIELDS = [
+  { key: "full_name", label: "Name", value: "Juan M. Dela Cruz", needsReview: false, originalText: "Name: Juan M. Dela Cruz", warnings: [] },
+  { key: "student_no", label: "Student number", value: "22-01187", needsReview: false, originalText: "Student No: 22-01187", warnings: [] },
+  { key: "section", label: "Section", value: "BSIT 4-1", needsReview: false, originalText: "Section: BSIT 4-1", warnings: [] },
+];
+async function uploadFor(page: Page) {
+  await page.locator('#document-check input[type="file"]').setInputFiles("tests/fixtures/demo-certificate.png");
+  await page.getByLabel(/Send this document to Lumen OCR and Lumen AI/).check();
+  await page.getByRole("button", { name: "Check document", exact: true }).click();
+}
+
+test("an uploaded School ID is compared with the checked COR", async ({ page }) => {
+  await useDemoGuide(page);
+  await mockVerify(page, { status: "ok", flags: [] });
+  let profile = "";
+  await page.route("**/api/ai/ocr", async (route) => {
+    profile = String(route.request().postDataBuffer()?.toString().match(/name="profile"\r\n\r\n([a-z_]+)/)?.[1]);
+    await route.fulfill({ json: { rawText: "STUDENT IDENTIFICATION CARD", fields: ID_FIELDS, warnings: [], disclaimer: "d", profileId: "school_id", detected: { detected: "school_id", evidence: "STUDENT IDENTIFICATION CARD" } } });
+  });
+  await page.goto(requirementUrl("illustrative-enrollment"));
+  await page.getByRole("button", { name: "Try a clean sample" }).click();
+  await page.keyboard.press("Escape");
+  await page.goto(requirementUrl("illustrative-school-id"));
+  await uploadFor(page);
+  const dialog = dialogFor(page, "School ID or government-issued ID");
+  await expect(dialog.getByText("Student number differs from your Certificate of Registration")).toBeVisible();
+  expect(profile).toBe("school_id");
+});
+
+test("a wrong document type is flagged", async ({ page }) => {
+  await useDemoGuide(page);
+  await mockOcr(page, { rawText: "CERTIFICATE OF INDIGENCY", fields: [], warnings: [], disclaimer: "d", profileId: "certificate_of_residency", detected: { detected: null, otherTitle: "Certificate of Indigency", evidence: "CERTIFICATE OF INDIGENCY" } });
+  await page.goto(requirementUrl("illustrative-residency"));
+  await uploadFor(page);
+  await expect(dialogFor(page, "Certificate of Residency").getByText("This looks like a Certificate of Indigency")).toBeVisible();
+});
+
+test("an unreadable upload explains recovery", async ({ page }) => {
+  await useDemoGuide(page);
+  await mockOcr(page, { error: "x" }, 422);
+  await page.goto(COR_URL);
+  await uploadFor(page);
+  await expect(page.getByText("Couldn't check this document")).toBeVisible();
+  await expect(page.locator("#document-check").getByRole("alert")).toContainText("Try a clearer, well-lit photo"); // scoped: the toast may also be an alert
 });

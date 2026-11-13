@@ -283,3 +283,15 @@
     transition: none;
   }
 }
+
+/* Upload block inside the "Check this document" panel. */
+.vf-upload {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.vf-upload h3 {
+  font-size: 18px;
+}
