@@ -20,9 +20,9 @@ describe("document keyword storage", () => {
   });
 
   it.each([
-    [{ id: "illustrative-enrollment", title: "x" }, "certificate_of_registration"],
-    [{ id: "illustrative-residency", title: "x" }, "certificate_of_residency"],
-    [{ id: "illustrative-school-id", title: "x" }, "school_id"],
+    [{ id: "certificate-of-registration", title: "x" }, "certificate_of_registration"],
+    [{ id: "barangay-residency", title: "x" }, "certificate_of_residency"],
+    [{ id: "school-or-valid-id", title: "x" }, "school_id"],
     [{ id: "a1", title: "Certificate of Registration (COR)" }, "certificate_of_registration"],
     [{ id: "a2", title: "Barangay Certificate of Residency" }, "certificate_of_residency"],
     [{ id: "a3", title: "School ID or any Valid-ID" }, "school_id"],

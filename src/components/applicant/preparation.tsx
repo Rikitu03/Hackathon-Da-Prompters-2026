@@ -299,6 +299,7 @@ export function Checklist() {
         </Link>
       </div>
       {guide.demo && <DemoNotice />}
+      {guide.scope && <Notice>{guide.scope}</Notice>}
       <section className="surface">
         <ProgressBar {...progress} />
       </section>

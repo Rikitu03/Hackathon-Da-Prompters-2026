@@ -18,7 +18,7 @@ describe("buildReviewPrompt", () => {
     expect(p.startsWith("You are GabayIskolar")).toBe(true);
     expect(p.indexOf("=== SOURCES ===")).toBeLessThan(p.indexOf("=== QUESTION ==="));
     expect(p).toContain("[S1] Certificate of Registration");
-    expect(p).toContain("[S2] School ID or government-issued ID");
+    expect(p).toContain("[S2] School ID or any Valid-ID");
     expect(p).toContain("School year: 2026-2027");
     expect(p).toContain("Today is 2026-11-13");
     expect(p.endsWith("=== END ===")).toBe(true);

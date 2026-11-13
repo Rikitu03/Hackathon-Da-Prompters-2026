@@ -48,6 +48,8 @@ export type Guide = {
   description: string;
   demo: boolean;
   level?: string;
+  /** Shown on the checklist when a guide covers only part of the official list. */
+  scope?: string;
   cycles: Cycle[];
 };
 export type Preferences = {

@@ -5,9 +5,8 @@ import { toast } from "@/components/ui/toast";
 import { OCR_CLIENT_TIMEOUT_MS } from "@/lib/ai-limits";
 import { reviewDocument } from "@/lib/applicant/api";
 import { validateFile, type Requirement } from "@/lib/applicant/model";
-import { analyzeDocument, recordFromOcr, recordFromSample } from "@/lib/verification/analyze";
+import { analyzeDocument, recordFromOcr } from "@/lib/verification/analyze";
 import { getProfile, profileForRequirement } from "@/lib/verification/profiles";
-import type { SampleVariant } from "@/lib/verification/samples";
 import { recordStore } from "@/lib/verification/store";
 import { Notice } from "../workspace";
 import { startAiReview } from "./ai-runner";
@@ -19,7 +18,7 @@ import "./verification.css";
 const CONSENT_TEXT =
   "Send this document to Lumen OCR and Lumen AI to read and review it. Lumen keeps a copy that other teams in this hackathon can see, and it can't be deleted. Use a sample or fictional document only.";
 
-/** "Check this document" on a requirement page: fictional samples, or a real (fictional) upload with consent. */
+/** "Check this document" on a requirement page: upload a copy, read it with Lumen OCR, check it with rules and Lumen AI. */
 export function DocumentCheckPanel({ cycleId, requirement }: { cycleId: string; requirement: Requirement }) {
   const profileId = profileForRequirement(requirement);
   const records = useDocumentRecords(cycleId);
@@ -43,13 +42,6 @@ export function DocumentCheckPanel({ cycleId, requirement }: { cycleId: string; 
     if (next) notifyAnalysis(profile.title, next);
     setOpen(true);
     void startAiReview(cycleId, profileId);
-  }
-
-  function runSample(variant: SampleVariant) {
-    if (!profileId) return;
-    const now = new Date();
-    recordStore.save(cycleId, recordFromSample(profileId, variant, now));
-    showResults(now);
   }
 
   function choose(next: File | undefined) {
@@ -127,7 +119,6 @@ export function DocumentCheckPanel({ cycleId, requirement }: { cycleId: string; 
         </div>
       )}
       <div className="vf-upload">
-        <h3>Check your own copy</h3>
         <p className="helper">JPG, PNG or PDF, up to 4 MB. The details Gabay reads stay in this tab only.</p>
         <div className="vf-actions">
           <Button variant="outline" disabled={pending} onClick={() => input.current?.click()}>
@@ -160,11 +151,6 @@ export function DocumentCheckPanel({ cycleId, requirement }: { cycleId: string; 
           </Notice>
         )}
       </div>
-      <div className="vf-actions">
-        <Button variant="outline" onClick={() => runSample("clean")}>Try a clean sample</Button>
-        <Button variant="outline" onClick={() => runSample("with-issues")}>Try a sample with issues</Button>
-      </div>
-      <p className="helper">Samples use fictional data. Nothing is uploaded.</p>
       {record && <VerificationDialog cycleId={cycleId} profileId={profileId} open={open} onOpenChange={setOpen} />}
     </section>
   );
