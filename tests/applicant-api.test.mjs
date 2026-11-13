@@ -5,6 +5,7 @@ import {
   fetchGuides,
   request,
   reviewDocument,
+  requestAiReview,
   NO_EVIDENCE_NOTICE,
 } from "../src/lib/applicant/api.ts";
 
@@ -160,4 +161,29 @@ test("OCR without a profile sends no profile field", async (t) => {
   });
   const file = new File([new Uint8Array([1])], "id.png", { type: "image/png" });
   assert.equal((await reviewDocument(file)).profileId, undefined);
+});
+test("AI review posts the request and returns flags", async (t) => {
+  t.mock.method(globalThis, "fetch", async (url, options) => {
+    assert.equal(url, "/api/ai/verify");
+    assert.equal(options.method, "POST");
+    assert.equal(JSON.parse(options.body).consent, true);
+    return Response.json({ status: "ok", flags: [] });
+  });
+  assert.deepEqual(
+    await requestAiReview({ consent: true, profileId: "school_id", fields: [], rawText: "", related: [] }),
+    { status: "ok", flags: [] },
+  );
+});
+test("AI review failures become an unavailable notice, never a rejection", async (t) => {
+  t.mock.method(globalThis, "fetch", async () => Response.json({ error: "off" }, { status: 503 }));
+  const r = await requestAiReview({ consent: true, profileId: "school_id", fields: [], rawText: "", related: [] });
+  assert.equal(r.status, "unavailable");
+  assert.match(r.message, /Lumen AI review/);
+});
+test("AI review treats a network failure or odd reply as unavailable", async (t) => {
+  const input = { consent: true, profileId: "school_id", fields: [], rawText: "", related: [] };
+  t.mock.method(globalThis, "fetch", async () => { throw new TypeError("network down"); });
+  assert.equal((await requestAiReview(input)).status, "unavailable");
+  t.mock.method(globalThis, "fetch", async () => Response.json({ status: "ok", flags: "nope" }));
+  assert.equal((await requestAiReview(input)).status, "unavailable");
 });

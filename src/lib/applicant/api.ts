@@ -12,7 +12,10 @@ import {
 } from "./model";
 import {
   PROFILE_IDS,
+  aiReviewResponseSchema,
   classificationSchema,
+  type AiReviewRequest,
+  type AiReviewResponse,
   type ProfileId,
 } from "../verification/contract";
 
@@ -237,4 +240,30 @@ export async function reviewDocument(
       "The review service returned an unexpected format. Please retry or use the manual checklist.",
     );
   return parsed.data;
+}
+const AI_REVIEW_UNREACHED = "Lumen AI review could not be reached. The rule checks still apply.";
+/** Ask Lumen AI for a second opinion. Never rejects: any failure becomes an "unavailable" result. */
+export async function requestAiReview(
+  input: AiReviewRequest,
+  signal?: AbortSignal,
+): Promise<AiReviewResponse> {
+  try {
+    const data = await request<unknown>(
+      "/api/ai/verify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+        signal,
+      },
+      "Lumen AI review",
+    );
+    const parsed = aiReviewResponseSchema.safeParse(data);
+    return parsed.success ? parsed.data : { status: "unavailable", message: AI_REVIEW_UNREACHED };
+  } catch (e) {
+    return {
+      status: "unavailable",
+      message: e instanceof ApplicantApiError ? e.message : AI_REVIEW_UNREACHED,
+    };
+  }
 }

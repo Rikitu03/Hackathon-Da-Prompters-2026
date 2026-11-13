@@ -60,3 +60,21 @@ export const documentRecordSchema = z.object({
 });
 export type DocumentRecord = z.infer<typeof documentRecordSchema>;
 export type RecordMap = Partial<Record<ProfileId, DocumentRecord>>;
+
+const aiFieldSchema = z.object({ key: z.string().max(40), label: z.string().max(60), value: z.string().max(200) });
+
+/** What the browser may send for a Lumen AI review: a few short details, never a file. */
+export const aiReviewRequestSchema = z.object({
+  consent: z.literal(true),
+  profileId: z.enum(PROFILE_IDS),
+  fields: z.array(aiFieldSchema).max(12),
+  rawText: z.string().max(1500),
+  related: z.array(z.object({ profileId: z.enum(PROFILE_IDS), fields: z.array(aiFieldSchema).max(12) })).max(2),
+});
+export type AiReviewRequest = z.infer<typeof aiReviewRequestSchema>;
+
+export const aiReviewResponseSchema = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("ok"), flags: z.array(flagSchema).max(10) }),
+  z.object({ status: z.literal("unavailable"), message: z.string().max(300) }),
+]);
+export type AiReviewResponse = z.infer<typeof aiReviewResponseSchema>;
