@@ -548,7 +548,8 @@ test("requirement importer never accepts arbitrary map links as verified pins",a
   await expect(dialog).toHaveCount(0);
 });
 
-test("Admin chart hover and month selection never expose a full-height focus rectangle",async ({page})=>{
+test("Admin chart hover and month selection never expose a full-height focus rectangle",async ({page,isMobile})=>{
+  await page.clock.setFixedTime(new Date("2026-11-13T12:00:00Z"));
   await page.goto("/admin/demo");
   const chart=page.getByRole("img",{name:/Monthly scholarship activity:/});
   await expect(chart).toBeVisible();
@@ -560,8 +561,17 @@ test("Admin chart hover and month selection never expose a full-height focus rec
   const selected=page.getByRole("group",{name:"Select activity month"});
   const november=selected.getByRole("button",{name:/Nov 2026:/});
   await november.focus();
+  await expect(november).toBeFocused();
+  await page.mouse.move(0,0);
   await expect(november).toHaveAttribute("aria-pressed","true");
   await expect(november).toHaveCSS("outline-width","2px");
+  const october=selected.getByRole("button",{name:/Oct 2026:/});
+  if(isMobile)await october.tap();
+  else await october.click();
+  await expect(october).toHaveAttribute("aria-pressed","true");
+  await expect(november).toHaveAttribute("aria-pressed","false");
+  await october.press("Enter");
+  await expect(october).toHaveAttribute("aria-pressed","true");
   await expect(chart.locator("rect[tabindex]")).toHaveCount(0);
   await expect(page.getByText("Recommended workflow")).toHaveCount(0);
 });

@@ -1,5 +1,13 @@
 # Ask Gabay applicant widget
 
+## Current two-mode integration
+
+Product help is now the default and works without a selected scholarship, including illustrative and closed cycles. It calls `POST /api/ai/help` with only `{ message }` and cites reviewed sections of [the product guide](PRODUCT_HELP.md). Scholarship guide retains the existing cycle/requirement payload and published-source evidence gate. Contextual actions and old assistant bookmarks select scholarship mode; generic landing-page actions select product help.
+
+Each mode has an independent in-memory transcript and draft. Switching cancels the active request and ignores late replies; changing cycles resets scholarship conversation only. Closing/minimizing retains the existing visit behavior. Both chat routes now share the Supabase-backed ten-attempt/ten-minute limiter, with no in-process fallback.
+
+See [implementation and rollout](PRODUCT_HELP_IMPLEMENTATION.md) for the migration, knowledge generation/check commands, server enable flag, and acceptance evidence. The older notes below describe the initial widget PR and its historical results, not the current combined test totals.
+
 The applicant experience mounts one floating widget across the landing page and
 student routes. Admin and backend walkthrough routes are excluded. The former
 `/assistant` URL redirects to `/dashboard?gabay=open`, preserving an optional

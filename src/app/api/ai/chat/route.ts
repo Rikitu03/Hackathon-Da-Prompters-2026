@@ -9,15 +9,24 @@ import { buildTsQuery } from "@/lib/rag/query";
 import { RetrievalError, loadPublishedCycle, retrieveSources } from "@/lib/rag/retrieve";
 import { takeChatLimit } from "@/lib/chat-limit";
 import type { ChatResponse } from "@/types/domain";
+import { builtInCycle, retrieveBuiltInSources } from "@/lib/rag/built-in";
 
 export const runtime = "nodejs";
 export const maxDuration = 45; // open session (≤10 s) + message (≤28 s; Lumen gives up at 25 s)
 
 const Schema = z.object({
-  cycleId: z.string().uuid(),
-  requirementId: z.string().uuid().optional(),
+  cycleId: z.string().min(1).max(128),
+  requirementId: z.string().min(1).max(128).optional(),
   // ≤ 500 so the question can never crowd the sources out of Lumen's 4000-byte message.
   message: z.string().trim().min(1).max(MAX_QUESTION_CHARS),
+}).superRefine((value, context) => {
+  const registered = builtInCycle(value.cycleId);
+  if (!registered && !z.string().uuid().safeParse(value.cycleId).success)
+    context.addIssue({ code: "custom", path: ["cycleId"], message: "Unknown guide cycle" });
+  if (value.requirementId && (registered
+    ? !registered.cycle.requirements.some(requirement => requirement.id === value.requirementId)
+    : !z.string().uuid().safeParse(value.requirementId).success))
+    context.addIssue({ code: "custom", path: ["requirementId"], message: "Unknown requirement context" });
 });
 
 export async function POST(request: Request) {
@@ -43,13 +52,18 @@ export async function POST(request: Request) {
 
   try {
     // 1. Scope: the cycle must be publicly visible and still open.
-    const cycle = await loadPublishedCycle(cycleId);
+    const registered = builtInCycle(cycleId);
+    const cycle = registered
+      ? { id: registered.cycle.id, applicationEnd: registered.cycle.end, officialUrl: registered.cycle.officialUrl }
+      : await loadPublishedCycle(cycleId);
     if (!cycle) return json({ error: "This scholarship guide is not published." }, 404);
     if (isCycleClosed(cycle.applicationEnd)) return json(closedCycleAnswer(cycle.applicationEnd!, cycle.officialUrl));
 
     // 2. Evidence gate: no searchable terms or no approved passages means no Lumen call.
     const tsquery = buildTsQuery(message);
-    const sources = tsquery ? await retrieveSources({ cycleId, requirementId, tsquery }) : [];
+    const sources = tsquery ? registered
+      ? retrieveBuiltInSources(cycleId, tsquery, requirementId)
+      : await retrieveSources({ cycleId, requirementId, tsquery }) : [];
     const { message: prompt, included } = buildPrompt(message, sources);
     if (included.length === 0) {
       console.info("[chat] no evidence", { ...log, terms: !!tsquery, retrieved: sources.length });

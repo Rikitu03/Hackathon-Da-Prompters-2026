@@ -60,6 +60,7 @@ export function GabayWidget({ children }: { children: React.ReactNode }) {
   const guideChat = useGabayChat(cycle?.id, recordQuestion);
   const productChat = useGabayChat(undefined, recordQuestion, "product");
   const stopProduct = productChat.stop;
+  const stopGuide = guideChat.stop;
   const [mode, setMode] = useState<"product" | "scholarship">("product");
   const product = mode === "product";
   const chat = product ? productChat : guideChat;
@@ -77,11 +78,12 @@ export function GabayWidget({ children }: { children: React.ReactNode }) {
   const contextId = cycle?.requirements.some((r) => r.id === requirementId) ? requirementId : "";
 
   const openChat = useCallback((requirement = "", nextMode: GabayMode = "scholarship") => {
-    stopProduct();
+    if (nextMode === "scholarship") stopProduct();
+    else stopGuide();
     setMode(nextMode);
     setRequirementId(requirement);
     setOpen(true);
-  }, [stopProduct]);
+  }, [stopProduct, stopGuide]);
   const controls = useMemo(() => ({ openChat }), [openChat]);
   function dismiss() {
     setOpen(false);

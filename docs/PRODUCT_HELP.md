@@ -4,19 +4,19 @@ This reviewed product guide describes preparation tools, not official scholarshi
 
 ## Getting started {#getting-started}
 <!-- tags: start, app, use, gamit, gamitin, simula, gabayiskolar, navigation, navigate -->
-GabayIskolar is an independent scholarship preparation prototype for Pasig students. It does not accept official applications or decide who receives a scholarship. Start at Scholarships or Choose a guide, select a published guide and cycle, and read its requirements. The Dashboard connects your preparation stages. The illustrative walkthrough lets you explore the tools without claiming its sample content is official policy.
+GabayIskolar is an independent scholarship preparation prototype for Pasig students. It does not accept official applications or decide who receives a scholarship. Start at Scholarships or Choose a guide, select a guide and cycle, and read its requirements. The Dashboard connects your preparation stages. The built-in CORE College renewal reference covers three document categories using reviewed source references; confirm the complete current requirements with the official office.
 
 ## Choosing a guide {#choosing-guide}
 <!-- tags: guide, select, choose, cycle, scholarship, pili, pumili, programa, onboarding -->
-Use Choose a guide to select the scholarship program and application cycle you want to prepare for. Published guides contain the content available to applicants. An illustrative guide is clearly labeled and contains fictional examples, not an official offer. Changing cycles keeps their preparation records separate. Product help works even before you choose a guide. Scholarship guide chat needs a selected, published, open cycle; it is unavailable for illustrative guides or closed cycles.
+Use Choose a guide to select the scholarship program and application cycle you want to prepare for. Available guides include published database guides and the reviewed built-in PSCS reference. Changing cycles keeps preparation records separate. Product help works before you choose a guide. Scholarship chat uses approved published sources or the server's registered built-in references, and is unavailable for closed cycles. A sample explicitly marked as a demo cannot supply official chat evidence. Confirm unknown dates with the office.
 
 ## Saving checklist progress {#checklist}
 <!-- tags: checklist, progress, status, save, saved, preparation, ihanda, paghahanda, progreso, listahan, mark -->
 My checklist lets you track preparation for each requirement. Read a requirement's instructions and sources before changing its preparation status. Checklist progress is stored in this browser and separated by cycle and requirement. If published instructions or source information changes, the item may need another review. Marking an item complete means you prepared it; it does not submit anything or confirm that the scholarship office accepts it. Clearing browser data can remove local progress.
 
-## The three-document walkthrough {#document-scope}
+## The three-document focus {#document-scope}
 <!-- tags: documents, document, certificate, registration, cor, residency, barangay, school, id, tatlong, dokumento -->
-The illustrative walkthrough focuses on Certificate of Registration, Certificate of Residency, and School ID or government-issued ID. These are the prototype's three priority document journeys, not a complete official scholarship checklist. Confirm the exact enrollment document and accepted ID wording in your selected cycle's published guidance. A preparation category does not mean every document with a similar name is accepted. Other official requirements still apply.
+The built-in guide focuses on Certificate of Registration, Barangay Certificate of Residency, and School ID or any Valid-ID. These are the prototype's three priority document journeys, not a complete official scholarship checklist. Confirm the exact enrollment document and accepted ID wording in your selected cycle's official guidance. A preparation category does not mean every document with a similar name is accepted. Other official requirements still apply; the guide includes a partial-coverage notice.
 
 ## Reading and correcting documents {#document-review}
 <!-- tags: ocr, scan, upload, read, reading, correct, correction, extracted, fields, photo, larawan, basa, basahin, itama -->
@@ -32,11 +32,11 @@ Applicants do not need an account. Checklist progress and guide choices stay in 
 
 ## Lumen and your information {#provider-privacy}
 <!-- tags: lumen, provider, retention, consent, personal, information, copy, transcript, messages, conversation, usapan -->
-Only fictional or sample documents should be sent to Lumen. Lumen OCR keeps a copy visible within the hackathon organization, and its developer interface provides no deletion operation. Read the consent disclosure before uploading. Lumen also stores chat messages, so do not include names, addresses, ID numbers, document contents, or other personal details in a question. The app keeps visible chat and drafts only in memory for this visit; that does not remove Lumen's independent copy.
+Only fictional or sample documents should be sent to Lumen. Lumen OCR keeps a copy visible within the hackathon organization, and its developer interface provides no deletion operation. Read the consent disclosure before uploading. Lumen also stores chat messages, so do not include names, addresses, ID numbers, document contents, or other personal details in a question. The app keeps visible chat and unsent chat drafts only in memory for this visit; that does not remove Lumen's independent copy.
 
 ## Product help and scholarship guidance {#chat-modes}
 <!-- tags: help, chat, chatbot, assistant, ask, gabay, mode, question, tanong, tulong, english, filipino, taglish -->
-Ask Gabay has two modes. Product help explains the app using this product guide and works without a scholarship selection. Scholarship guide answers using approved sources for your selected published cycle and opens from a requirement's Ask Gabay action. Switch to Scholarship guide for official requirements, eligibility rules, deadlines, fees, or accepted-document questions. Answers need matching published evidence; missing information remains a notice. Ask in English, Filipino, or Taglish. Each question stands alone: the visible transcript does not imply model memory.
+Ask Gabay has two modes. Product help explains the app using this product guide and works without a scholarship selection. Scholarship guide uses approved published sources or reviewed built-in references for the selected cycle, and opens from a requirement's Ask Gabay action. Switch to Scholarship guide for requirements, eligibility rules, deadlines, fees, or accepted-document questions. Answers need matching evidence; missing information remains a notice. Ask in English, Filipino, or Taglish. Each question stands alone: the visible transcript does not imply model memory.
 
 ## Continuing to the official application {#official-handoff}
 <!-- tags: apply, application, submit, submission, official, portal, deadline, fee, eligible, eligibility, requirements, accepted, mag-apply, aplikasyon -->

@@ -14,6 +14,9 @@ test("launcher opens without navigating and retains drafts on minimize, close an
   const question = page.getByLabel("Your scholarship question");
   await page.getByRole("button", { name: "Open Ask Gabay", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByLabel("Your product question")).toBeFocused();
+  await page.getByRole("button", { name: "Scholarship guide", exact: true }).click();
+  await question.focus();
   await expect(question).toBeFocused();
   await expect(page.getByRole("button", { name: "Send question" })).toBeDisabled();
   await page.getByRole("button", { name: "How do I apply?", exact: true }).click();

@@ -70,7 +70,13 @@ function niceChartTop(maximum:number) {
 export function ScholarshipActivityChart({data}:{data:AdminData}) {
   const gradientId="admin-activity-fill-"+useId().replaceAll(":","");
   const months=useMemo(()=>monthlyActivity(data),[data]);
-  const [activeMonth,setActiveMonth]=useState<number|null>(null);
+  const [hoveredMonth,setHoveredMonth]=useState<number|null>(null);
+  const [selectedMonth,setSelectedMonth]=useState<number|null>(null);
+  const activeMonth=hoveredMonth??selectedMonth;
+  function selectMonth(index:number) {
+    setSelectedMonth(index);
+    setHoveredMonth(null);
+  }
   const createdTotal=months.reduce((sum,month)=>sum+month.created,0);
   const publishedTotal=months.reduce((sum,month)=>sum+month.published,0);
   const hasActivity=createdTotal+publishedTotal>0;
@@ -107,7 +113,7 @@ export function ScholarshipActivityChart({data}:{data:AdminData}) {
         </div>
       ):(
         <>
-          <div className="relative mt-5" onMouseLeave={()=>setActiveMonth(null)}>
+          <div className="relative mt-5" onMouseLeave={()=>setHoveredMonth(null)}>
             <svg
               viewBox={"0 0 "+WIDTH+" "+HEIGHT}
               role="img"
@@ -137,8 +143,8 @@ export function ScholarshipActivityChart({data}:{data:AdminData}) {
                 <rect data-chart-hit="month" data-month={month.key}
                   x={x(i)-Math.min(45,(RIGHT-LEFT)/(months.length-1)/2)} y={TOP-6}
                   width={Math.min(90,(RIGHT-LEFT)/(months.length-1))} height={BOTTOM-TOP+12}
-                  fill="transparent" onMouseEnter={()=>setActiveMonth(i)}
-                  onMouseMove={()=>setActiveMonth(i)} />
+                  fill="transparent" onMouseEnter={()=>setHoveredMonth(i)}
+                  onMouseMove={()=>setHoveredMonth(i)} />
               </g>)}
               {activeMonth!==null && activePoint && chosen?<g pointerEvents="none">
                 <line x1={activePoint.x} x2={activePoint.x} y1={TOP} y2={BOTTOM} stroke="#a0b7d3" strokeWidth="1" strokeDasharray="3 6"/>
@@ -159,10 +165,10 @@ export function ScholarshipActivityChart({data}:{data:AdminData}) {
           <div className="mt-1 grid grid-cols-6 gap-1" role="group" aria-label="Select activity month">
             {months.map((month,i)=><button
               key={month.key} type="button"
-              aria-pressed={activeMonth===i}
+              aria-pressed={selectedMonth===i}
               aria-label={month.label+" "+month.key.slice(0,4)+": "+month.created+" guides created, "+month.published+" cycles published"}
-              onClick={()=>setActiveMonth(activeMonth===i?null:i)}
-              onFocus={()=>setActiveMonth(i)}
+              onClick={()=>selectMonth(i)}
+              onFocus={()=>selectMonth(i)}
               className={"min-h-9 rounded-lg px-1 py-1.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155bb0] "+
                 (activeMonth===i?"bg-[#eaf1f9] text-[#102a51]":"text-[#53657b] hover:bg-[#f1f5fa]")}
             >{month.label}</button>)}

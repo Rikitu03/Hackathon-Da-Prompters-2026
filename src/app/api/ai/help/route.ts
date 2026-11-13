@@ -13,7 +13,7 @@ const schema = z.object({ message: z.string().trim().min(1).max(500) }).strict()
 const notice = () => json({ answer: PRODUCT_HELP_NOTICE, grounded: false, sources: [] });
 
 async function readQuestion(request: Request) {
-  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) throw new ApiError(415, "Expected application/json.");
+  if (request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json") throw new ApiError(415, "Expected application/json.");
   const reader = request.body?.getReader();
   if (!reader) throw new ApiError(400, "A question is required.");
   const chunks: Uint8Array[] = [];

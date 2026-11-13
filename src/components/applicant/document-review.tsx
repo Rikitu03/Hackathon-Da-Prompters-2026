@@ -39,10 +39,15 @@ const example: OcrResult = {
 };
 export function DocumentReview({ initialRequirementId = "" }: { initialRequirementId?: string }) {
   const { openChat } = useGabay();
-  const { cycle, recordDocumentCheck } = useWorkspace();
+  const { cycle, preferences, ready: workspaceReady, loading, error: workspaceError, recordDocumentCheck } = useWorkspace();
   const prep = usePreparation(cycle);
   const [requirementId, setRequirementId] = useState("");
   const requirement = cycle?.requirements.find((r) => r.id === requirementId);
+  const initialSelection = cycle?.requirements.some((r) => r.id === initialRequirementId) ? initialRequirementId : "";
+  const contextKey = `${cycle?.id ?? ""}|${initialRequirementId}`;
+  const [loadedContext, setLoadedContext] = useState<string | null>(null);
+  const contextReady = workspaceReady && !loading && loadedContext === contextKey &&
+    (!preferences?.cycleId || cycle?.id === preferences.cycleId || !!workspaceError);
   const [file, setFile] = useState<File | null>(null),
     [preview, setPreview] = useState(""),
     [consent, setConsent] = useState(false),
@@ -67,7 +72,7 @@ export function DocumentReview({ initialRequirementId = "" }: { initialRequireme
   }, [file]);
   useEffect(() => () => controller.current?.abort(), []);
   function choose(next: File | undefined) {
-    if (!next || pending) return;
+    if (!next || pending || !contextReady) return;
     const issue = validateFile(next);
     setError(issue ?? "");
     if (issue) return;
@@ -81,6 +86,7 @@ export function DocumentReview({ initialRequirementId = "" }: { initialRequireme
   }
   const clear = useCallback(() => {
     controller.current?.abort();
+    controller.current = null;
     setPending(false);
     setFile(null);
     setConsent(false);
@@ -94,10 +100,11 @@ export function DocumentReview({ initialRequirementId = "" }: { initialRequireme
   }, []);
   useEffect(() => {
     clear();
-    setRequirementId(cycle?.requirements.some((r) => r.id === initialRequirementId) ? initialRequirementId : "");
-  }, [cycle, initialRequirementId, clear]);
+    setRequirementId(initialSelection);
+    setLoadedContext(contextKey);
+  }, [contextKey, initialSelection, clear]);
   async function process() {
-    if (!file || !consent || pending) return;
+    if (!file || !consent || pending || !contextReady) return;
     setPending(true);
     setError("");
     setResult(null);
@@ -153,12 +160,12 @@ export function DocumentReview({ initialRequirementId = "" }: { initialRequireme
       </Notice>
       <label className="field document-context">
         Document for
-        <select value={requirementId} disabled={pending} onChange={(e) => { setRequirementId(e.target.value); setChecked(false); setConfirmed(false); }}>
+        <select value={requirementId} disabled={pending || !contextReady} onChange={(e) => { setRequirementId(e.target.value); setChecked(false); setConfirmed(false); }}>
           <option value="">Not linked to a requirement</option>
           {cycle?.requirements.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}
         </select>
       </label>
-      <div className="document-layout">
+      <div className="document-layout" aria-busy={!contextReady}>
         <section className="surface upload-panel">
           <h2>1. Choose a document</h2>
           <div
@@ -185,7 +192,7 @@ export function DocumentReview({ initialRequirementId = "" }: { initialRequireme
               type="button"
               className="btn secondary compact"
               onClick={() => input.current?.click()}
-              disabled={pending}
+              disabled={pending || !contextReady}
             >
               {file ? "Choose another file" : "Choose document"}
             </button>
@@ -196,7 +203,7 @@ export function DocumentReview({ initialRequirementId = "" }: { initialRequireme
               aria-label="Choose document file"
               aria-describedby="upload-hint"
               accept="image/jpeg,image/png,application/pdf"
-              disabled={pending}
+              disabled={pending || !contextReady}
               onChange={(e) => choose(e.target.files?.[0])}
             />
             <small id="upload-hint">JPG, PNG or PDF, up to 4 MB</small>
@@ -258,7 +265,7 @@ export function DocumentReview({ initialRequirementId = "" }: { initialRequireme
             <input
               type="checkbox"
               checked={consent}
-              disabled={!file || pending}
+              disabled={!file || pending || !contextReady}
               onChange={(e) => setConsent(e.target.checked)}
             />
             <span>
@@ -267,7 +274,7 @@ export function DocumentReview({ initialRequirementId = "" }: { initialRequireme
           </label>
           <button
             className="btn primary"
-            disabled={!file || !consent || pending}
+            disabled={!file || !consent || pending || !contextReady}
             onClick={() => void process()}
           >
             <ScanText size={18} />
@@ -443,7 +450,7 @@ export function DocumentReview({ initialRequirementId = "" }: { initialRequireme
               </p>
               <hr />
               <p>Want to try the review interaction first?</p>
-              <button className="btn secondary compact" onClick={showExample}>
+              <button className="btn secondary compact" disabled={!contextReady} onClick={showExample}>
                 Try fictional example
               </button>
               <small>Clearly labeled sample · No file is uploaded</small>
