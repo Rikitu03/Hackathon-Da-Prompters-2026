@@ -138,11 +138,13 @@
   pointer-events: none;
 }
 .admin-login-waves {
+  /* A page-level decoration, independent of the card and illustration height. */
   position: absolute;
   z-index: 1;
-  left: calc(-1 * (var(--login-left-pad) + var(--login-outside-pad)));
-  bottom: calc(-1 * var(--login-bottom-pad));
-  width: calc(100% + var(--login-left-pad) + var(--login-outside-pad) + 26px);
+  left: 0;
+  bottom: 0;
+  display: block;
+  width: 100%;
   height: clamp(86px, 13vh, 135px);
   pointer-events: none;
 }
@@ -153,17 +155,16 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  /* Keep the existing centered top edge on taller screens, but fill to the viewport bottom. */
-  align-self: stretch;
+  /* Size to its real content; do not stretch the card just to reach the viewport edge. */
+  align-self: center;
   width: 100%;
   max-width: 650px;
   height: auto;
   min-height: 0;
-  margin-top: max(0px, calc((100svh - var(--login-top-pad) - var(--login-bottom-pad) - 850px) / 2));
-  margin-bottom: calc(-1 * var(--login-bottom-pad));
+  margin: 0;
   overflow: hidden;
   border: 1px solid rgba(199,220,241,.72);
-  border-radius: 23px 23px 0 0;
+  border-radius: 23px;
   background: rgba(255,255,255,.985);
   box-shadow: 0 15px 40px rgba(35,92,151,.09), 0 2px 10px rgba(35,92,151,.05);
 }
@@ -375,7 +376,7 @@
   align-self: stretch;
   width: 100%;
   height: clamp(48px, 7vh, 74px);
-  margin-top: auto;
+  margin-top: 0;
   opacity: .92;
 }
 .admin-login-page :is(input, button, a):focus-visible {
@@ -418,7 +419,7 @@
 @media (min-width: 921px) and (max-height: 640px) {
   /* On very short windows, keep all controls accessible rather than clipping. */
   .admin-login-layout { height: auto; min-height: 100svh; }
-  .admin-login-card { height: auto; min-height: 570px; margin-top: 0; margin-bottom: 0; border-radius: 23px; }
+  .admin-login-card { height: auto; min-height: 0; margin: 0; border-radius: 23px; }
   .admin-login-hero { min-height: 570px; }
 }
 
@@ -447,9 +448,9 @@
     opacity: .7;
   }
   .admin-login-waves {
-    left: -22px;
+    left: 0;
     bottom: 0;
-    width: calc(100% + 44px);
+    width: 100%;
     height: 70px;
   }
   .admin-login-card {
