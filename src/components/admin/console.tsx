@@ -482,7 +482,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
                     <button type="button" onClick={()=>{setRequirementId(null);setRequirementPrefilled(false);}} className="rounded-lg p-2 hover:bg-[#eef6ff]" aria-label="Close requirement editor"><X size={18}/></button>
                   </div>
                 </div>
-                <RequirementImportDialog open={showRequirementImport} onClose={()=>setShowRequirementImport(false)} onApply={applyRequirementSuggestions}/>
+                {showRequirementImport ? <RequirementImportDialog open onClose={()=>setShowRequirementImport(false)} onApply={applyRequirementSuggestions}/> : null}
                 {requirementPrefilled && <p role="status" className="rounded-xl border border-[#c5d9ef] bg-[#f0f6fc] px-4 py-3 text-sm text-[#102a51]">Suggestions are copied to the draft editor. Review and select Save requirement draft to persist changes.</p>}
                 {!isDraft ? <Notice>Published requirements are read-only. Create a new version with the backend publishing workflow.</Notice> : null}
                 <Field htmlFor="req-title" label="Requirement title" required><input id="req-title" className={inputClass} value={requirementForm.title} onChange={e=>setRequirementForm({...requirementForm,title:e.target.value})} required disabled={!isDraft || !canEdit}/></Field>
