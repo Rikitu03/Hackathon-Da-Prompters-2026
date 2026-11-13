@@ -6,7 +6,7 @@ import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import {
   ArrowRight, Check, ChevronRight, ClipboardCheck, FileCheck2, FileText, GraduationCap,
   LayoutDashboard, LibraryBig, LoaderCircle, LockKeyhole, LogOut, Plus, RefreshCw,
-  ShieldCheck, X
+  ShieldCheck, MapPin, FileUp, X
 } from "lucide-react";
 import { api, HttpError } from "@/lib/http-client";
 import { Button, Card, Empty, Field, Heading, Notice, Pill, StepLink, inputClass, areaClass } from "./ui";
@@ -20,6 +20,8 @@ import { GabayBrand } from "@/components/shared/gabay-brand";
 import { OperationsPanel, AdminWorkflow, ApplicantContentPreview } from "./operations";
 import type { ContextDraft } from "./context-import";
 import { AdminImportDialog } from "./import-dialog";
+import { RequirementImportDialog, type RequirementSuggestion } from "./requirement-import";
+import { mapPinUrl } from "@/lib/guides/schema";
 import { AdminPagination, ADMIN_PAGE_SIZE, safeAdminPage } from "./pagination";
 import "./admin.css";
 
@@ -41,8 +43,8 @@ const info: Record<Section, { label: string; description: string }> = {
 const initProgram = { title: "", description: "" };
 const initCycle = { academic_year: "", application_start: "", application_end: "", official_url: "" };
 type FAQDraft = { question: string; answer: string };
-type RequirementDraft = { title: string; description: string; is_required: boolean; steps: string[]; faqs: FAQDraft[] };
-const initRequirement = (): RequirementDraft => ({ title: "", description: "", is_required: true, steps: [""], faqs: [] });
+type RequirementDraft = { title: string; description: string; is_required: boolean; steps: string[]; faqs: FAQDraft[]; issuingOffice:string; officeAddress:string; officeHours:string; mapUrl:string };
+const initRequirement = (): RequirementDraft => ({ title: "", description: "", is_required: true, steps: [""], faqs: [], issuingOffice:"", officeAddress:"", officeHours:"", mapUrl:"" });
 const errorText = (err: unknown) => err instanceof Error ? err.message : "Something went wrong. Please retry.";
 const stat = (value: number, title: string, icon: ReactNode, subtitle: string, delay = 0) => <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{duration:0.26,delay,ease:[0.22,1,0.36,1]}} className="h-full"><Card className="h-full"><div className="flex items-center justify-between gap-3"><span className="text-sm font-medium text-[#53657b]">{title}</span><span className="rounded-xl bg-[#eef6ff] p-2 text-[#155bb0]">{icon}</span></div><p className="mt-3 text-3xl font-semibold tracking-tight text-[#102a51]" style={{ fontVariantNumeric: "tabular-nums" }}>{value}</p><p className="mt-1 text-xs leading-5 text-[#53657b]">{subtitle}</p></Card></motion.div>;
 
@@ -88,6 +90,8 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
   const [showImport, setShowImport] = useState(false);
   const [requirementId, setRequirementId] = useState<string | null>(null);
   const [requirementForm, setRequirementForm] = useState<RequirementDraft>(initRequirement);
+  const [showRequirementImport,setShowRequirementImport] = useState(false);
+  const [requirementPrefilled,setRequirementPrefilled] = useState(false);
   const [sourceTitle, setSourceTitle] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [sourceContent, setSourceContent] = useState("");
@@ -301,27 +305,46 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
   }
   function editRequirement(r?: Requirement) {
     setError("");
+    setRequirementPrefilled(false);
+    setShowRequirementImport(false);
     setRequirementId(r?.id || "new");
     if (!r) { setRequirementForm(initRequirement()); return; }
     setRequirementForm({
       title:r.title,description:r.description,is_required:r.is_required,
+      issuingOffice:r.issuing_office ?? "",officeAddress:r.office_address ?? "",officeHours:r.office_hours ?? "",mapUrl:r.map_url ?? "",
       steps: data.steps.filter((s) => s.requirement_id === r.id).sort((a,b) => a.position-b.position).map((s) => s.instruction),
       faqs: data.faqs.filter((f) => f.requirement_id === r.id).map((f) => ({question:f.question,answer:f.answer}))
     });
+  }
+  function applyRequirementSuggestions(ready:RequirementSuggestion) {
+    setRequirementForm(current=>({
+      ...current,
+      title:ready.title || current.title,
+      description:ready.description || current.description,
+      steps:ready.steps.filter(Boolean).length?ready.steps.filter(Boolean):current.steps,
+      issuingOffice:ready.issuingOffice || current.issuingOffice,
+      officeAddress:ready.officeAddress || current.officeAddress,
+      officeHours:ready.officeHours || current.officeHours,
+      mapUrl:ready.mapUrl || current.mapUrl
+    }));
+    setRequirementPrefilled(true);
   }
   async function saveRequirement(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!activeCycle || !isDraft) return;
     if (!requirementForm.title.trim() || !requirementForm.steps.some((s)=>s.trim())) {setError("Every requirement needs a title and at least one actionable step.");return;}
     if (requirementForm.faqs.some((f) => !f.question.trim() || !f.answer.trim())) {setError("Complete both fields in every FAQ, or remove empty entries.");return;}
+    if (!mapPinUrl.safeParse(requirementForm.mapUrl.trim()).success) {setError("Use a direct HTTPS Google Maps, Apple Maps or OpenStreetMap link for the pinned location.");return;}
     const editingId = requirementId !== "new" ? requirementId : null;
     await act(async () => {
       await api("/api/admin/content", { method: "POST", body: JSON.stringify({
         action: "save_requirement", cycleId: activeCycle.id, ...(editingId ? { requirementId: editingId } : {}),
         title: requirementForm.title.trim(), description: requirementForm.description.trim(), required: requirementForm.is_required,
+        issuingOffice:requirementForm.issuingOffice.trim(),officeAddress:requirementForm.officeAddress.trim(),officeHours:requirementForm.officeHours.trim(),mapUrl:requirementForm.mapUrl.trim(),
         steps: requirementForm.steps.map((step) => step.trim()).filter(Boolean), faqs: requirementForm.faqs,
       }) });
       setRequirementId(null);
+      setRequirementPrefilled(false);
     }, editingId ? "Requirement journey updated atomically." : "Requirement journey saved as draft.");
   }
   async function saveSource(e: FormEvent<HTMLFormElement>) {
@@ -458,11 +481,29 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
             {!activeCycle ? <Empty title="No application cycle selected" message="Create or choose an application cycle before adding requirements."><Link href="/admin/programs"><StepLink>Manage scholarship programs</StepLink></Link></Empty> : <div className="grid gap-5 xl:grid-cols-[minmax(260px,.8fr)_minmax(0,1.3fr)]">
               <Card className="self-start"><div className="mb-4 flex items-center justify-between gap-2"><h2 className="font-semibold">Checklist items</h2><Pill status={activeCycle.status}/></div><div className="space-y-2">{visibleRequirements.map((r,index)=><button key={r.id} className={"flex min-h-14 w-full items-center gap-3 rounded-xl border p-3 text-left text-sm transition-colors "+(requirementId===r.id?"border-[#9cbde0] bg-[#eef6ff]":"border-[#d7e3ef] hover:bg-[#eef6ff]")} onClick={()=>editRequirement(r)}><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#eef6ff] text-xs font-bold text-[#155bb0]">{(safeAdminPage(requirementPage,cycleRequirements.length)-1)*ADMIN_PAGE_SIZE+index+1}</span><span className="flex-1 font-semibold">{r.title}</span><ChevronRight size={15} className="shrink-0"/></button>)}{!cycleRequirements.length ? <p className="py-4 text-sm leading-6 text-[#53657b]">No requirements yet. Add the first item for this cycle.</p> : null}</div><AdminPagination page={safeAdminPage(requirementPage,cycleRequirements.length)} totalItems={cycleRequirements.length} label="requirements" onPageChange={setRequirementPage}/>{isDraft ? <Button className="mt-5 w-full" variant="outline" disabled={!canEdit} onClick={()=>editRequirement()}><Plus size={16}/> Add requirement</Button> : <p className="mt-4 text-xs leading-5 text-[#7b6d4e]">Published cycles are read-only here. Use a versioned update workflow.</p>}</Card>
               <Card>{!requirementId ? <Empty title="Select a requirement" message="Choose a checklist item or create a new one. Each item needs actionable steps and approved source backing."/> : <form onSubmit={e=>void saveRequirement(e)} className="space-y-5">
-                <div className="flex items-center justify-between"><h2 className="text-lg font-semibold">{requirementId==="new"?"New requirement":"Edit requirement"}</h2><button type="button" onClick={()=>setRequirementId(null)} className="rounded-lg p-2 hover:bg-[#eef6ff]" aria-label="Close requirement editor"><X size={18}/></button></div>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-lg font-semibold">{requirementId==="new"?"New requirement":"Edit requirement"}</h2>
+                  <div className="flex items-center gap-2">
+                    {isDraft && canEdit && <Button type="button" variant="outline" onClick={()=>setShowRequirementImport(true)}><FileUp size={16}/> Import text / file</Button>}
+                    <button type="button" onClick={()=>{setRequirementId(null);setRequirementPrefilled(false);}} className="rounded-lg p-2 hover:bg-[#eef6ff]" aria-label="Close requirement editor"><X size={18}/></button>
+                  </div>
+                </div>
+                {showRequirementImport ? <RequirementImportDialog open onClose={()=>setShowRequirementImport(false)} onApply={applyRequirementSuggestions}/> : null}
+                {requirementPrefilled && <p role="status" className="rounded-xl border border-[#c5d9ef] bg-[#f0f6fc] px-4 py-3 text-sm text-[#102a51]">Suggestions are copied to the draft editor. Review and select Save requirement draft to persist changes.</p>}
                 {!isDraft ? <Notice>Published requirements are read-only. Create a new version with the backend publishing workflow.</Notice> : null}
                 <Field htmlFor="req-title" label="Requirement title" required><input id="req-title" className={inputClass} value={requirementForm.title} onChange={e=>setRequirementForm({...requirementForm,title:e.target.value})} required disabled={!isDraft || !canEdit}/></Field>
                 <Field htmlFor="req-desc" label="Why this document is needed" hint="Only include claims supported by an approved reference."><AutoTextarea id="req-desc" className={areaClass} value={requirementForm.description} onChange={e=>setRequirementForm({...requirementForm,description:e.target.value})} disabled={!isDraft || !canEdit}/></Field>
                 <label className="flex min-h-11 items-center gap-3 text-sm font-medium"><input type="checkbox" checked={requirementForm.is_required} onChange={e=>setRequirementForm({...requirementForm,is_required:e.target.checked})} className="h-5 w-5 accent-[#155bb0]" disabled={!isDraft || !canEdit}/> Required for this cycle (uncheck if conditional)</label>
+                <fieldset disabled={!isDraft || !canEdit} className="space-y-3 border-t border-[#d7e3ef] pt-5">
+                  <legend className="inline-flex items-center gap-2 pb-2 text-base font-semibold text-[#102a51]"><MapPin size={19} className="text-[#155bb0]"/> Where to get this document</legend>
+                  <p className="text-xs leading-5 text-[#53657b]">Optional issuing-office details. Verify the office and pinned map link before publishing.</p>
+                  <Field htmlFor="req-office" label="Issuing office"><input id="req-office" maxLength={160} className={inputClass} value={requirementForm.issuingOffice} onChange={event=>setRequirementForm(old=>({...old,issuingOffice:event.target.value}))} placeholder="e.g., University Registrar"/></Field>
+                  <Field htmlFor="req-address" label="Full office address"><AutoTextarea id="req-address" className={areaClass} value={requirementForm.officeAddress} onChange={event=>setRequirementForm(old=>({...old,officeAddress:event.target.value}))} placeholder="Verified street address, city and province"/></Field>
+                  <Field htmlFor="req-hours" label="Office hours"><input id="req-hours" maxLength={240} className={inputClass} value={requirementForm.officeHours} onChange={event=>setRequirementForm(old=>({...old,officeHours:event.target.value}))} placeholder="e.g., Mon–Fri, 8:00 AM–5:00 PM"/></Field>
+                  <Field htmlFor="req-map" label="Pinned map URL" hint="Paste the exact Google Maps, Apple Maps or OpenStreetMap location link. No pin is guessed automatically."><input id="req-map" type="url" maxLength={2000} className={inputClass} value={requirementForm.mapUrl} onChange={event=>setRequirementForm(old=>({...old,mapUrl:event.target.value}))} placeholder="https://www.google.com/maps/..."/></Field>
+                  {requirementForm.mapUrl.trim() && mapPinUrl.safeParse(requirementForm.mapUrl).success &&
+                    <a href={requirementForm.mapUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-[#155bb0] underline underline-offset-4"><MapPin size={16}/> Preview pinned location</a>}
+                </fieldset>
                 <div className="border-t border-[#d7e3ef] pt-6">
                   <StepBuilder
                     key={activeCycleId+":"+requirementId}

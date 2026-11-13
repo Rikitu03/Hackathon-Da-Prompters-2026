@@ -9,6 +9,7 @@ import {
   Check,
   ClipboardCheck,
   MessageCircle,
+  MapPin, ExternalLink,
   ScanText,
 } from "lucide-react";
 import {
@@ -473,8 +474,20 @@ export function RequirementDetail({
               </p>
             )}
           </section>
-          <section className="surface">
-            <h2>Questions you might have</h2>
+          {(requirement.issuingOffice || requirement.officeAddress || requirement.officeHours || requirement.mapUrl) && (
+             <section className="surface" aria-label="Where to get this document">
+               <h2><MapPin size={20} aria-hidden="true" /> Where to get this document</h2>
+               {requirement.issuingOffice && <p><strong>Issuing office:</strong> {requirement.issuingOffice}</p>}
+               {requirement.officeAddress && <p><strong>Address:</strong> {requirement.officeAddress}</p>}
+               {requirement.officeHours && <p><strong>Office hours:</strong> {requirement.officeHours}</p>}
+               {requirement.mapUrl && <a className="btn secondary compact" href={requirement.mapUrl} target="_blank" rel="noopener noreferrer">
+                 <MapPin size={16} aria-hidden="true"/> Open pinned location <ExternalLink size={14} aria-hidden="true"/>
+               </a>}
+               <p className="helper">Confirm the address and opening hours with the issuing office before visiting.</p>
+             </section>
+           )}
+           <section className="surface">
+             <h2>Questions you might have</h2>
             {requirement.faqs.length ? (
               requirement.faqs.map((f, i) => (
                 <details key={i}>
