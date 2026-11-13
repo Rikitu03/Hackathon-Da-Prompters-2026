@@ -12,6 +12,7 @@ import { api, HttpError } from "@/lib/http-client";
 import { Button, Card, Empty, Field, Heading, Notice, Pill, StepLink, inputClass, areaClass } from "./ui";
 import { demoPublicationChecks, emptyData, formatDate, isHttpsLink, loadAdminData, type AdminData, type Cycle, type Program, type Requirement, type Role } from "./data";
 import { demoData } from "./demo-data";
+import { clearDemoSandbox, demoId, readDemoSandbox, upsertDemoCycle, upsertDemoProgram, upsertDemoRequirement, upsertDemoSource, writeDemoSandbox } from "./demo-actions";
 import { AdminSelect } from "./select";
 import { StepBuilder } from "./step-builder";
 import { AutoTextarea } from "./auto-textarea";
@@ -72,6 +73,15 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [data, setData] = useState<AdminData>(demoMode ? demoData : emptyData);
+  useEffect(() => {
+    if (!demoMode) return;
+    setData(readDemoSandbox());
+  }, [demoMode]);
+  // Persist synchronously before route navigation can unmount this view.
+  function commitDemo(next: AdminData) {
+    writeDemoSandbox(next);
+    setData(next);
+  }
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -193,6 +203,17 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     };
   }, [demoMode, gate, reload]);
 
+  function resetDemo() {
+    if (!demoMode) return;
+    clearDemoSandbox();
+    setData(demoData);
+    setProgramId(""); setCycleId("");
+    setProgramMode("none"); setCycleMode("none"); setRequirementId(null); setSourceId(null);
+    setSearch(""); setFilter("all");
+    setMessage("Demo sample data restored locally. No Supabase records were changed.");
+    setError("");
+  }
+
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!configured) return;
@@ -275,6 +296,19 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     const title = programForm.title.trim(), description = programForm.description.trim();
     if (title.length < 3 || description.length < 10) { setError("Enter a program name (at least 3 characters) and description (at least 10 characters)."); return; }
     const editingId = programMode === "edit" ? activeProgram?.id : null;
+    if (demoMode) {
+      const id = editingId || demoId("program");
+      commitDemo(upsertDemoProgram(data, {
+        id, title, description, status: editingId ? activeProgram?.status ?? "draft" : "draft",
+        created_at: editingId ? activeProgram?.created_at ?? new Date().toISOString() : new Date().toISOString(),
+      }));
+      setProgramId(id); setCycleId(""); setProgramMode("none"); setProgramForm(initProgram);
+      if (!editingId && importedCycle) {
+        setCycleForm(importedCycle); setCycleMode("new"); setImportedCycle(null);
+      }
+      setError(""); setMessage("Demo program draft updated locally. No Supabase records were saved.");
+      return;
+    }
     await act(async () => {
       const result = await api<{ program: Program }>(editingId ? "/api/admin/programs/" + editingId : "/api/admin/programs", {
         method: editingId ? "PATCH" : "POST", body: JSON.stringify({ title, description }),
@@ -295,6 +329,21 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     if (cycleForm.official_url && !isHttpsLink(cycleForm.official_url)) {setError("The official portal link must be an HTTPS URL.");return;}
     if (cycleForm.application_start && cycleForm.application_end && cycleForm.application_end < cycleForm.application_start) {setError("The end date cannot be earlier than the start date.");return;}
     const editingId = cycleMode === "edit" ? activeCycle?.id : null;
+    if (demoMode) {
+      const id = editingId || demoId("cycle");
+      commitDemo(upsertDemoCycle(data, {
+        id, program_id: activeProgram.id,
+        academic_year: cycleForm.academic_year.trim(),
+        application_start: cycleForm.application_start || null,
+        application_end: cycleForm.application_end || null,
+        official_url: cycleForm.official_url.trim() || null,
+        status: editingId ? activeCycle?.status ?? "draft" : "draft",
+        published_at: null,
+      }));
+      setCycleId(id); setCycleMode("none"); setCycleForm(initCycle);
+      setError(""); setMessage("Demo cycle draft updated locally. No Supabase records were saved.");
+      return;
+    }
     await act(async () => {
       const result = await api<{ guide: { cycleId: string } }>("/api/admin/content", { method: "POST", body: JSON.stringify({
         action: "save_cycle", programId: activeProgram.id, ...(editingId ? { cycleId: editingId } : {}),
@@ -337,6 +386,19 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     if (requirementForm.faqs.some((f) => !f.question.trim() || !f.answer.trim())) {setError("Complete both fields in every FAQ, or remove empty entries.");return;}
     if (!mapPinUrl.safeParse(requirementForm.mapUrl.trim()).success) {setError("Use a direct HTTPS Google Maps, Apple Maps or OpenStreetMap link for the pinned location.");return;}
     const editingId = requirementId !== "new" ? requirementId : null;
+    if (demoMode) {
+      const id = editingId || demoId("requirement");
+      const position = editingId ? (cycleRequirements.find(r => r.id === id)?.position ?? cycleRequirements.length) : cycleRequirements.length;
+      commitDemo(upsertDemoRequirement(data, {
+        id, cycle_id: activeCycle.id, title: requirementForm.title.trim(),
+        description: requirementForm.description.trim(), is_required: requirementForm.is_required, position,
+        issuing_office: requirementForm.issuingOffice.trim(), office_address: requirementForm.officeAddress.trim(),
+        office_hours: requirementForm.officeHours.trim(), map_url: requirementForm.mapUrl.trim(),
+      }, requirementForm.steps.map(s => s.trim()).filter(Boolean), requirementForm.faqs.map(f => ({question:f.question.trim(),answer:f.answer.trim()}))));
+      setRequirementId(null); setRequirementPrefilled(false);
+      setError(""); setMessage("Demo requirement updated locally. No Supabase records were saved.");
+      return;
+    }
     await act(async () => {
       await api("/api/admin/content", { method: "POST", body: JSON.stringify({
         action: "save_requirement", cycleId: activeCycle.id, ...(editingId ? { requirementId: editingId } : {}),
@@ -352,6 +414,20 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
     e.preventDefault();
     if (!activeCycle || !isDraft) return;
     if (sourceTitle.trim().length < 3 || !isHttpsLink(sourceUrl.trim())) {setError("Enter a source title and a valid HTTPS reference URL.");return;}
+    if (demoMode) {
+      const existing = data.sources.find(row => row.id === sourceId);
+      const id = sourceId || demoId("source");
+      const updatedText = !existing || existing.content !== sourceContent || existing.source_url !== sourceUrl.trim();
+      commitDemo(upsertDemoSource(data, {
+        id, cycle_id: activeCycle.id, title: sourceTitle.trim(),
+        source_url: sourceUrl.trim(), content: sourceContent.trim(),
+        is_approved: sourceApproved, reviewed_at: sourceApproved ? new Date().toISOString() : null,
+        content_version: existing ? existing.content_version + (updatedText ? 1 : 0) : 1,
+      }));
+      setSourceTitle(""); setSourceUrl(""); setSourceContent(""); setSourceApproved(false); setSourceId(null);
+      setError(""); setMessage("Demo reference updated in this browser tab only. Nothing saved to Supabase.");
+      return;
+    }
     await act(async () => {
       await api("/api/admin/content", { method: "POST", body: JSON.stringify({
         action: "save_source", cycleId: activeCycle.id, ...(sourceId ? { sourceId } : {}),
@@ -399,13 +475,13 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
       <div className="admin-topbar sticky top-0 z-20 border-b border-[#d7e3ef] bg-white/95 backdrop-blur-xl">
         <div className="flex min-h-16 items-center justify-between gap-3 px-4 sm:px-7 lg:px-10">
           <div className="flex min-w-0 items-center gap-2"><div className="lg:hidden"><GabayBrand/></div><span className="hidden text-sm font-medium text-[#53657b] lg:inline">Admin workspace</span><ChevronRight size={14} aria-hidden="true" className="hidden text-[#53657b] lg:inline"/><span className="hidden truncate text-sm font-semibold text-[#102a51] lg:inline">{info[section].label}</span></div>
-          <div className="flex items-center gap-2"><span className="inline-flex rounded-full border border-[#d7e3ef] bg-[#eef6ff] px-3 py-1.5 text-xs font-semibold capitalize text-[#155bb0]">{demoMode ? "Demo preview" : role + " access"}</span>{demoMode ? <Link href="/admin" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[#d7e3ef] text-[#cddff4] lg:hidden" aria-label="Admin sign-in"><LockKeyhole size={18}/></Link> : <button className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[#d7e3ef] text-[#cddff4] lg:hidden" onClick={() => void signOut()} aria-label="Sign out"><LogOut size={18}/></button>}</div>
+          <div className="flex items-center gap-2"><span className="inline-flex rounded-full border border-[#d7e3ef] bg-[#eef6ff] px-3 py-1.5 text-xs font-semibold capitalize text-[#155bb0]">{demoMode ? "Demo preview" : role + " access"}</span>{demoMode ? <button type="button" onClick={resetDemo} className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#d7e3ef] bg-white px-3 text-xs font-semibold text-[#155bb0] hover:bg-[#eef6ff]">Reset demo</button> : null}{demoMode ? <Link href="/admin" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[#d7e3ef] text-[#cddff4] lg:hidden" aria-label="Admin sign-in"><LockKeyhole size={18}/></Link> : <button className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[#d7e3ef] text-[#cddff4] lg:hidden" onClick={() => void signOut()} aria-label="Sign out"><LogOut size={18}/></button>}</div>
         </div>
         <div className="overflow-x-auto border-t border-[#d7e3ef] lg:hidden"><LinkNav section={section} mobile demoMode={demoMode}/></div>
       </div>
       <main className="admin-content mx-auto min-w-0 w-full max-w-[1340px] px-4 py-7 sm:px-7 sm:py-9 lg:px-10 lg:py-10">
         {!demoMode && role === "editor" && <div className="mb-5"><Notice>Read-only editor access. A publisher must save, review, and publish changes.</Notice></div>}
-        {demoMode ? <div className="mb-5"><Notice>This is an <strong>interactive UI preview</strong> using fictional data. You can try controls and step ordering, but no changes are saved or published. No live records are loaded.</Notice></div> : null}
+        {demoMode ? <div className="mb-5"><Notice>This is an <strong>interactive demo sandbox</strong> using fictional data. Draft changes are saved only in this browser tab. Nothing is sent to Supabase or published.</Notice></div> : null}
         <AnimatePresence initial={false} mode="wait">
           {error ? <motion.div key="admin-error" initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:0.16}} className="mb-5"><Notice tone="error">{error}</Notice></motion.div>
            : message ? <motion.div key="admin-success" initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:0.16}} className="mb-5"><Notice tone="success">{message}</Notice></motion.div>
@@ -415,7 +491,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
         <AnimatePresence mode="wait"><motion.div key={section} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-4}} transition={{duration:0.18,ease:"easeOut"}}>
           {section === "overview" ? <>
             <Heading eyebrow="Content management" title="Welcome to your workspace" description="Manage the scholarship guides your team is preparing."
-              action={<Link href={demoMode?"/admin/demo?view=programs":"/admin/programs/new"} className="admin-primary-action inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#155bb0] px-4 py-2.5 text-sm font-semibold text-[#f8fbff] hover:bg-[#104a92]"><Plus size={17}/>Create guide</Link>}/>
+              action={<Link href={demoMode?"/admin/demo?view=programs&new=1":"/admin/programs/new"} className="admin-primary-action inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#155bb0] px-4 py-2.5 text-sm font-semibold text-[#f8fbff] hover:bg-[#104a92]"><Plus size={17}/>Create guide</Link>}/>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {stat(data.programs.length,"Programs",<GraduationCap size={19}/>, "All managed programs",0)}
               {stat(data.cycles.filter(c=>c.status==="draft").length,"Draft cycles",<FileText size={19}/>, "Not visible to applicants",0.055)}
@@ -471,7 +547,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
           {section === "requirements" ? <>
             <Heading eyebrow="Preparation guidance" title="Requirements & FAQs" description="Step 2: Select a guide and add documents students need, clear preparation steps, and common questions."/>
             <SelectScope data={data} programId={activeProgramId} cycleId={activeCycleId} onProgram={id=>{setProgramId(id);setCyclePage(1);setRequirementPage(1);setSourcePage(1);}} onCycle={id=>{setCycleId(id);setRequirementPage(1);setSourcePage(1);}}/>
-            {!activeCycle ? <Empty title="No application cycle selected" message="Create or choose an application cycle before adding requirements."><Link href="/admin/programs"><StepLink>Manage scholarship programs</StepLink></Link></Empty> : <div className="grid gap-5 xl:grid-cols-[minmax(260px,.8fr)_minmax(0,1.3fr)]">
+            {!activeCycle ? <Empty title="No application cycle selected" message="Create or choose an application cycle before adding requirements."><Link href={demoMode ? "/admin/demo?view=programs" : "/admin/programs"}><StepLink>Manage scholarship programs</StepLink></Link></Empty> : <div className="grid gap-5 xl:grid-cols-[minmax(260px,.8fr)_minmax(0,1.3fr)]">
               <Card className="self-start"><div className="mb-4 flex items-center justify-between gap-2"><h2 className="font-semibold">Checklist items</h2><Pill status={activeCycle.status}/></div><div className="space-y-2">{visibleRequirements.map((r,index)=><button key={r.id} className={"flex min-h-14 w-full items-center gap-3 rounded-xl border p-3 text-left text-sm transition-colors "+(requirementId===r.id?"border-[#9cbde0] bg-[#eef6ff]":"border-[#d7e3ef] hover:bg-[#eef6ff]")} onClick={()=>editRequirement(r)}><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#eef6ff] text-xs font-bold text-[#155bb0]">{(safeAdminPage(requirementPage,cycleRequirements.length)-1)*ADMIN_PAGE_SIZE+index+1}</span><span className="flex-1 font-semibold">{r.title}</span><ChevronRight size={15} className="shrink-0"/></button>)}{!cycleRequirements.length ? <p className="py-4 text-sm leading-6 text-[#53657b]">No requirements yet. Add the first item for this cycle.</p> : null}</div><AdminPagination page={safeAdminPage(requirementPage,cycleRequirements.length)} totalItems={cycleRequirements.length} label="requirements" onPageChange={setRequirementPage}/>{isDraft ? <Button className="mt-5 w-full" variant="outline" disabled={!canEdit} onClick={()=>editRequirement()}><Plus size={16}/> Add requirement</Button> : <p className="mt-4 text-xs leading-5 text-[#7b6d4e]">Published cycles are read-only here. Use a versioned update workflow.</p>}</Card>
               <Card>{!requirementId ? <Empty title="Select a requirement" message="Choose a checklist item or create a new one. Each item needs actionable steps and approved source backing."/> : <form onSubmit={e=>void saveRequirement(e)} className="space-y-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">

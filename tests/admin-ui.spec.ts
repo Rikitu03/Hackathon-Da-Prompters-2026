@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("demo dashboard renders clear summaries and navigation", async ({ page, isMobile }) => {
   await page.goto("/admin/demo");
   await expect(page.getByRole("heading", {name:"Welcome to your workspace"})).toBeVisible();
-  await expect(page.getByText("interactive UI preview")).toBeVisible();
+  await expect(page.getByText(/interactive demo sandbox/)).toBeVisible();
   await expect(page.getByRole("link", {name:"Scholarship guides"})).toBeVisible();
   await expect(page.getByRole("link", {name:"Requirements & FAQs"})).toBeVisible();
   await expect(page.getByRole("link", {name:"Knowledge & sources"})).toBeVisible();
@@ -54,15 +54,103 @@ test("mobile layouts avoid horizontal document scrolling and retain usable contr
   }
 });
 
-test("demo controls never claim a database save", async ({page}) => {
+test("demo create-draft button updates sample records without backend writes", async ({page}) => {
   await page.goto("/admin/demo?view=programs");
   await page.getByRole("button",{name:"New program"}).click();
   await page.getByRole("textbox",{name:"Program name"}).fill("Test user experience guide");
   await page.getByRole("textbox",{name:"Program description"}).fill("A fictional usability test program description.");
   await page.getByRole("button",{name:"Create draft"}).click();
-  await expect(page.getByText(/Preview mode: changes are not saved/)).toBeVisible();
+  await expect(page.getByText(/Demo program draft updated locally/)).toBeVisible();
 });
 
+
+
+test("demo Create guide shortcut opens the program form", async ({page}) => {
+  await page.goto("/admin/demo");
+  await page.getByRole("link", { name: "Create guide" }).click();
+  await expect(page).toHaveURL(/view=programs&new=1/);
+  await expect(page.getByRole("textbox", { name: "Program name" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Create draft" })).toBeVisible();
+});
+
+test("demo draft persists across navigation and reset restores samples", async ({page}) => {
+  const unexpectedWrites: string[] = [];
+  page.on("request", req => {
+    if (/\/api\/admin\//.test(req.url()) && req.method() !== "GET") unexpectedWrites.push(req.url());
+  });
+  await page.goto("/admin/demo?view=programs");
+  await page.getByRole("button", { name: "New program" }).click();
+  await page.getByRole("textbox", { name: "Program name" }).fill("Sandbox Test Guide");
+  await page.getByRole("textbox", { name: "Program description" }).fill("Fictional guide for locally testing admin actions.");
+  await page.getByRole("button", { name: "Create draft" }).click();
+  await expect(page.getByRole("listitem").filter({hasText:"Sandbox Test Guide"})).toBeVisible();
+  await page.getByRole("link", { name: "Knowledge & sources" }).click();
+  await page.getByRole("link", { name: "Scholarship guides" }).click();
+  await expect(page.getByRole("listitem").filter({hasText:"Sandbox Test Guide"})).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("listitem").filter({hasText:"Sandbox Test Guide"})).toBeVisible();
+  await page.getByRole("button", { name: "Reset demo" }).click();
+  await expect(page.getByRole("listitem").filter({hasText:"Sandbox Test Guide"})).toHaveCount(0);
+  expect(unexpectedWrites).toEqual([]);
+});
+
+test("demo Save draft cycle updates the visible cycle list", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  await page.getByRole("button", { name: "Add cycle" }).click();
+  await page.locator("#cycle-year").fill("Demo 2026-2027");
+  await page.getByRole("button", { name: "Save draft cycle" }).click();
+  await expect(page.getByText("Demo 2026-2027", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Demo cycle draft updated locally/)).toBeVisible();
+});
+
+test("demo Save requirement draft updates checklist and steps", async ({page}) => {
+  await page.goto("/admin/demo?view=requirements");
+  await page.getByRole("button", { name: "Add requirement" }).click();
+  await page.locator("#req-title").fill("Fictional sandbox clearance");
+  await page.getByLabel("Instruction for step 1").fill("Ask the fictional office for a sample form.");
+  await page.getByRole("button", { name: "Save requirement draft" }).click();
+  await expect(page.getByRole("button", { name: /Fictional sandbox clearance/ })).toBeVisible();
+  await page.getByRole("button", { name: /Fictional sandbox clearance/ }).click();
+  await expect(page.getByLabel("Instruction for step 1")).toHaveValue("Ask the fictional office for a sample form.");
+});
+
+test("demo Save source and review adds a local reference", async ({page}) => {
+  await page.goto("/admin/demo?view=knowledge");
+  await page.locator("#source-title").fill("Fictional sandbox source");
+  await page.locator("#source-url").fill("https://example.test/demo-source");
+  await page.locator("#source-content").fill("Sample text only. Not a verified official document.");
+  await page.getByRole("button", { name: "Save source and review" }).click();
+  await expect(page.getByRole("heading", { name: "Fictional sandbox source" })).toBeVisible();
+  await expect(page.getByText(/Demo reference updated in this browser tab only/)).toBeVisible();
+  await page.goto("/admin/demo?view=preview");
+  await expect(page.getByRole("button", { name: "Publish verified guide" })).toBeDisabled();
+});
+
+
+test("demo Edit program updates its list item without server storage", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  const row = page.getByRole("listitem").filter({hasText:"Sample Scholarship Preparation Guide"});
+  await row.getByRole("button", { name:"Edit" }).click();
+  await page.getByRole("textbox", { name:"Program name" }).fill("Edited fictional guide");
+  await page.getByRole("button", { name:"Save changes" }).click();
+  await expect(page.getByRole("listitem").filter({hasText:"Edited fictional guide"})).toBeVisible();
+});
+
+test("demo Edit source invalidates local approval when its reference text changes", async ({page}) => {
+  await page.goto("/admin/demo?view=knowledge");
+  await page.locator("#source-title").fill("Sandbox reviewed reference");
+  await page.locator("#source-url").fill("https://example.test/reference");
+  await page.locator("#source-content").fill("Fictional example reference text.");
+  await page.getByLabel(/I have reviewed this source/).check();
+  await page.getByRole("button", { name:"Save source and review" }).click();
+  const article = page.locator("article").filter({hasText:"Sandbox reviewed reference"});
+  await expect(article.getByText("approved")).toBeVisible();
+  await article.getByRole("button", { name:"Edit source and review" }).click();
+  await page.locator("#source-content").fill("Edited fictional reference text.");
+  await expect(page.getByLabel(/I have reviewed this source/)).not.toBeChecked();
+  await page.getByRole("button", { name:"Save source and review" }).click();
+  await expect(page.locator("article").filter({hasText:"Sandbox reviewed reference"}).getByText("in review")).toBeVisible();
+});
 
 test("overview program entries are fully clickable and Refresh is not required", async ({page}) => {
   await page.goto("/admin/demo");
@@ -280,7 +368,7 @@ test("context text import stages reviewed fields but never claims to save in dem
   await expect(page.getByRole("textbox",{name:"Program description"})).toHaveValue(/fictional guide/);
   await expect(page.getByRole("dialog",{name:"Import scholarship source"})).toHaveCount(0);
   await page.getByRole("button",{name:"Create draft"}).click();
-  await expect(page.getByText(/Preview mode: changes are not saved/)).toBeVisible();
+  await expect(page.getByText(/Demo program draft updated locally/)).toBeVisible();
 });
 
 test("context importer explains rejected files and missing Lumen extraction", async ({page}) => {
@@ -496,7 +584,7 @@ test("requirement text import reviews labeled fields and stages an office map pi
   await expect(page.getByLabel("Instruction for step 1")).toHaveValue("Request the document at the registrar.");
   await expect(page.getByText("Suggestions are copied to the draft editor")).toBeVisible();
   await page.getByRole("button",{name:"Save requirement draft"}).click();
-  await expect(page.getByText(/Preview mode: changes are not saved/)).toBeVisible();
+  await expect(page.getByText(/Demo requirement updated locally/)).toBeVisible();
 });
 
 test("requirement importer supports local files and rejects unsupported or oversized files",async ({page})=>{

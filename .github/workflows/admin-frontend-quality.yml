@@ -8,6 +8,9 @@ on:
       - "src/app/api/auth/**"
       - "src/lib/api.ts"
       - "src/lib/api-origin.test.ts"
+      - "next.config.ts"
+      - "src/middleware.ts"
+      - "src/middleware.test.ts"
       - "src/components/shared/**"
       - "src/components/applicant/workspace.tsx"
       - "docs/ADMIN_FRONTEND_UAT.md"
@@ -26,6 +29,9 @@ on:
       - "src/app/api/auth/**"
       - "src/lib/api.ts"
       - "src/lib/api-origin.test.ts"
+      - "next.config.ts"
+      - "src/middleware.ts"
+      - "src/middleware.test.ts"
       - "src/components/shared/**"
       - "src/components/applicant/workspace.tsx"
       - "package.json"
@@ -56,7 +62,7 @@ jobs:
       - name: Applicant model and API regression tests
         run: npm run test:applicant
       - name: Origin security and login validation tests
-        run: npx vitest run src/lib/api-origin.test.ts src/components/admin/login-validation.test.ts
+        run: npx vitest run src/lib/api-origin.test.ts src/components/admin/login-validation.test.ts src/middleware.test.ts
       - name: Production build
         run: npm run build
       - name: Install browser for UI tests

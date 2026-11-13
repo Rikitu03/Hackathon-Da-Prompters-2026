@@ -290,6 +290,17 @@
   color: #53657b;
 }
 .admin-login-form-options span svg { color: #155bb0; }
+.admin-login-form-options a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  color: #075ba9;
+  font-size: inherit;
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.admin-login-form-options a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .admin-login-form-options button {
   padding: 7px 0 7px 7px;
   border: 0;

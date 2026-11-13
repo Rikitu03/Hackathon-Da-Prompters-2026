@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import {
   ArrowRight, BookmarkCheck, Eye, EyeOff,
@@ -186,7 +187,7 @@ export function AdminLoginScreen({
                 </div>
 
                 <div className="admin-login-form-options">
-                  <span><ShieldCheck size={17} aria-hidden="true"/> Secure admin access</span>
+                  <Link href="/admin/demo" aria-label="Open interactive admin demo">Try interactive demo</Link>
                   <button type="button" onClick={() => setHelpOpen((open) => !open)} aria-expanded={helpOpen} aria-controls="admin-login-help">
                     Forgot password?
                   </button>

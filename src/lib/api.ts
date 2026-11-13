@@ -46,39 +46,41 @@ export async function body<T extends z.ZodTypeAny>(request: Request, schema: T):
 }
 export function sameOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  const url = new URL(request.url);
-  // Next may reconstruct request.url with its internal hostname (localhost).
-  // Prefer the actual Host header rather than general-purpose forwarded headers.
-  const host = request.headers.get("host");
-  if (host) url.host = host;
-
-  // A Codespaces browser uses an HTTPS public host, but Next may see
-  // HTTP/localhost after forwarding. Sec-Fetch-Site is set by the browser;
-  // a cross-origin web page cannot forge a "same-origin" value.
-  let verifiedCodespacesProxy = false;
   const fetchSite = request.headers.get("sec-fetch-site");
-  if (origin && fetchSite === "same-origin") {
-    try {
-      const browser = new URL(origin);
-      const rawHost = (host || new URL(request.url).host).toLowerCase();
-      const internalHost = rawHost.split(":")[0];
-      const local = ["localhost", "127.0.0.1", "[::1]"].includes(internalHost);
-      const codespaces = browser.protocol === "https:" &&
-        /^[a-z0-9-]+\.app\.github\.dev$/.test(browser.hostname);
-      const forwarded = request.headers.get("x-forwarded-host")?.toLowerCase();
-      // An absent or internally rewritten forwarded host is not evidence of
-      // a foreign origin; a different external host is rejected.
-      const internallyForwarded = new URL(request.url).host.toLowerCase();
-      const forwardedMatches = !forwarded || forwarded === browser.host ||
-        forwarded === rawHost ||
-        (rawHost === browser.host && forwarded === internallyForwarded);
-      verifiedCodespacesProxy = codespaces && (local || rawHost === browser.host) && forwardedMatches;
-    } catch { /* Invalid Origin cannot qualify for the proxy exception. */ }
-  }
-  if (fetchSite === "cross-site" || fetchSite === "same-site" ||
-    (origin && origin !== url.origin && !verifiedCodespacesProxy)) {
+  // Browser fetch metadata is independent of a reverse proxy's rewritten Host.
+  // Same-site is intentionally rejected for state-changing admin endpoints.
+  if (fetchSite === "cross-site" || fetchSite === "same-site") {
     throw new ApiError(403, "Cross-site writes are not allowed");
   }
+
+  const requestUrl = new URL(request.url);
+  const host = request.headers.get("host") ?? requestUrl.host;
+  const destination = new URL(requestUrl);
+  destination.host = host;
+  if (!origin || origin === destination.origin) return;
+
+  // In GitHub Codespaces HTTPS terminates at GitHub's forwarding proxy.
+  // Match the origin to THIS codespace's GitHub-provided environment, not to
+  // user-controlled X-Forwarded-* headers. Keep the check Codespaces-only,
+  // require the browser's same-origin metadata, and match the forwarded port.
+  const codespace = process.env.CODESPACES === "true" ? process.env.CODESPACE_NAME : undefined;
+  const domain = process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN ?? "app.github.dev";
+  const port = requestUrl.port || destination.port || process.env.PORT || "3000";
+  if (
+    codespace &&
+    /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(codespace) &&
+    domain === "app.github.dev" &&
+    /^[0-9]{2,5}$/.test(port) &&
+    fetchSite === "same-origin"
+  ) {
+    const expectedPublicHost = `${codespace}-${port}.${domain}`;
+    const actualHost = destination.hostname.toLowerCase();
+    const receivingHost = actualHost === expectedPublicHost ||
+      ["localhost", "127.0.0.1", "[::1]"].includes(actualHost);
+    if (receivingHost && origin === `https://${expectedPublicHost}`) return;
+  }
+
+  throw new ApiError(403, "Cross-site writes are not allowed");
 }
 export async function requireAdmin(write = false) {
   const client = await createServerSupabaseClient();
