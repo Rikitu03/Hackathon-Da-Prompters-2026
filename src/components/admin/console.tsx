@@ -18,7 +18,8 @@ import { AutoTextarea } from "./auto-textarea";
 import { ProgramSearch } from "./program-search";
 import { GabayBrand } from "@/components/shared/gabay-brand";
 import { OperationsPanel, AdminWorkflow, ApplicantContentPreview } from "./operations";
-import { ContextImport, type ContextDraft } from "./context-import";
+import type { ContextDraft } from "./context-import";
+import { AdminImportDialog } from "./import-dialog";
 import { AdminPagination, ADMIN_PAGE_SIZE, safeAdminPage } from "./pagination";
 import "./admin.css";
 
@@ -84,6 +85,7 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
   const [cycleMode, setCycleMode] = useState<"none"|"new"|"edit">("none");
   const [cycleForm, setCycleForm] = useState(initCycle);
   const [importedCycle, setImportedCycle] = useState<typeof initCycle | null>(null);
+  const [showImport, setShowImport] = useState(false);
   const [requirementId, setRequirementId] = useState<string | null>(null);
   const [requirementForm, setRequirementForm] = useState<RequirementDraft>(initRequirement);
   const [sourceTitle, setSourceTitle] = useState("");
@@ -417,8 +419,12 @@ export function AdminConsole({ section = "overview", programId: initialProgramId
           </> : null}
 
           {section === "programs" ? <>
-            <Heading eyebrow="Content library" title="Scholarship guides" description="Step 1: Enter verified scholarship details and academic year. Then prepare the student checklist." action={<Button disabled={!canEdit} onClick={()=>{setProgramForm(initProgram);setImportedCycle(null);setProgramMode("new");setError("");}}><Plus size={17}/> New program</Button>}/>
-            <ContextImport demoMode={demoMode} onApply={applyContextDraft}/>
+            <Heading eyebrow="Content library" title="Scholarship guides" description="Create a guide or import an official document to start a draft."
+              action={<div className="flex flex-wrap items-center gap-2">
+                <Button variant="outline" disabled={!canEdit} aria-haspopup="dialog" onClick={()=>setShowImport(true)}>Import file</Button>
+                <Button disabled={!canEdit} onClick={()=>{setProgramForm(initProgram);setImportedCycle(null);setProgramMode("new");setError("");}}><Plus size={17}/> New program</Button>
+              </div>}/>
+            <AdminImportDialog open={showImport} onClose={()=>setShowImport(false)} demoMode={demoMode} onApply={applyContextDraft}/>
              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,1fr)]">
               <div className="space-y-5">
                 <Card><div className="grid gap-3 sm:grid-cols-[1fr_160px]"><ProgramSearch value={search} onChange={value=>{setSearch(value);setProgramPage(1);}} programNames={data.programs.map(p=>p.title)} scope={demoMode?"demo":"admin"}/><div><label htmlFor="program-filter" className="sr-only">Filter publication status</label><AdminSelect id="program-filter" value={filter} onChange={value=>{setFilter(value);setProgramPage(1);}} placeholder="All statuses" options={[{value:"all",label:"All statuses"},{value:"draft",label:"Draft"},{value:"published",label:"Published"},{value:"archived",label:"Archived"}]}/></div></div></Card>
