@@ -54,9 +54,13 @@ export const pscsCoreCollegeRenewal: Guide = {
           description:
             "The official list asks for enrollment evidence for the first semester of AY 2026–2027. A Certificate of Registration is the usual school record for this; confirm with the scholarship office that it is accepted for this cycle.",
           required: true,
+          issuingOffice: "Your school’s Registrar’s Office or official student portal",
           steps: [
-            "Request your Certificate of Registration for the first semester of AY 2026–2027 from your school registrar.",
+            "Get your Certificate of Registration (COR) from your school’s Registrar’s Office. If your school provides it through an official student portal, select the first semester of AY 2026–2027 and download or print the COR.",
+            "Have your student number and enrollment details ready. Ask the registrar whether your enrollment must be confirmed and whether you need to submit a document request before the COR can be released.",
+            "Tell the registrar that the copy is for a scholarship application. Ask whether a signed or certified copy is available, whether there is a fee, and when and how you can collect it. Follow your school’s instructions and keep any receipt or request reference.",
             "Check that it shows your name, student number, address, course, department, enrollment date, school year and year level.",
+            "Ask the registrar to correct any wrong details. Keep the original or official downloaded file and prepare a clear scan or photo of the complete document, with all edges visible.",
             "Use “Check this document” on this page to read the details and flag anything outdated or inconsistent.",
           ],
           faqs: [
@@ -73,12 +77,27 @@ export const pscsCoreCollegeRenewal: Guide = {
           description:
             "The official list asks for a barangay residency certificate that states your years of residence. A Certificate of Indigency is a different document.",
           required: true,
+          issuingOffice: "Your barangay hall; Pinagbuhatan Barangay Hall if you live in Pinagbuhatan",
+          officeAddress: "Pinagbuhatan, Pasig City — the pinned location is for Pinagbuhatan residents.",
+          // Location and stated hours come from the user-supplied Pinagbuhatan-Barangay-Hall.pdf.
+          // The PDF does not establish service days, fees, processing time, or request requirements.
+          officeHours: "Pinagbuhatan reference: 8:00 AM–5:00 PM. Confirm service days and certificate-request hours before visiting.",
+          mapUrl: "https://www.google.com/maps/place/Pinagbuhatan+Barangay+Hall/@14.5573469,121.0913655,17.5z/data=!4m6!3m5!1s0x3397c7cd6f709e05:0xc9481ff04396c444!8m2!3d14.5571675!4d121.0909313!16s%2Fg%2F11b8t533ft?hl=en",
           steps: [
-            "Request a Certificate of Residency from your barangay hall.",
+            "Go to the barangay hall of the barangay where you currently live. If you live in Pinagbuhatan, use the Pinagbuhatan Barangay Hall location below. If you live in another barangay, request the certificate from your own barangay hall.",
+            "Before visiting, ask the barangay office what to bring, its service hours, any fee and the release schedule. Ask which ID and proof of address it accepts, such as a utility bill or lease, and bring the documents it requests.",
+            "At the barangay’s certificate or service desk, request a Certificate of Residency for a scholarship application. Explain that it needs to state your years of residence. This is different from a Certificate of Indigency.",
+            "Fill out the barangay’s request form or provide the details staff ask for, including your full name, complete address and years of residence. Follow any verification and payment instructions, keep any official receipt or claim slip, and collect the certificate on the advised date.",
             "Make sure it states your name, address, how many years you have lived there, the date issued and the city.",
+            "Ask the barangay staff to correct any errors before you leave. Keep the certificate and prepare a clear scan or photo of the entire page, including the issuing official’s signature and any seal.",
             "Use “Check this document” to compare its name and address with your Certificate of Registration.",
           ],
           faqs: [
+            {
+              question: "Do I have to go to Pinagbuhatan Barangay Hall?",
+              answer:
+                "Only if you live in Pinagbuhatan. The pinned location and the 8:00 AM–5:00 PM hours are from the supplied Pinagbuhatan Barangay Hall reference. Confirm current service days and hours before visiting. Residents of other barangays should contact their own barangay hall.",
+            },
             {
               question: "Can I submit a Certificate of Indigency instead?",
               answer:
@@ -91,9 +110,14 @@ export const pscsCoreCollegeRenewal: Guide = {
           title: "School ID or any Valid-ID",
           description: "The official list asks for a copy of a valid ID, both sides.",
           required: true,
+          issuingOffice: "Your school’s ID office; ask the Registrar’s Office or Student Affairs Office for directions",
           steps: [
+            "If you need a school ID, contact your school’s Registrar’s Office or Student Affairs Office and ask which campus office handles ID issuance, validation and replacement. Some schools have a separate ID or ICT office.",
+            "Have your student number and current Certificate of Registration ready. Ask the issuing office what documents or photo it needs, whether you need an appointment, and whether a fee applies.",
+            "Follow your school’s ID request process, including any photo capture or validation step. Keep any receipt or claim slip, confirm the release schedule, and collect your ID from the designated office.",
+            "If your ID is lost, damaged or awaiting release, ask the school about replacement or validation. Before using another valid ID instead, confirm its acceptance with the scholarship office.",
             "Prepare a clear copy of the front and back of your school ID or another valid ID.",
-            "Check that the name and student number match your Certificate of Registration.",
+            "Check that your name matches your Certificate of Registration and, for a school ID, that any printed student number matches too. Make sure the photo and all printed details on both sides are readable.",
             "Use “Check this document” to read the ID and compare it with your Certificate of Registration.",
           ],
           faqs: [
