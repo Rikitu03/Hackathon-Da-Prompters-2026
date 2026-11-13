@@ -19,6 +19,34 @@ describe("same-origin write guard", () => {
     };
     expect(() => sameOrigin(new Request("http://localhost:3000/api/auth/login", { headers }))).not.toThrow();
   });
+  it("accepts Codespaces HTTPS requests when forwarded-host is absent or internally rewritten", () => {
+    const origin = "https://cautious-adventure-5gxxg9w6q7q427rxq-3000.app.github.dev";
+    const scenarios = [
+      { host: "localhost:3000" },
+      { host: "localhost:3000", "x-forwarded-host": "localhost:3000" },
+      { host: new URL(origin).host, "x-forwarded-host": "localhost:3000" },
+      { host: new URL(origin).host },
+    ];
+    for (const headers of scenarios) {
+      const request = new Request("http://localhost:3000/api/auth/login", {
+        headers: { ...headers, origin, "sec-fetch-site": "same-origin" },
+      });
+      expect(() => sameOrigin(request)).not.toThrow();
+    }
+  });
+  it("rejects a cross-site and same-site write even with a matching forwarded host", () => {
+    const origin = "https://cautious-adventure-5gxxg9w6q7q427rxq-3000.app.github.dev";
+    for (const fetchSite of ["cross-site", "same-site"]) {
+      expect(() => sameOrigin(new Request("http://localhost:3000/api/auth/login", {
+        headers: {
+          host: "localhost:3000",
+          origin,
+          "sec-fetch-site": fetchSite,
+          "x-forwarded-host": new URL(origin).host,
+        },
+      }))).toThrow("Cross-site writes");
+    }
+  });
   it("rejects forged forwarded hosts, external origins, and cross-site requests", () => {
     const browserOrigin = "https://cautious-adventure-5gxxg9w6q7q427rxq-3000.app.github.dev";
     const base = {
