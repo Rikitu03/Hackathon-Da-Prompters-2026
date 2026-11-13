@@ -235,7 +235,7 @@ export function ContextImport({onApply,demoMode}: {
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold">{error.title}</p>
                   <p className="mt-1 text-sm leading-6">{error.advice}</p>
-                  <p className="mt-2 text-xs font-semibold">Validation status {error.code} · No file uploaded</p>
+                  <p className="mt-2 text-xs font-semibold">Local validation · {error.code}-equivalent · No file uploaded</p>
                 </div>
                 <button type="button" onClick={clear} aria-label="Dismiss upload error" className="rounded-md p-1 hover:bg-[#ffe9e3]"><X size={18}/></button>
               </div> : null}
@@ -285,7 +285,7 @@ export function ContextImport({onApply,demoMode}: {
       </AnimatePresence>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#e4edf5] bg-[#fbfdff] px-5 py-3 text-xs text-[#53657b] sm:px-7">
         <span className="inline-flex items-center gap-2"><RefreshCcw size={14} aria-hidden="true"/> Import never publishes automatically.</span>
-        <span>Verification remains with the administrator.</span>
+        <span>{demoMode ? "Demo: nothing is saved to Supabase." : "Verification remains with the administrator."}</span>
       </div>
     </section>
   );
