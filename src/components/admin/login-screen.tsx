@@ -215,7 +215,6 @@ export function AdminLoginScreen({
           <Skyline/>
         </main>
       </div>
-      <p className="admin-login-disclaimer">Independent student project. Not an official Pasig City government portal.</p>
     </div>
   );
 }
