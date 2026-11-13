@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { mapPinUrl } from "@/lib/guides/schema";
 import type {
   PublicProgram,
   ProgramSummary,
@@ -44,7 +45,8 @@ export function requirementFrom(row: RequirementRow): Requirement {
     description: row.description,
     required: row.is_required,
     issuingOffice: row.issuing_office ?? "", officeAddress: row.office_address ?? "",
-    officeHours: row.office_hours ?? "", mapUrl: row.map_url ?? "",
+    officeHours: row.office_hours ?? "",
+    mapUrl: mapPinUrl.safeParse(row.map_url ?? "").success ? row.map_url ?? "" : "",
     steps: [...(row.requirement_steps ?? [])]
       .sort((a, b) => a.position - b.position)
       .map((s) => s.instruction),
