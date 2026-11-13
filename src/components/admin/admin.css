@@ -283,3 +283,78 @@
 @media(prefers-reduced-motion: reduce) {
   .admin-portal .admin-page-button { transition: none; }
 }
+
+
+/* Focused document-import dialog: native top-layer modal with a restrained backdrop. */
+.admin-portal .admin-import-dialog {
+  position: fixed;
+  width: min(1100px, calc(100vw - 32px));
+  max-width: min(1100px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #cdd9e8;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 28px 95px rgba(6, 18, 37, .32);
+}
+.admin-portal .admin-import-dialog::backdrop {
+  background: rgba(8, 17, 31, .72);
+  backdrop-filter: blur(3px);
+}
+.admin-portal .admin-import-dialog .admin-import-shell {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+@media(max-width: 640px) {
+  .admin-portal .admin-import-dialog {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    border-radius: 16px;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .admin-portal .admin-import-close { transition: none; }
+}
+
+/* Requirement import is a focused top-layer modal, not an inline list card. */
+.admin-portal .admin-requirement-import-modal {
+  position: fixed;
+  width: min(740px, calc(100vw - 32px));
+  max-width: min(740px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #d0deec;
+  border-radius: 20px;
+  background: #fff;
+  color: #102a51;
+  box-shadow: 0 30px 88px rgba(3,14,33,.34);
+}
+.admin-portal .admin-requirement-import-modal::backdrop {
+  background: rgba(8,17,31,.72);
+  backdrop-filter: blur(3px);
+}
+@media (max-width: 640px) {
+  .admin-portal .admin-requirement-import-modal {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    border-radius: 16px;
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  .admin-portal .admin-requirement-import-modal * {
+    scroll-behavior:auto!important;
+    transition-duration:0s!important;
+  }
+}

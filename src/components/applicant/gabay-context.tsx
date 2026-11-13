@@ -2,7 +2,8 @@
 
 import { createContext, useContext } from "react";
 
-export const GabayContext = createContext<{ openChat: (requirementId?: string) => void } | null>(null);
+export type GabayMode = "product" | "scholarship";
+export const GabayContext = createContext<{ openChat: (requirementId?: string, mode?: GabayMode) => void } | null>(null);
 
 export function useGabay() {
   const value = useContext(GabayContext);

@@ -9,6 +9,7 @@ import {
   Check,
   ClipboardCheck,
   MessageCircle,
+  MapPin, ExternalLink,
   ScanText,
 } from "lucide-react";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@/lib/applicant/model";
 import { closedCycleNotice, cycleWindow } from "@/lib/cycle-window";
 import { JourneyRail } from "./journey";
+import { useGabay } from "./gabay-context";
 import { request, requirementFrom } from "@/lib/applicant/api";
 import type { RequirementRow } from "@/lib/guides/data";
 import {
@@ -247,12 +249,6 @@ export function Dashboard() {
               copy: "Keep your preparation organized.",
             },
             {
-              href: "/assistant",
-              icon: MessageCircle,
-              title: "Ask Gabay",
-              copy: "Ask about your selected guide.",
-            },
-            {
               href: "/document-review",
               icon: ScanText,
               title: "Check a document",
@@ -388,6 +384,7 @@ export function RequirementDetail({
   programId?: string;
   cycleId?: string;
 }) {
+  const { openChat } = useGabay();
   const w = useWorkspace();
   const selectedProgram = programId ?? w.preferences?.programId ?? "";
   const data = useGuide(selectedProgram);
@@ -483,8 +480,20 @@ export function RequirementDetail({
             )}
           </section>
           {cycle && <DocumentCheckPanel cycleId={cycle.id} requirement={requirement} />}
-          <section className="surface">
-            <h2>Questions you might have</h2>
+          {(requirement.issuingOffice || requirement.officeAddress || requirement.officeHours || requirement.mapUrl) && (
+             <section className="surface" aria-label="Where to get this document">
+               <h2><MapPin size={20} aria-hidden="true" /> Where to get this document</h2>
+               {requirement.issuingOffice && <p><strong>Issuing office:</strong> {requirement.issuingOffice}</p>}
+               {requirement.officeAddress && <p><strong>Address:</strong> {requirement.officeAddress}</p>}
+               {requirement.officeHours && <p><strong>Office hours:</strong> {requirement.officeHours}</p>}
+               {requirement.mapUrl && <a className="btn secondary compact" href={requirement.mapUrl} target="_blank" rel="noopener noreferrer">
+                 <MapPin size={16} aria-hidden="true"/> Open pinned location <ExternalLink size={14} aria-hidden="true"/>
+               </a>}
+               <p className="helper">Confirm the address and opening hours with the issuing office before visiting.</p>
+             </section>
+           )}
+           <section className="surface">
+             <h2>Questions you might have</h2>
             {requirement.faqs.length ? (
               requirement.faqs.map((f, i) => (
                 <details key={i}>
@@ -555,9 +564,9 @@ export function RequirementDetail({
             Check my document
             <ScanText size={17} />
           </Link>}
-          <Link
+          <button
+            type="button"
             className="btn secondary"
-            href={`/assistant?requirement=${encodeURIComponent(id)}`}
             onClick={() => {
               if (data.guide && cycle)
                 w.select({
@@ -568,11 +577,12 @@ export function RequirementDetail({
                   programId: data.guide.id,
                   cycleId: cycle.id,
                 });
+              openChat(id);
             }}
           >
             Ask Gabay about this item
             <MessageCircle size={17} />
-          </Link>
+          </button>
         </aside>
       </div>
     </>

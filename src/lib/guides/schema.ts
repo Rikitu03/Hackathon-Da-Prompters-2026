@@ -6,6 +6,17 @@ const httpsUrl = z.string().trim().max(2000).refine((value) => {
   try { return new URL(value).protocol === "https:"; } catch { return false; }
 }, "Use a complete https:// URL");
 const date = z.union([z.literal(""), z.string().date()]);
+export const mapPinUrl = z.string().trim().max(2000).refine(value => {
+  if (!value) return true;
+  try {
+    const url=new URL(value),host=url.hostname.toLowerCase();
+    return url.protocol==="https:" && !url.username && !url.password &&
+      (host==="google.com" || host.endsWith(".google.com") ||
+       host==="google.com.ph" || host.endsWith(".google.com.ph") ||
+       host==="maps.app.goo.gl" || host==="openstreetmap.org" ||
+       host.endsWith(".openstreetmap.org") || host==="maps.apple.com");
+  } catch { return false; }
+},"Use a direct HTTPS Google Maps, Apple Maps, or OpenStreetMap link");
 export const guideSchema = z.object({
   programId: z.string().uuid().optional(),
   cycleId: z.string().uuid().optional(),
@@ -18,6 +29,10 @@ export const guideSchema = z.object({
   requirements: z.array(z.object({
     id: z.string().uuid().optional(), title: text,
     description: z.string().trim().max(6000), required: z.boolean(),
+    issuingOffice: z.string().trim().max(160).optional(),
+    officeAddress: z.string().trim().max(400).optional(),
+    officeHours: z.string().trim().max(240).optional(),
+    mapUrl: mapPinUrl.optional(),
     steps: z.array(z.string().trim().min(1).max(2000)).max(20),
     faqs: z.array(z.object({ question: text, answer: z.string().trim().min(1).max(3000) })).max(20),
   })).max(30),

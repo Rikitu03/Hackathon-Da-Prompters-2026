@@ -253,6 +253,8 @@ test("Admin V2 primary blue links and buttons have readable white text", async (
 
 test("context importer offers a real Markdown template and visible supported formats", async ({page}) => {
   await page.goto("/admin/demo?view=programs");
+  await page.getByRole("button",{name:"Import file"}).click();
+  await expect(page.getByRole("dialog",{name:"Import scholarship source"})).toBeVisible();
   await expect(page.getByRole("heading",{name:/Start with a document/})).toBeVisible();
   await expect(page.getByRole("button",{name:"Browse files"})).toBeVisible();
   const downloadEvent=page.waitForEvent("download");
@@ -263,6 +265,8 @@ test("context importer offers a real Markdown template and visible supported for
 
 test("context text import stages reviewed fields but never claims to save in demo mode", async ({page}) => {
   await page.goto("/admin/demo?view=programs");
+  await page.getByRole("button",{name:"Import file"}).click();
+  await expect(page.getByRole("dialog",{name:"Import scholarship source"})).toBeVisible();
   await page.getByLabel("Choose scholarship source file").setInputFiles({
     name:"sample-guide.md",mimeType:"text/markdown",
     buffer:Buffer.from("# Official sample\nScholarship Name: Example Education Grant\nDescription: A fictional guide used for accessibility and usability tests.\nAcademic Year: 2026-2027\nOfficial Application URL: https://example.test/official\n")
@@ -274,13 +278,15 @@ test("context text import stages reviewed fields but never claims to save in dem
   await page.getByRole("button",{name:/Apply to draft form/}).click();
   await expect(page.getByRole("textbox",{name:"Program name"})).toHaveValue("Example Education Grant");
   await expect(page.getByRole("textbox",{name:"Program description"})).toHaveValue(/fictional guide/);
-  await expect(page.getByText("Fields copied to the editor")).toBeVisible();
+  await expect(page.getByRole("dialog",{name:"Import scholarship source"})).toHaveCount(0);
   await page.getByRole("button",{name:"Create draft"}).click();
   await expect(page.getByText(/Preview mode: changes are not saved/)).toBeVisible();
 });
 
 test("context importer explains rejected files and missing Lumen extraction", async ({page}) => {
   await page.goto("/admin/demo?view=programs");
+  await page.getByRole("button",{name:"Import file"}).click();
+  await expect(page.getByRole("dialog",{name:"Import scholarship source"})).toBeVisible();
   const input=page.getByLabel("Choose scholarship source file");
   await input.setInputFiles({name:"unsafe.exe",mimeType:"application/octet-stream",buffer:Buffer.from("not a document")});
   await expect(page.getByRole("region",{name:/Start with a document/}).getByRole("alert")).toContainText("This file type is not supported");
@@ -313,6 +319,7 @@ test("reviewed import keeps cycle fields after saving its program through the ba
   });
   await page.route("**/api/admin/guides/*/readiness", route => route.fulfill({ json: { checks: [], ready: false, status: "draft" } }));
   await page.goto("/admin/programs");
+  await page.getByRole("button",{name:"Import file"}).click();
   await page.getByLabel("Choose scholarship source file").setInputFiles({ name: "synthetic-import.md", mimeType: "text/markdown", buffer: Buffer.from("Scholarship Name: Synthetic Imported Guide\nDescription: Fictional import and backend integration test only.\nAcademic Year: 2026-2027\nApplication Opens: 2026-11-01\nApplication Closes: 2026-12-31\nOfficial Application URL: https://example.test/apply\n") });
   await page.getByRole("button", { name: "Apply to draft form", exact: true }).click();
   await page.getByRole("button", { name: "Create draft", exact: true }).click();
@@ -328,6 +335,8 @@ test("reviewed import keeps cycle fields after saving its program through the ba
 
 test("import progress is backed by completed device reading, not fictitious AI upload", async ({page}) => {
   await page.goto("/admin/demo?view=programs");
+  await page.getByRole("button",{name:"Import file"}).click();
+  await expect(page.getByRole("dialog",{name:"Import scholarship source"})).toBeVisible();
   await page.getByLabel("Choose scholarship source file").setInputFiles({
     name:"progress-check.md",mimeType:"text/markdown",
     buffer:Buffer.from("Scholarship Name: Mock Scholarship\nDescription: Fictional progress indicator sample for UI testing.\nAcademic Year: 2026-2027\n")
@@ -341,9 +350,9 @@ test("import progress is backed by completed device reading, not fictitious AI u
   await expect(page.getByText("Local file reading complete")).toBeVisible();
   await expect(page.getByText("Real device-read progress only.")).toBeVisible();
   await page.getByRole("button",{name:"Apply to draft form"}).click();
-  await expect(preparation).toHaveAttribute("aria-valuenow","100");
-  await expect(page.getByText("Fields applied to draft editor")).toBeVisible();
-  await page.getByRole("button",{name:"Remove"}).click();
+  await expect(page.getByRole("dialog",{name:"Import scholarship source"})).toHaveCount(0);
+  await expect(page.getByRole("textbox",{name:"Program name"})).toHaveValue("Mock Scholarship");
+  await page.getByRole("button",{name:"Import file"}).click();
   await expect(preparation).toHaveAttribute("aria-valuenow","0");
   await expect(progress).toHaveCount(0);
   await page.getByLabel("Choose scholarship source file").setInputFiles({
@@ -358,6 +367,8 @@ test("import progress is backed by completed device reading, not fictitious AI u
 
 test("import preparation tracker exposes errors without simulated completion", async ({page}) => {
   await page.goto("/admin/demo?view=programs");
+  await page.getByRole("button",{name:"Import file"}).click();
+  await expect(page.getByRole("dialog",{name:"Import scholarship source"})).toBeVisible();
   const preparation=page.getByRole("progressbar",{name:"Import preparation milestones"});
   await expect(preparation).toHaveAttribute("aria-valuenow","0");
   await expect(page.getByText("Choose a document to start")).toBeVisible();
@@ -408,4 +419,160 @@ test("Admin V3 paginates more than 10 Supabase-visible guides and resets on sear
   await page.getByRole("combobox",{name:"Search scholarship programs"}).fill("Scholarship 03");
   await expect(page.getByRole("heading",{name:"Test Scholarship 03"})).toBeVisible();
   await expect(pager).toHaveCount(0);
+});
+
+
+test("document import opens as a focus-trapped modal and restores the trigger on dismissal",async ({page})=>{
+  await page.goto("/admin/demo?view=programs");
+  await expect(page.getByRole("dialog",{name:"Import scholarship source"})).toHaveCount(0);
+  const trigger=page.getByRole("button",{name:"Import file"});
+  await trigger.click();
+  const dialog=page.getByRole("dialog",{name:"Import scholarship source"});
+  await expect(dialog).toBeVisible();
+  await expect(page.getByRole("heading",{name:/Start with a document/})).toBeVisible();
+  await expect(page.locator("body")).toHaveCSS("overflow","hidden");
+  const backdrop=await dialog.evaluate(node=>getComputedStyle(node,"::backdrop").backgroundColor);
+  expect(backdrop).toBe("rgba(8, 17, 31, 0.72)");
+  await expect(dialog.getByRole("button",{name:"Close import dialog"})).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await expect(page.locator("body")).not.toHaveCSS("overflow","hidden");
+  await trigger.click();
+  await dialog.getByRole("button",{name:"Close import dialog"}).click();
+  await expect(dialog).toHaveCount(0);
+});
+
+test("import modal remains scrollable and within mobile viewport",async ({page,isMobile})=>{
+  test.skip(!isMobile,"Mobile modal sizing");
+  await page.goto("/admin/demo?view=programs");
+  await page.getByRole("button",{name:"Import file"}).click();
+  const modal=page.getByRole("dialog",{name:"Import scholarship source"});
+  await expect(modal).toBeVisible();
+  const geometry=await modal.evaluate(dialog=>{
+    const b=dialog.getBoundingClientRect();
+    return {left:b.left,right:b.right,top:b.top,bottom:b.bottom,viewportWidth:innerWidth,viewportHeight:innerHeight,overflowY:getComputedStyle(dialog).overflowY};
+  });
+  expect(geometry.left).toBeGreaterThanOrEqual(0);
+  expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth+1);
+  expect(geometry.top).toBeGreaterThanOrEqual(0);
+  expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewportHeight+1);
+  expect(geometry.overflowY).toBe("auto");
+});
+
+test("requirement text import reviews labeled fields and stages an office map pin", async ({page}) => {
+  await page.goto("/admin/demo?view=requirements");
+  await page.getByRole("button",{name:/Example enrollment document/}).click();
+  const open=page.getByRole("button",{name:"Import text / file"});
+  await open.click();
+  const dialog=page.getByRole("dialog",{name:"Import requirement details"});
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button",{name:"Close requirement import"})).toBeFocused();
+  const overlay=await dialog.evaluate(node=>getComputedStyle(node,"::backdrop").backgroundColor);
+  expect(overlay).toBe("rgba(8, 17, 31, 0.72)");
+  await dialog.getByLabel("Or paste source text").fill(
+    "Document name: Fictional Proof of Enrollment\n"+
+    "Purpose: Confirm active enrollment for this demonstration.\n"+
+    "Issuing office: Sample Campus Registrar\n"+
+    "Office address: Example Street, Pasig City, Philippines\n"+
+    "Office hours: Mon–Fri, 9:00 AM–4:00 PM\n"+
+    "Maps URL: https://www.google.com/maps?q=14.58,121.07\n"+
+    "Step 1: Request the document at the registrar.\n"+
+    "Step 2: Check the official stamp before submitting."
+  );
+  await dialog.getByRole("button",{name:"Extract from pasted text"}).click();
+  await expect(dialog.getByRole("textbox",{name:"Requirement title"})).toHaveValue("Fictional Proof of Enrollment");
+  await expect(dialog.getByRole("textbox",{name:"Issuing office"})).toHaveValue("Sample Campus Registrar");
+  await expect(dialog.getByRole("textbox",{name:"Full office address"})).toHaveValue("Example Street, Pasig City, Philippines");
+  await expect(dialog.getByLabel("Pinned map link")).toHaveValue("https://www.google.com/maps?q=14.58,121.07");
+  await dialog.getByRole("button",{name:"Apply suggestions to requirement"}).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(open).toBeFocused();
+  await expect(page.locator("#req-title")).toHaveValue("Fictional Proof of Enrollment");
+  await expect(page.locator("#req-office")).toHaveValue("Sample Campus Registrar");
+  await expect(page.locator("#req-address")).toHaveValue("Example Street, Pasig City, Philippines");
+  await expect(page.locator("#req-map")).toHaveValue("https://www.google.com/maps?q=14.58,121.07");
+  await expect(page.getByRole("link",{name:"Preview pinned location"})).toHaveAttribute("target","_blank");
+  await expect(page.getByLabel("Instruction for step 1")).toHaveValue("Request the document at the registrar.");
+  await expect(page.getByText("Suggestions are copied to the draft editor")).toBeVisible();
+  await page.getByRole("button",{name:"Save requirement draft"}).click();
+  await expect(page.getByText(/Preview mode: changes are not saved/)).toBeVisible();
+});
+
+test("requirement importer supports local files and rejects unsupported or oversized files",async ({page})=>{
+  await page.goto("/admin/demo?view=requirements");
+  await page.getByRole("button",{name:/Example enrollment document/}).click();
+  await page.getByRole("button",{name:"Import text / file"}).click();
+  const dialog=page.getByRole("dialog",{name:"Import requirement details"});
+  const file=dialog.getByLabel("Choose requirement source file");
+  await file.setInputFiles({name:"guide.docx",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",buffer:Buffer.from("unsupported")});
+  await expect(dialog.getByRole("alert")).toContainText("Unsupported format");
+  await file.setInputFiles({name:"guide.md",mimeType:"text/markdown",buffer:Buffer.from("Requirement title: University certificate\nStep 1: Contact the issuing office for current requirements.\n")});
+  await expect(dialog.getByRole("textbox",{name:"Requirement title"})).toHaveValue("University certificate");
+  await dialog.getByRole("button",{name:"Close requirement import"}).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole("button",{name:"Import text / file"})).toBeFocused();
+});
+
+test("PDF requirement extraction requires explicit consent and does not auto-publish",async ({page})=>{
+  await page.route("**/api/ai/ocr",route=>route.fulfill({status:200,json:{
+    rawText:"Document name: Certified enrollment letter\nIssuing office: Records Office\nStep 1: Ask the official office to issue an original.",
+    fields:[],warnings:[],disclaimer:"Review all extracted fields."
+  }}));
+  await page.goto("/admin/demo?view=requirements");
+  await page.getByRole("button",{name:/Example enrollment document/}).click();
+  await page.getByRole("button",{name:"Import text / file"}).click();
+  const dialog=page.getByRole("dialog",{name:"Import requirement details"});
+  await dialog.getByLabel("Choose requirement source file").setInputFiles({name:"sample.pdf",mimeType:"application/pdf",buffer:Buffer.from("%PDF-1.7\nexample")});
+  const extract=dialog.getByRole("button",{name:"Extract text with OCR"});
+  await expect(extract).toBeDisabled();
+  await dialog.getByRole("checkbox").check();
+  await extract.click();
+  await expect(dialog.getByRole("textbox",{name:"Requirement title"})).toHaveValue("Certified enrollment letter");
+  await dialog.getByRole("button",{name:"Apply suggestions to requirement"}).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.locator("#req-title")).toHaveValue("Certified enrollment letter");
+});
+
+test("requirement importer never accepts arbitrary map links as verified pins",async ({page})=>{
+  await page.goto("/admin/demo?view=requirements");
+  await page.getByRole("button",{name:/Example enrollment document/}).click();
+  await page.getByRole("button",{name:"Import text / file"}).click();
+  const dialog=page.getByRole("dialog",{name:"Import requirement details"});
+  await dialog.getByLabel("Or paste source text").fill("Document name: Example certificate\nMaps URL: https://unsafe.example.invalid/location\n");
+  await dialog.getByRole("button",{name:"Extract from pasted text"}).click();
+  await dialog.getByRole("button",{name:"Apply suggestions to requirement"}).click();
+  await expect(dialog.getByRole("alert")).toContainText("direct HTTPS Google Maps");
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+});
+
+test("Admin chart hover and month selection never expose a full-height focus rectangle",async ({page})=>{
+  await page.goto("/admin/demo");
+  const chart=page.getByRole("img",{name:/Monthly scholarship activity:/});
+  await expect(chart).toBeVisible();
+  const target=chart.locator('[data-chart-hit="month"]').last();
+  await expect(target).not.toHaveAttribute("tabindex","0");
+  await expect(target).not.toHaveAttribute("role","button");
+  await target.hover();
+  await expect(chart.locator('[data-chart-tooltip="true"]')).toBeVisible();
+  const selected=page.getByRole("group",{name:"Select activity month"});
+  const november=selected.getByRole("button",{name:/Nov 2026:/});
+  await november.focus();
+  await expect(november).toHaveAttribute("aria-pressed","true");
+  await expect(november).toHaveCSS("outline-width","2px");
+  await expect(chart.locator("rect[tabindex]")).toHaveCount(0);
+  await expect(page.getByText("Recommended workflow")).toHaveCount(0);
+});
+
+test("Admin importer remains hidden until requested to keep the guide list readable",async ({page})=>{
+  await page.goto("/admin/demo?view=programs");
+  await expect(page.getByRole("heading",{name:"Scholarship guides"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:/Start with a document/})).toHaveCount(0);
+  await page.getByRole("button",{name:"Import file"}).click();
+  const dialog=page.getByRole("dialog",{name:"Import scholarship source"});
+  await expect(dialog.getByRole("heading",{name:/Start with a document/})).toBeVisible();
+  await dialog.getByRole("button",{name:"Close import dialog"}).click();
+  await expect(dialog).toHaveCount(0);
 });

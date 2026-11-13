@@ -8,7 +8,7 @@ import { ArrowUpRight, BookOpen, CheckSquare, ClipboardList, FileText, ListCheck
 import { CHAT_MESSAGE_MAX_CHARS } from "@/lib/ai-limits";
 import { citedSegments, safeHttps } from "@/lib/applicant/model";
 import { closedCycleNotice, cycleWindow } from "@/lib/cycle-window";
-import { GabayContext } from "./gabay-context";
+import { GabayContext, type GabayMode } from "./gabay-context";
 import { useGabayChat, type GabayMessage as Message } from "./use-gabay-chat";
 import { useWorkspace } from "./workspace";
 import "./gabay-widget.css";
@@ -76,9 +76,9 @@ export function GabayWidget({ children }: { children: React.ReactNode }) {
   const canSend = chat.ready && (product || (!!cycle && !closed && !guide?.demo));
   const contextId = cycle?.requirements.some((r) => r.id === requirementId) ? requirementId : "";
 
-  const openChat = useCallback((requirement = "") => {
+  const openChat = useCallback((requirement = "", nextMode: GabayMode = "scholarship") => {
     stopProduct();
-    setMode("scholarship");
+    setMode(nextMode);
     setRequirementId(requirement);
     setOpen(true);
   }, [stopProduct]);

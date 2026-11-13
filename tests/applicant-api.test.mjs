@@ -9,6 +9,7 @@ import {
   reviewDocument,
   requestAiReview,
   NO_EVIDENCE_NOTICE,
+  requirementFrom,
 } from "../src/lib/applicant/api.ts";
 
 test("product help sends no cycle/history and keeps document-section citations", async (t) => {
@@ -202,4 +203,21 @@ test("AI review treats a network failure or odd reply as unavailable", async (t)
   assert.equal((await requestAiReview(input)).status, "unavailable");
   t.mock.method(globalThis, "fetch", async () => Response.json({ status: "ok", flags: "nope" }));
   assert.equal((await requestAiReview(input)).status, "unavailable");
+});
+
+
+test("published requirement mapping carries verified office details and rejects unapproved map hosts", () => {
+  const base={
+    id:"r1",title:"Certified enrollment letter",description:"Sample requirement",
+    position:0,is_required:true,requirement_steps:[{id:"s1",position:0,instruction:"Visit the registrar"}],faqs:[]
+  };
+  const withLocation=requirementFrom({...base,issuing_office:"Sample Registrar",
+    office_address:"Example City, Philippines",office_hours:"Mon–Fri, 8 AM–5 PM",
+    map_url:"https://www.google.com/maps?q=14.58,121.06"});
+  assert.equal(withLocation.issuingOffice,"Sample Registrar");
+  assert.equal(withLocation.officeAddress,"Example City, Philippines");
+  assert.equal(withLocation.officeHours,"Mon–Fri, 8 AM–5 PM");
+  assert.equal(withLocation.mapUrl,"https://www.google.com/maps?q=14.58,121.06");
+  assert.equal(requirementFrom(base).mapUrl,"");
+  assert.equal(requirementFrom({...base,map_url:"https://example.invalid/fake-pin"}).mapUrl,"");
 });
