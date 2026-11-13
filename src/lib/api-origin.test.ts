@@ -47,7 +47,7 @@ describe("same-origin write guard", () => {
   });
 
   it("rejects different codespaces, ports, non-HTTPS origins and unrelated destinations", () => {
-    const variants = [
+    const variants: Array<Record<string, string>> = [
       { origin: `https://other-codespace-3000.app.github.dev` },
       { origin: `https://${name}-3001.app.github.dev` },
       { origin: `http://${name}-3000.app.github.dev` },
