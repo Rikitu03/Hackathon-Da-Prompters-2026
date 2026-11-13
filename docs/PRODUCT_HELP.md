@@ -32,7 +32,7 @@ Applicants do not need an account. Checklist progress and guide choices stay in 
 
 ## Lumen and your information {#provider-privacy}
 <!-- tags: lumen, provider, retention, consent, personal, information, copy, transcript, messages, conversation, usapan -->
-Only fictional or sample documents should be sent to Lumen. Lumen OCR keeps a copy visible within the hackathon organization, and its developer interface provides no deletion operation. Read the consent disclosure before uploading. Lumen also stores chat messages, so do not include names, addresses, ID numbers, document contents, or other personal details in a question. The app keeps visible chat and drafts only in memory for this visit; that does not remove Lumen's independent copy.
+Only fictional or sample documents should be sent to Lumen. Lumen OCR keeps a copy visible within the hackathon organization, and its developer interface provides no deletion operation. Read the consent disclosure before uploading. Lumen also stores chat messages, so do not include names, addresses, ID numbers, document contents, or other personal details in a question. The app keeps visible chat and unsent chat drafts only in memory for this visit; that does not remove Lumen's independent copy.
 
 ## Product help and scholarship guidance {#chat-modes}
 <!-- tags: help, chat, chatbot, assistant, ask, gabay, mode, question, tanong, tulong, english, filipino, taglish -->

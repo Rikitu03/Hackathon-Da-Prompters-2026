@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "sourceChecksum": "32dceeba80e8bffd2eb3f577bee46cab4aaea69e3c449d62cfb2ddf4da679d02",
+  "sourceChecksum": "5570c2243bc7a9d2a005a2a690e57395c5074c0e5c53701c0166c6c4892d91ac",
   "passages": [
     {
       "sourceId": "product-help:getting-started:1",
@@ -153,7 +153,7 @@
         "conversation",
         "usapan"
       ],
-      "content": "Only fictional or sample documents should be sent to Lumen. Lumen OCR keeps a copy visible within the hackathon organization, and its developer interface provides no deletion operation. Read the consent disclosure before uploading. Lumen also stores chat messages, so do not include names, addresses, ID numbers, document contents, or other personal details in a question. The app keeps visible chat and drafts only in memory for this visit; that does not remove Lumen's independent copy."
+      "content": "Only fictional or sample documents should be sent to Lumen. Lumen OCR keeps a copy visible within the hackathon organization, and its developer interface provides no deletion operation. Read the consent disclosure before uploading. Lumen also stores chat messages, so do not include names, addresses, ID numbers, document contents, or other personal details in a question. The app keeps visible chat and unsent chat drafts only in memory for this visit; that does not remove Lumen's independent copy."
     },
     {
       "sourceId": "product-help:chat-modes:1",

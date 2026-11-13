@@ -14,7 +14,9 @@ async function onboard(page: Page) {
   await expect(page).toHaveURL(/\/dashboard$/);
 }
 async function checkDocument(page: Page) {
+  await expect(page.getByLabel("Choose document file", { exact: true })).toBeEnabled();
   await page.locator('input[type="file"]').setInputFiles("tests/fixtures/demo-certificate.png");
+  await expect(page.getByLabel(/Send this document to Lumen OCR/)).toBeEnabled();
   await page.getByLabel(/Send this document to Lumen OCR/).check();
   await page.getByRole("button", { name: "Extract details", exact: true }).click();
   await expect(page.getByText("Read from document: Name: Juan Dela Cruz (fictional)")).toBeVisible();
@@ -48,7 +50,7 @@ test("landing preserves its headline and introduces preparation clearly", async 
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Pasig City");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("scholarships.");
   await expect(page.getByRole("link", { name: "Start preparing", exact: true }).first()).toHaveAttribute("href", "/onboarding");
-  await page.getByRole("checkbox", { name: "Example: Record of grades" }).check();
+  await page.getByRole("checkbox", { name: "Example: Certificate of Residency" }).check();
   await expect(page.getByText("2 of 3 prepared", { exact: true })).toBeVisible();
   await page.locator("summary").filter({ hasText: "Is this the official scholarship portal?" }).click();
   await expect(page.getByText(/No. GabayIskolar is an independent preparation companion/)).toBeVisible();
@@ -151,6 +153,7 @@ test("a platform OCR timeout explains recovery and waits for a manual retry", as
   let uploads = 0;
   await page.route("**/api/ai/ocr", (route) => { uploads++; return route.fulfill({ status: 504, contentType: "text/html", body: "<html>Gateway timeout</html>" }); });
   await page.goto(`/document-review?requirement=${REQ_ENROLL_ID}`);
+  await expect(page.getByLabel("Choose document file", { exact: true })).toBeEnabled();
   await page.locator('input[type="file"]').setInputFiles("tests/fixtures/demo-certificate.png");
   await expect(page.getByRole("button", { name: "Extract details", exact: true })).toBeDisabled();
   await page.getByLabel(/Send this document to Lumen OCR/).check();

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { chooseGuide, mockPublishedGuide, mockChat, GROUNDED_REPLY, PROGRAM_ID } from "./support/applicant-mocks";
+import { useDemoGuide, requirementUrl, mockVerify } from "./support/verification-mocks";
 
 const reply = { answer: "Open My checklist to track your preparation [1].", grounded: true,
   sources: [{ sourceId: "product-help:checklist:1", title: "GabayIskolar product guide — Saving checklist progress" }] };
@@ -105,9 +106,56 @@ test("product mode is accessible in both themes at a keyboard-sized mobile heigh
     await mode.focus(); await mode.press("Enter");
     await expect(mode).toHaveAttribute("aria-pressed", "true");
     await page.getByRole("button", { name: "Product help", exact: true }).click();
+    await page.screenshot({ path: test.info().outputPath(`product-${colorScheme}.png`) });
   }
   await input.press("Escape");
   await expect(page.getByRole("button", { name: "Open Ask Gabay", exact: true })).toBeFocused();
+});
+
+test("product help works with the illustrative guide while scholarship mode stays restricted", async ({ page }) => {
+  await useDemoGuide(page);
+  await page.route("**/api/ai/help", route => route.fulfill({ json: reply }));
+  const input = await openProduct(page, "/my-checklist");
+  await expect(input).toBeEnabled();
+  await page.getByRole("button", { name: "Scholarship guide", exact: true }).click();
+  await expect(page.getByLabel("Your scholarship question")).toBeDisabled();
+  await page.getByRole("button", { name: "Product help", exact: true }).click();
+  await input.fill("How do I use the checklist?"); await input.press("Enter");
+  await expect(page.getByLabel("Product documentation")).toBeVisible();
+});
+
+test("verification dialogs stay above the widget and preserve its product draft", async ({ page }) => {
+  await useDemoGuide(page); await mockVerify(page, { status: "unavailable", message: "Fixture only" });
+  const input = await openProduct(page, requirementUrl("illustrative-enrollment"));
+  await input.fill("Unsent product draft");
+  const sample = page.getByRole("button", { name: "Try a clean sample", exact: true });
+  await sample.focus(); await sample.press("Enter");
+  const dialog = page.getByRole("dialog", { name: "Certificate of Registration", exact: true });
+  await expect(dialog).toBeVisible();
+  const popupLayer = await dialog.evaluate(node => Number(getComputedStyle(node).zIndex));
+  const widgetLayer = await page.locator(".gabay-widget").evaluate(node => Number(getComputedStyle(node).zIndex));
+  expect(popupLayer).toBeGreaterThan(widgetLayer);
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(input).toHaveValue("Unsent product draft");
+});
+
+test("a generic landing action switches from an in-flight scholarship request to product help", async ({ page }) => {
+  await chooseGuide(page);
+  let release!: () => void;
+  const held = new Promise<void>(resolve => { release = resolve; });
+  await page.route("**/api/ai/chat", async route => { await held; await route.fulfill({ json: GROUNDED_REPLY }).catch(() => {}); });
+  await openProduct(page);
+  await page.getByRole("button", { name: "Scholarship guide", exact: true }).click();
+  const question = page.getByLabel("Your scholarship question");
+  await question.fill("What documents do I need?"); await question.press("Enter");
+  await expect(page.getByRole("button", { name: "Stop request" })).toBeVisible();
+  await page.getByRole("button", { name: "Close Ask Gabay", exact: true }).click();
+  await page.getByRole("button", { name: "Meet Gabay", exact: true }).click();
+  release();
+  await expect(page.getByRole("button", { name: "Product help", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".gabay-message")).toHaveCount(0);
+  await page.getByRole("button", { name: "Scholarship guide", exact: true }).click();
+  await expect(page.locator(".gabay-message-assistant")).toHaveCount(0);
 });
 
 test("the real product route is honestly disabled during automated browser checks", async ({ page }) => {
@@ -116,6 +164,6 @@ test("the real product route is honestly disabled during automated browser check
   const pending = page.waitForResponse(response => response.url().endsWith("/api/ai/help"));
   await input.press("Enter");
   expect((await pending).status()).toBe(503);
-  await expect(page.getByRole("alert")).toContainText("unavailable");
+  await expect(page.getByRole("dialog", { name: "Ask Gabay", exact: true }).getByRole("alert")).toContainText("unavailable");
   await expect(page.locator(".gabay-message-assistant")).toHaveCount(0);
 });

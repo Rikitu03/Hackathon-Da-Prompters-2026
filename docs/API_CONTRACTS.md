@@ -125,6 +125,13 @@ when a supplied source ID is reused; historical text revisions are not retained.
 
 ## AI endpoints
 
+- `POST /api/ai/help` — JSON `{ "message": "1–500 characters" }`, with no cycle, requirement, history, or session fields. Unknown fields and malformed JSON return 400; actual bodies over 8 KiB return 413; non-JSON media types return 415; cross-site requests return 403.
+  - Returns the existing `ChatResponse` shape. A grounded answer cites reviewed product-guide sections (`product-help:<section>:<part>`), not official scholarship policy. Missing evidence, a scope refusal, or an uncited reply yields a fixed notice with `grounded:false` and `sources:[]`, with no invented official URL.
+  - Requires `LUMEN_PRODUCT_HELP_ENABLED=true`, existing Lumen configuration, and the shared chat-limit migration. Otherwise it returns 503. Product help does not require a scholarship selection. No matching passage means no provider call and no quota charge.
+- Both `/api/ai/chat` and `/api/ai/help` share **10 Lumen-bound attempts per 10-minute database window**, enforced atomically across server instances. Exhaustion returns 429 with `Retry-After`; unavailable limiter configuration/storage returns 503 before Lumen. The existing server signing secret authorizes the narrow RPC; no service-role key is used. No questions/transcripts are stored by the limiter.
+
+The product route uses reviewed [product documentation](PRODUCT_HELP.md); scholarship chat continues to use approved published-cycle database sources. Neither route accepts conversation history or implies model memory. Details: [rollout and knowledge maintenance](PRODUCT_HELP_IMPLEMENTATION.md).
+
 - `POST /api/ai/chat` — JSON `{ cycleId: uuid, requirementId?: uuid, message: 1–500 chars }`.
   - `200` → `ChatResponse`: `{ "answer": "...", "sources": [{ "sourceId", "title", "url"? }], "grounded": true|false, "officialUrl"?: "..." }`.
     - `grounded: true`: Lumen answered and cited at least one of the approved passages we sent. Every `sources[]` entry is a real `knowledge_sources.id` from the requested published cycle. The server translates provider `[S1]` passage markers into inline `[1]` markers numbered in `sources` order, deduplicating passages from the same source. Unknown references are removed.
