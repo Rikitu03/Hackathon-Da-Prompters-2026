@@ -316,16 +316,40 @@ test("import progress is backed by completed device reading, not fictitious AI u
     name:"progress-check.md",mimeType:"text/markdown",
     buffer:Buffer.from("Scholarship Name: Mock Scholarship\nDescription: Fictional progress indicator sample for UI testing.\nAcademic Year: 2026-2027\n")
   });
+  const preparation=page.getByRole("progressbar",{name:"Import preparation milestones"});
+  await expect(preparation).toHaveAttribute("aria-valuenow","75");
+  await expect(preparation).toHaveAttribute("aria-valuetext","3 of 4 import preparation steps complete");
   const progress=page.getByRole("progressbar",{name:"Local source file reading progress"});
   await expect(progress).toBeVisible();
   await expect(progress).toHaveAttribute("aria-valuenow","100");
   await expect(page.getByText("Local file reading complete")).toBeVisible();
   await expect(page.getByText("Real device-read progress only.")).toBeVisible();
+  await page.getByRole("button",{name:"Apply to draft form"}).click();
+  await expect(preparation).toHaveAttribute("aria-valuenow","100");
+  await expect(page.getByText("Fields applied to draft editor")).toBeVisible();
   await page.getByRole("button",{name:"Remove"}).click();
+  await expect(preparation).toHaveAttribute("aria-valuenow","0");
   await expect(progress).toHaveCount(0);
   await page.getByLabel("Choose scholarship source file").setInputFiles({
     name:"scanned.pdf",mimeType:"application/pdf",buffer:Buffer.from("%PDF-1.7\nnot a real document")
   });
   await expect(page.getByRole("progressbar",{name:"Local source file reading progress"})).toHaveCount(0);
+  await expect(preparation).toHaveAttribute("aria-valuenow","50");
+  await expect(page.getByText("Needs Lumen backend")).toBeVisible();
   await expect(page.getByText("AI document extraction is not connected yet")).toBeVisible();
+});
+
+
+test("import preparation tracker exposes errors without simulated completion", async ({page}) => {
+  await page.goto("/admin/demo?view=programs");
+  const preparation=page.getByRole("progressbar",{name:"Import preparation milestones"});
+  await expect(preparation).toHaveAttribute("aria-valuenow","0");
+  await expect(page.getByText("Choose a document to start")).toBeVisible();
+  await page.getByLabel("Choose scholarship source file").setInputFiles({
+    name:"not-supported.exe",mimeType:"application/octet-stream",buffer:Buffer.from("invalid test fixture")
+  });
+  await expect(preparation).toHaveAttribute("aria-valuenow","0");
+  await expect(page.getByText("File rejected — see correction below")).toBeVisible();
+  await expect(page.getByText("Fix selected file")).toBeVisible();
+  await expect(page.getByRole("region",{name:/Start with a document/}).getByRole("alert")).toContainText("415");
 });
