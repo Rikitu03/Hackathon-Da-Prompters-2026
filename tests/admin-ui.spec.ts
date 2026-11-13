@@ -353,3 +353,56 @@ test("import preparation tracker exposes errors without simulated completion", a
   await expect(page.getByText("Fix selected file")).toBeVisible();
   await expect(page.getByRole("region",{name:/Start with a document/}).getByRole("alert")).toContainText("415");
 });
+
+
+test("Admin V3 uses a real-dated gradient chart and hides pagers for short lists", async ({page}) => {
+  await page.goto("/admin/demo");
+  await expect(page.getByRole("heading",{name:"Scholarship activity"})).toBeVisible();
+  const chart=page.getByRole("img",{name:/Monthly scholarship activity:/});
+  await expect(chart).toBeVisible();
+  await expect(chart.locator("linearGradient")).toHaveCount(1);
+  await page.getByRole("link",{name:"Scholarship guides"}).click();
+  await expect(page.getByRole("navigation",{name:"scholarship guides pagination"})).toHaveCount(0);
+  await page.getByRole("link",{name:"Requirements & FAQs"}).click();
+  await expect(page.getByRole("navigation",{name:"requirements pagination"})).toHaveCount(0);
+  await page.getByRole("link",{name:"Knowledge & sources"}).click();
+  await expect(page.getByRole("navigation",{name:"sources pagination"})).toHaveCount(0);
+});
+
+test("Admin V3 paginates more than 10 Supabase-visible guides and resets on search", async ({page}) => {
+  const user={id:"00000000-0000-4000-8000-000000000001",aud:"authenticated",role:"authenticated",email:"admin@test.invalid"};
+  await page.addInitScript(({savedUser})=>{
+    const now=Math.floor(Date.now()/1000);
+    localStorage.setItem("sb-mock-auth-token",JSON.stringify({
+      access_token:"mock-e2e-access",refresh_token:"mock-e2e-refresh",
+      token_type:"bearer",expires_in:3600,expires_at:now+3600,user:savedUser
+    }));
+  },{savedUser:user});
+  const guides=Array.from({length:13},(_,i)=>({
+    id:"v3-guide-"+(i+1),
+    title:"Test Scholarship "+String(i+1).padStart(2,"0"),
+    description:"Fictional record for pagination regression testing only.",
+    status:"draft",created_at:"2026-11-01T00:00:00Z"
+  }));
+  await page.route("https://mock.supabase.test/**",async route=>{
+    const path=new URL(route.request().url()).pathname;
+    let body:unknown=[];
+    if(path==="/auth/v1/user")body=user;
+    else if(path.startsWith("/rest/v1/admin_profiles"))body=[{role:"editor"}];
+    else if(path.startsWith("/rest/v1/scholarship_programs"))body=guides;
+    await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(body)});
+  });
+  await page.goto("/admin/programs");
+  const pager=page.getByRole("navigation",{name:"scholarship guides pagination"});
+  await expect(pager).toBeVisible();
+  await expect(pager).toContainText("Showing");
+  await expect(pager).toContainText("13");
+  await expect(page.getByRole("heading",{name:"Test Scholarship 01"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Test Scholarship 11"})).toHaveCount(0);
+  await pager.getByRole("button",{name:"Page 2"}).click();
+  await expect(page.getByRole("heading",{name:"Test Scholarship 11"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Test Scholarship 01"})).toHaveCount(0);
+  await page.getByRole("combobox",{name:"Search scholarship programs"}).fill("Scholarship 03");
+  await expect(page.getByRole("heading",{name:"Test Scholarship 03"})).toBeVisible();
+  await expect(pager).toHaveCount(0);
+});
