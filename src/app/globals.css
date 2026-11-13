@@ -23,3 +23,5 @@ a { color:inherit; }
     @apply font-sans; } }
 /* Portaled shadcn surfaces (toasts, dialogs) live outside the page shells, so they restate the project font. */
 [data-slot="toast-viewport"], [data-slot="dialog-content"], [data-slot="dialog-overlay"] { font-family: var(--font-sans); }
+/* Toasts must stay readable above an open dialog, which uses the same z-index. */
+[data-slot="toast-viewport"] { z-index: 60; }
