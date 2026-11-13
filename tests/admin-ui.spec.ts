@@ -246,3 +246,22 @@ test("guided authoring steps and applicant preview use the same saved guide fiel
   await expect(preview.getByRole("heading",{name:"How to prepare"}).first()).toBeVisible();
   await expect(page.getByRole("link",{name:/Open editor to fix/}).first()).toBeVisible();
 });
+
+test("Admin V2 primary blue links and buttons have readable white text", async ({page}) => {
+  await page.goto("/admin/demo");
+  const create = page.getByRole("link",{name:"Create guide"});
+  await expect(create).toBeVisible();
+  await expect(create).toHaveCSS("background-color","rgb(21, 91, 176)");
+  await expect(create).toHaveCSS("color","rgb(248, 251, 255)");
+  await expect(create.locator("svg")).toHaveCSS("color","rgb(248, 251, 255)");
+  await create.hover();
+  await expect(create).toHaveCSS("color","rgb(255, 255, 255)");
+
+  await page.goto("/admin/demo?view=programs");
+  const newProgram = page.getByRole("button",{name:"New program"});
+  await expect(newProgram).toHaveCSS("background-color","rgb(21, 91, 176)");
+  await expect(newProgram).toHaveCSS("color","rgb(248, 251, 255)");
+  await expect(newProgram.locator("svg")).toHaveCSS("color","rgb(248, 251, 255)");
+  await newProgram.hover();
+  await expect(newProgram).toHaveCSS("color","rgb(255, 255, 255)");
+});

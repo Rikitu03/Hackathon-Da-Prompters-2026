@@ -103,7 +103,7 @@ export function OperationsPanel({ data, demoMode }: { data: AdminData; demoMode:
           <p className="mt-1 text-sm leading-6 text-[#53657b]">Create a guide, add its required documents, verify official sources, then review it before publishing.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href={demoMode ? route(true,"programs") : "/admin/programs/new"} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#155bb0] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#104a92]"><Plus size={17}/>Create guide</Link>
+          <Link href={demoMode ? route(true,"programs") : "/admin/programs/new"} className="admin-primary-action inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#155bb0] px-4 py-2.5 text-sm font-semibold text-[#f8fbff] hover:bg-[#104a92]"><Plus size={17}/>Create guide</Link>
           {firstDraft && <Link href={route(demoMode,"programs",firstDraft.id)} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#b5c9e0] bg-white px-4 py-2.5 text-sm font-semibold text-[#102a51] hover:bg-[#eaf4ff]"><FilePenLine size={17}/>Continue draft</Link>}
         </div>
       </section>

@@ -12,7 +12,7 @@ export function Button({ children, variant = "primary", busy, className = "", di
     quiet: "border-transparent bg-transparent text-[#375d85] hover:bg-[#eef6ff]",
     danger: "border-[#e9bdbc] bg-[#fff9f8] text-[#9b3530] hover:bg-[#fbeae8]"
   };
-  return <button {...props} disabled={disabled || busy} className={"inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm transition-[background-color,border-color,transform] duration-150 active:scale-[.985] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155bb0] disabled:cursor-not-allowed disabled:opacity-60 " + variants[variant] + " " + className}>{busy ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : null}{children}</button>;
+  return <button {...props} disabled={disabled || busy} className={(variant === "primary" ? "admin-primary-action " : "") + "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm transition-[background-color,border-color,transform] duration-150 active:scale-[.985] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155bb0] disabled:cursor-not-allowed disabled:opacity-60 " + variants[variant] + " " + className}>{busy ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : null}{children}</button>;
 }
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <section className={cardClass + " " + className}>{children}</section>;

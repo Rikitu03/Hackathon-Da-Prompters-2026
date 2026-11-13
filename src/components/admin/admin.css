@@ -79,6 +79,33 @@
 }
 
 
+/*
+ * Accessible primary actions in the Admin only.
+ * The unlayered global "a { color: inherit }" overrides Tailwind utility colors
+ * on anchor buttons, so declare the intended foreground here as an unlayered
+ * component rule.  This also covers native primary <button> controls.
+ */
+.admin-portal .admin-primary-action {
+  background-color: #155bb0;
+  color: #f8fbff;
+}
+.admin-portal .admin-primary-action:is(:hover, :focus-visible) {
+  background-color: #104a92;
+  color: #ffffff;
+}
+.admin-portal .admin-primary-action:active {
+  background-color: #0e3e7c;
+  color: #ffffff;
+}
+.admin-portal .admin-primary-action svg {
+  color: inherit;
+}
+.admin-portal .admin-primary-action:disabled {
+  background-color: #55718f;
+  color: #ffffff;
+  opacity: 1;
+}
+
 /* Admin V2: share the exact student typography, book-and-wave mark and blue language. */
 @font-face {
   font-family: "Gabay Sans";
