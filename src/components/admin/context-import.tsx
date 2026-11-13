@@ -266,7 +266,7 @@ export function ContextImport({onApply,demoMode}: {
             <p className="mt-3 text-xs text-[#53657b]">PDF · DOC · DOCX · MD · TXT &nbsp;|&nbsp; Max 8 MB</p>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-            <span className="text-xs text-[#53657b]">No file? Use the guided editor below.</span>
+            <span className="text-xs text-[#53657b]">Prefer manual entry? Close this window to use the guide editor.</span>
             <button type="button" onClick={downloadTemplate} className="inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-[#155bb0] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155bb0]"><Download size={16}/> Download template</button>
           </div>
         </div>
@@ -364,7 +364,7 @@ export function ContextImport({onApply,demoMode}: {
                 {!isText ? <div role="status" className="rounded-xl border border-[#bcd3ec] bg-[#eef6ff] p-4">
                   <p className="flex items-center gap-2 font-semibold text-[#102a51]"><Sparkles size={17} className="text-[#155bb0]"/> AI document extraction is not connected yet</p>
                   <p className="mt-2 text-sm leading-6 text-[#53657b]">The file passed the basic size and extension checks. Lumen PDF/Word extraction still needs the verified backend connection. No document was sent or saved, and no fields have been invented.</p>
-                  <p className="mt-2 text-xs text-[#53657b]">You can continue manually below, or use the downloadable Markdown template for local prefill.</p>
+                  <p className="mt-2 text-xs text-[#53657b]">Close this window to enter the details manually, or use the downloadable Markdown template.</p>
                 </div> : <div>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -388,7 +388,7 @@ export function ContextImport({onApply,demoMode}: {
                       <CheckCircle2 size={17}/> Apply to draft form <ArrowRight size={16}/>
                     </Button>
                   </div>
-                  {applied ? <p role="status" className="mt-3 flex items-center gap-2 text-sm font-semibold text-[#21674a]"><CheckCircle2 size={17}/> Fields copied to the editor. Review and save the draft below; nothing has been published.</p> : null}
+                  {applied ? <p role="status" className="mt-3 flex items-center gap-2 text-sm font-semibold text-[#21674a]"><CheckCircle2 size={17}/> Fields copied to the draft form. Nothing has been saved or published.</p> : null}
                 </div>}
               </div> : null}
             </div>

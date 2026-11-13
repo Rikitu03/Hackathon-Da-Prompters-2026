@@ -2698,7 +2698,7 @@
   padding: 0;
 }
 .applicant-ui .journey-rail li { min-width: 0; }
-.applicant-ui .journey-rail a {
+.applicant-ui .journey-rail :is(a, button) {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -2724,7 +2724,7 @@
 }
 .applicant-ui .journey-rail .is-done .journey-stop { background: var(--blue); border-color: var(--blue); }
 .applicant-ui .journey-rail [aria-current="step"] .journey-stop { background: var(--yellow); border-color: var(--navy); color: var(--navy); }
-.applicant-ui .journey-rail a:hover .journey-stage-label { text-decoration: underline; text-underline-offset: 4px; }
+.applicant-ui .journey-rail :is(a, button):hover .journey-stage-label { text-decoration: underline; text-underline-offset: 4px; }
 .applicant-ui .journey-rail small { font-size: 13px; font-weight: 400; color: var(--muted); }
 .applicant-ui .journey-river { position: absolute; top: 14px; left: 10%; width: 80%; height: 24px; overflow: visible; }
 .applicant-ui .journey-river path { fill: none; stroke: var(--line); stroke-width: 4px; vector-effect: non-scaling-stroke; }
@@ -2754,10 +2754,10 @@
   .applicant-ui .journey-rail { padding: 16px; margin-bottom: 24px; }
   .applicant-ui .journey-mobile-title { display: block; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
   .applicant-ui .journey-rail ol { gap: 8px; }
-  .applicant-ui .journey-rail a { min-height: 44px; padding: 18px 0; gap: 0; }
-  .applicant-ui .journey-rail a::after { content: ""; width: 100%; height: 8px; border-radius: 2px; background: var(--line); }
-  .applicant-ui .journey-rail .is-done a::after { background: var(--blue); }
-  .applicant-ui .journey-rail a[aria-current="step"]::after { background: var(--yellow); outline: 2px solid var(--navy); }
+  .applicant-ui .journey-rail :is(a, button) { min-height: 44px; padding: 18px 0; gap: 0; }
+  .applicant-ui .journey-rail :is(a, button)::after { content: ""; width: 100%; height: 8px; border-radius: 2px; background: var(--line); }
+  .applicant-ui .journey-rail .is-done :is(a, button)::after { background: var(--blue); }
+  .applicant-ui .journey-rail :is(a, button)[aria-current="step"]::after { background: var(--yellow); outline: 2px solid var(--navy); }
   .applicant-ui .journey-rail .journey-stop, .applicant-ui .journey-stage-label, .applicant-ui .journey-rail small, .applicant-ui .journey-river { display: none; }
   .applicant-ui .chat-notice { padding: 16px; }
   .applicant-ui .document-next { padding: 16px; }
@@ -2765,3 +2765,7 @@
 @media (prefers-reduced-motion: reduce) {
   .applicant-ui .journey-river-progress { animation: none; }
 }
+
+.applicant-ui .journey-rail button { width: 100%; border: 0; background: transparent; color: inherit; text-align: center; }
+.applicant-ui .tools-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 700px) { .applicant-ui .tools-grid { grid-template-columns: 1fr; } }

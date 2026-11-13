@@ -1,8 +1,9 @@
-import { Assistant } from "@/components/applicant/assistant";
+import { redirect } from "next/navigation";
 export default async function Page({
   searchParams,
 }: {
   searchParams: Promise<{ requirement?: string }>;
 }) {
-  return <Assistant initialRequirementId={(await searchParams).requirement} />;
+  const requirement = (await searchParams).requirement;
+  redirect(`/dashboard?gabay=open${requirement ? `&requirement=${encodeURIComponent(requirement)}` : ""}`);
 }

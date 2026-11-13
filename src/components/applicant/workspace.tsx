@@ -16,7 +16,6 @@ import {
   ClipboardCheck,
   LayoutDashboard,
   Menu,
-  MessageCircle,
   ScanText,
   X,
   Waves,
@@ -332,7 +331,6 @@ const navigation = [
   { href: "/my-checklist", label: "My checklist", icon: ClipboardCheck },
   { href: "/application-draft", label: "Private draft", icon: ClipboardCheck },
   { href: "/document-review", label: "Check a document", icon: ScanText },
-  { href: "/assistant", label: "Ask Gabay", icon: MessageCircle },
   { href: "/summary", label: "Official step", icon: ArrowUpRight },
 ];
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
