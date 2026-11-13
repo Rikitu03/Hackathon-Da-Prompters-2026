@@ -5,6 +5,9 @@ on:
     paths:
       - "src/app/admin/**"
       - "src/components/admin/**"
+      - "src/app/api/auth/**"
+      - "src/lib/api.ts"
+      - "src/lib/api-origin.test.ts"
       - "src/components/shared/**"
       - "src/components/applicant/workspace.tsx"
       - "docs/ADMIN_FRONTEND_UAT.md"
@@ -20,6 +23,9 @@ on:
     paths:
       - "src/app/admin/**"
       - "src/components/admin/**"
+      - "src/app/api/auth/**"
+      - "src/lib/api.ts"
+      - "src/lib/api-origin.test.ts"
       - "src/components/shared/**"
       - "src/components/applicant/workspace.tsx"
       - "package.json"
